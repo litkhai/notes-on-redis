@@ -14,6 +14,7 @@ Official documentation: [Redis functions](https://redis.io/docs/latest/develop/p
 
 ```bash
 ./lab.sh   # starts and removes its own container
+./more.sh  # functions on a replica, FUNCTION DUMP/RESTORE, an ACL file, ACL LOG
 ```
 
 Output as it appeared (2026-11-07):
@@ -103,6 +104,105 @@ OK
 47
 ```
 
+`more.sh` output as it appeared (2026-11-07):
+
+```text
+replica link: role:slave master_link_status:up
+== a library on the primary
+shop
+[nor-dd-fa-p]> HSET item:1 stock 5
+(integer) 1
+
+== the replica got the library through replication
+[nor-dd-fa-r]> FUNCTION LIST LIBRARYNAME shop
+1) 1) "library_name"
+   2) "shop"
+   3) "engine"
+   4) "LUA"
+   5) "functions"
+   6) 1) 1) "name"
+         2) "stock"
+         3) "description"
+         4) (nil)
+         5) "flags"
+         6) 1) no-writes
+      2) 1) "name"
+         2) "sell"
+         3) "description"
+         4) (nil)
+         5) "flags"
+         6) (empty array)
+
+[nor-dd-fa-r]> FCALL_RO stock 1 item:1
+"5"
+
+[nor-dd-fa-r]> FCALL sell 1 item:1
+(error) READONLY You can't write against a read only replica.
+
+== FUNCTION DUMP from the primary, FUNCTION RESTORE into an unrelated server
+189
+[nor-dd-fa-x]> FUNCTION RESTORE <dump>
+OK
+
+[nor-dd-fa-x]> FUNCTION LIST
+1) 1) "library_name"
+   2) "shop"
+   3) "engine"
+   4) "LUA"
+   5) "functions"
+   6) 1) 1) "name"
+         2) "sell"
+         3) "description"
+         4) (nil)
+         5) "flags"
+         6) (empty array)
+      2) 1) "name"
+         2) "stock"
+         3) "description"
+         4) (nil)
+         5) "flags"
+         6) 1) no-writes
+
+[nor-dd-fa-x]> FUNCTION RESTORE x
+(error) ERR DUMP payload version or checksum are wrong
+
+== an ACL file: ACL SAVE writes it, ACL LOAD reads it back
+[nor-dd-fa-p]> ACL SETUSER reporter on >pw ~report:* +@read
+OK
+
+[nor-dd-fa-p]> ACL SAVE
+OK
+
+[nor-dd-fa-p]$ cat /data/users.acl   (password hashes shortened here)
+user default on nopass sanitize-payload ~* &* +@all
+user reporter on sanitize-payload #30c952fa... ~report:* resetchannels -@all +@read
+
+[nor-dd-fa-p]> ACL LOAD
+OK
+
+[nor-dd-fa-p]> ACL USERS
+1) "default"
+2) "ops"
+3) "reporter"
+
+[nor-dd-fa-p]> ACL LOAD
+(error) ERR /data/users.acl:5: Error in applying operation '+nosuchcommand': Unknown command or category name in ACL. WARNING: ACL errors detected, no change to the previously active ACL rules was performed
+
+[nor-dd-fa-p]> ACL USERS
+1) "default"
+2) "ops"
+3) "reporter"
+
+== ACL LOG: a wrong password and a denied command
+[nor-dd-fa-p]> ACL LOG RESET
+OK
+
+[nor-dd-fa-p]> ACL LOG (fields: reason, context, object, username)
+   count 1 reason key context toplevel object secret:1 username reporter
+   count 1 reason command context toplevel object set username reporter
+   count 1 reason auth context toplevel object AUTH username reporter
+```
+
 ### What was observed
 
 - **Functions.** `sell` decremented stock to 0, then refused with its own `sold out` error. `stock` is registered with `no-writes` and runs under `FCALL_RO`. `FCALL_RO sell` is refused: `Can not execute a script with write flag using *_ro command`. That is what lets read-only functions run on replicas.
@@ -110,11 +210,14 @@ OK
 - **Selector.** User `rep` reads `report:*`; the selector `(~audit:* +xadd)` adds exactly one thing, `XADD` on `audit:*`. `XADD report:log` failed because neither rule set allows both the command and the key.
 - **`+@all -@write` blocks module writes.** User `ro` could `JSON.GET` but not `JSON.SET`, and `TS.ADD` was refused too. A user with only `+@read` could run `JSON.GET`. `ACL CAT write` lists 47 commands from JSON, time series, Bloom, cuckoo, count-min, top-k and t-digest; no `FT.*` command is among them.
 - **The ACL page disagrees.** It still says "command categories, with the exception of +@all, never include module commands." On Redis 8.10.3 that is no longer true, as the two results above show. An ACL written for Redis 7 that relied on it now grants or blocks more than before.
+- **Functions replicate.** A library loaded on the primary appeared on the replica once the link was up. There `FCALL_RO stock` ran and returned `"5"`; `FCALL sell` was refused with `READONLY You can't write against a read only replica`.
+- **FUNCTION DUMP moves libraries between servers.** A 189-byte dump from the primary restored into an unrelated server with both functions and their flags. A corrupt payload was refused: `DUMP payload version or checksum are wrong`.
+- **ACL files.** `ACL SAVE` wrote the users with SHA-256 password hashes. A hand-added user under a `#` comment line loaded with `ACL LOAD`; comment lines are accepted since Redis 8.8. A line with an unknown command made `ACL LOAD` fail as a whole: "no change to the previously active ACL rules was performed".
+- **ACL LOG says who was refused and why.** One wrong password, one denied command and one denied key produced three entries with reasons `auth`, `command` (`set`) and `key` (`secret:1`), all for `reporter`.
 
 ### Not run / caveats
 
-- `FUNCTION DUMP`/`RESTORE` and functions on a replica were not run.
-- ACL files (`ACL SAVE`, `ACL LOAD`) and `ACL LOG` were not run.
+- Comment lines in the ACL file are stripped on load and not written back by `ACL SAVE` (ACL page); keep hand-written notes elsewhere. Whether ACL users reach a replica was not tested.
 
 | | |
 |---|---|
@@ -133,9 +236,12 @@ OK
 
 ```bash
 ./lab.sh   # starts and removes its own container
+./more.sh  # functions on a replica, FUNCTION DUMP/RESTORE, an ACL file, ACL LOG
 ```
 
 출력은 영문 절과 같다(2026-11-07).
+
+`more.sh`의 출력도 영문 절과 같다(2026-11-07).
 
 ### 관찰한 것
 
@@ -144,11 +250,14 @@ OK
 - **셀렉터.** 사용자 `rep`은 `report:*`를 읽는다. 셀렉터 `(~audit:* +xadd)`는 딱 하나, `audit:*`에 대한 `XADD`를 더한다. `XADD report:log`는 실패했다. 명령과 키를 함께 허락하는 규칙 묶음이 없기 때문이다.
 - **`+@all -@write`는 모듈 쓰기도 막는다.** 사용자 `ro`는 `JSON.GET`은 되고 `JSON.SET`은 안 됐고, `TS.ADD`도 거절됐다. `+@read`만 가진 사용자도 `JSON.GET`을 실행했다. `ACL CAT write`에는 JSON, time series, Bloom, cuckoo, count-min, top-k, t-digest 명령 47개가 있고 `FT.*` 명령은 없다.
 - **ACL 페이지는 다르게 말한다.** 여전히 "command categories, with the exception of +@all, never include module commands"라고 적혀 있다. 위 두 결과대로 Redis 8.10.3에서는 더 이상 사실이 아니다. 그 문장에 기대 Redis 7용으로 쓴 ACL은 이제 전보다 더 허락하거나 더 막는다.
+- **함수는 복제된다.** 주 서버에 올린 라이브러리가 복제 연결이 맺어진 뒤 복제본에 나타났다. 거기서 `FCALL_RO stock`은 돌아 `"5"`를 돌려줬고, `FCALL sell`은 `READONLY You can't write against a read only replica`로 거절됐다.
+- **FUNCTION DUMP로 서버 사이에 라이브러리를 옮긴다.** 주 서버의 189바이트 덤프가 상관없는 서버에 두 함수와 플래그까지 그대로 복원됐다. 깨진 페이로드는 거절됐다: `DUMP payload version or checksum are wrong`.
+- **ACL 파일.** `ACL SAVE`는 사용자를 SHA-256 비밀번호 해시와 함께 썼다. `#` 주석 줄 아래 손으로 추가한 사용자는 `ACL LOAD`로 올라왔다. 주석 줄은 Redis 8.8부터 허용된다. 모르는 명령이 든 줄이 있으면 `ACL LOAD` 전체가 실패했다: "no change to the previously active ACL rules was performed".
+- **ACL LOG는 누가 왜 거절됐는지 알려 준다.** 틀린 비밀번호, 거절된 명령, 거절된 키 한 번씩이 사유 `auth`, `command`(`set`), `key`(`secret:1`)인 항목 셋으로 남았다. 모두 `reporter`였다.
 
 ### 미실행 / 주의
 
-- `FUNCTION DUMP`/`RESTORE`와 복제본에서의 함수 실행은 하지 않았다.
-- ACL 파일(`ACL SAVE`, `ACL LOAD`)과 `ACL LOG`는 실행하지 않았다.
+- ACL 파일의 주석 줄은 읽을 때 지워지고 `ACL SAVE`로 다시 써지지 않는다(ACL 페이지). 손으로 쓴 메모는 다른 곳에 둔다. ACL 사용자가 복제본에 전달되는지는 시험하지 않았다.
 
 | | |
 |---|---|

@@ -15,6 +15,7 @@ Official documentation: [Replication](https://redis.io/docs/latest/operate/oss_a
 ```bash
 docker compose up -d
 ./run.sh
+../../cloud/01-free-database/.venv/bin/python sentinel_client.py   # on a fresh 'docker compose up': a redis-py Sentinel client across a failover
 docker compose down
 ```
 
@@ -44,16 +45,30 @@ $ ./run.sh        (fixed-IP topology from compose.yaml)
 ip=10.231.77.12 num-slaves=2 failover-timeout=10000
 ```
 
+`sentinel_client.py` output as it appeared (2026-11-07), on a fresh `docker compose up`:
+
+```text
+master from the Sentinels: ('10.231.77.10', 6379) = nor-repl-primary
+killed nor-repl-primary (SIGKILL)
+Sentinels report the new master ('10.231.77.12', 6379) = nor-repl-replica2 after 4.5 s
+writes 364, failed 64, errors ['ConnectionError', 'MasterNotFoundError', 'TimeoutError']
+first successful write on the new master 4.4 s after the kill
+last value 300, successful writes 300, increments lost 0
+restarted nor-repl-primary; its role over time: ConnectionError at 0.0 s, master at 0.2 s, slave->10.231.77.12 at 11.0 s
+```
+
 ### What was observed
 
 - **Partial vs full.** Killing the replicas' connections led to two partial resyncs (`sync_partial_ok` 0 → 2); restarting a replica without persistence forced a full sync (`sync_full` 2 → 3, `sync_partial_err` 1).
 - **WAIT is per connection.** With `SET` and `WAIT 2 1000` on one connection: 2 with both replicas up; 1 after the 1-second timeout with one replica paused. The same `WAIT` on a fresh connection returned 2 at once: it has no writes of its own to wait for. A first version of this script sent them on separate connections and wrongly showed 2.
 - **Failover.** Stopping the primary to Sentinel naming a replica as master: 4,402 ms (3 s of that is `down-after-milliseconds`). The new master accepted writes; the old primary, started again, was a replica of it after 11.3 s.
+- **A Sentinel-aware client follows on its own.** redis-py's `Sentinel(...).master_for("mymaster")` asked the Sentinels for the master and, after the kill, wrote to the new one 4.4 s later with no code change; the Sentinels named it at 4.5 s. In between the client got `ConnectionError`, `TimeoutError` and `MasterNotFoundError`, so the application still needs a retry.
+- **The old primary is a master again for about 11 s.** Restarted, it answered as `master` from 0.2 s and became a replica of the new master only at 11.0 s, when Sentinel reconfigured it. A client that connects to it directly, not through Sentinel, can write there in that window and lose those writes.
 - **Do not point Sentinel at container names.** In a first run Sentinel monitored `primary` by hostname. Once that container stopped, Docker's DNS could not resolve the name, the Sentinels stalled on the lookups and marked each other down, and the failover took 284,103 ms. With fixed IPs it took 4.4 s.
 
 ### Not run / caveats
 
-- Clients that discover the master through Sentinel (`SENTINEL get-master-addr-by-name` in a client library) were not tested; the script asks Sentinel directly.
+- Only redis-py was tried as a Sentinel client; other libraries may retry differently.
 - No persistence on any node; with persistence a restarted replica can partially resync.
 
 | | |
@@ -74,21 +89,24 @@ Compose로 주 서버 하나, 복제본 둘, Sentinel 셋(quorum 2, `down-after-
 ```bash
 docker compose up -d
 ./run.sh
+../../cloud/01-free-database/.venv/bin/python sentinel_client.py   # on a fresh 'docker compose up': a redis-py Sentinel client across a failover
 docker compose down
 ```
 
-출력은 영문 절과 같다(2026-11-07).
+출력은 영문 절과 같다(2026-11-07). `sentinel_client.py`의 출력도 마찬가지다.
 
 ### 관찰한 것
 
 - **부분 대 전체.** 복제본 연결을 끊자 부분 재동기화가 두 번 일어났다(`sync_partial_ok` 0 → 2). 영속성 없는 복제본을 재시작하자 전체 동기화가 됐다(`sync_full` 2 → 3, `sync_partial_err` 1).
 - **WAIT은 연결 단위다.** 한 연결에서 `SET`과 `WAIT 2 1000`: 복제본 둘이 살아 있으면 2, 하나를 멈추면 1초 타임아웃 뒤 1. 같은 `WAIT`을 새 연결에서 보내면 바로 2가 나온다. 기다릴 자기 쓰기가 없기 때문이다. 이 스크립트의 첫 버전은 둘을 다른 연결로 보내 잘못된 2를 보였다.
 - **장애 조치.** 주 서버를 멈춘 뒤 Sentinel이 복제본을 마스터로 지목하기까지 4,402 ms(그중 3초가 `down-after-milliseconds`). 새 마스터는 쓰기를 받았고, 다시 켠 옛 주 서버는 11.3초 뒤 그 복제본이 됐다.
+- **Sentinel을 아는 클라이언트는 알아서 따라간다.** redis-py의 `Sentinel(...).master_for("mymaster")`는 Sentinel에 마스터를 묻고, 죽인 뒤 4.4초에 코드 변경 없이 새 마스터에 썼다. Sentinel이 새 마스터를 지목한 것은 4.5초. 그 사이 클라이언트는 `ConnectionError`, `TimeoutError`, `MasterNotFoundError`를 받으므로 애플리케이션에 재시도는 여전히 필요하다.
+- **옛 주 서버는 약 11초 동안 다시 마스터다.** 재시작하면 0.2초부터 `master`로 답했고, Sentinel이 재설정한 11.0초에야 새 마스터의 복제본이 됐다. Sentinel을 거치지 않고 직접 붙는 클라이언트는 그 사이 거기에 쓰고 그 쓰기를 잃을 수 있다.
 - **Sentinel에 컨테이너 이름을 주지 말 것.** 첫 실행에서 Sentinel은 `primary`를 호스트 이름으로 감시했다. 그 컨테이너가 멈추자 Docker DNS가 이름을 풀지 못했고, Sentinel들이 조회에 묶여 서로를 다운으로 표시했으며 장애 조치에 284,103 ms가 걸렸다. 고정 IP로는 4.4초였다.
 
 ### 미실행 / 주의
 
-- Sentinel을 통해 마스터를 찾는 클라이언트(클라이언트 라이브러리의 `SENTINEL get-master-addr-by-name`)는 시험하지 않았다. 스크립트가 Sentinel에 직접 묻는다.
+- Sentinel 클라이언트로는 redis-py만 시험했다. 다른 라이브러리는 재시도 방식이 다를 수 있다.
 - 모든 노드에 영속성이 없다. 영속성이 있으면 재시작한 복제본도 부분 재동기화할 수 있다.
 
 | | |

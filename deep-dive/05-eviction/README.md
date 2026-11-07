@@ -15,6 +15,7 @@ Official documentation: [Key eviction](https://redis.io/docs/latest/develop/refe
 ```bash
 python3 -m venv .venv && .venv/bin/pip install redis   # or reuse another lab's venv
 ../../cloud/01-free-database/.venv/bin/python lab.py   # starts and removes its own container
+../../cloud/01-free-database/.venv/bin/python volatile.py   # volatile-* policies and maxmemory-samples
 ```
 
 Output as it appeared (2026-11-07):
@@ -35,6 +36,25 @@ allkeys-random   survived read-hot  2595 write-hot  2568 cold  2636 new(first 50
    {'db0_distrib_strings_sizes': {'256': 2000, '64K': 1}, 'db0_distrib_lists_items': {'256': 1}}
 ```
 
+`volatile.py` output as it appeared (2026-11-07):
+
+```text
+== volatile policies: only keys with a TTL can be evicted (16,000 keys, then 14,000 new with a TTL)
+volatile-lru     persist 4000 soon 2002 later 1943 hot 3993 evicted   4113 
+volatile-lfu     persist 4000 soon 3279 later 3186 hot 4000 evicted   4095 
+volatile-lrm     persist 4000 soon 2644 later 2584 hot 2645 evicted   4127 
+volatile-ttl     persist 4000 soon 1718 later 2263 hot 3911 evicted   4108 
+volatile-random  persist 4000 soon 3318 later 3328 hot 3358 evicted   4127 
+
+== when no key has a TTL, a volatile policy cannot free anything
+   writes refused after 27372 keys: command not allowed when used memory > 'maxmemory'.
+
+== allkeys-lru accuracy by maxmemory-samples: 10,000 old keys, the first 5,000 read again, then 30,000 new
+   samples  1: recently read kept [4649, 4552, 4733], not read kept [4677, 4563, 4740];  OOM after 27310 keys, OOM after 27311 keys, OOM after 27317 keys (three runs)
+   samples  5: recently read kept [855, 788, 865], not read kept [617, 620, 666] (three runs)
+   samples 10: recently read kept [350, 294, 319], not read kept [97, 86, 103] (three runs)
+```
+
 ### What was observed
 
 - **noeviction** refuses the write once memory is full: `command not allowed when used memory > 'maxmemory'`. Reads keep working; nothing was evicted.
@@ -44,12 +64,13 @@ allkeys-random   survived read-hot  2595 write-hot  2568 cold  2636 new(first 50
 - **allkeys-random** left about half of every group.
 - **HOTKEYS** tracked by CPU for 1.8 s and ranked `k:7` (half of all reads) first and `k:42` second, as the read pattern intended.
 - **INFO keysizes** reports a power-of-two histogram per type: 2,000 strings in the 256-byte bucket, one in the 64K bucket, one list in the 256-item bucket.
+- **Volatile policies never touch keys without a TTL.** All 4,000 `persist` keys survived under every volatile policy. With 14,000 new keys pushing out about 4,100, `volatile-lfu` and `volatile-lru` protected the read `hot` keys (4,000 and 3,993 left), `volatile-lrm` did not (2,645, like the others), and `volatile-ttl` took more of the 600-second `soon` keys (1,718 left) than of the 3,600-second ones (2,263 and 3,911).
+- **No TTL, no room.** Under `volatile-lru` with only TTL-less keys, writes were refused at 27,372 keys, exactly as `noeviction` would.
+- **`maxmemory-samples` sets how well LRU guesses.** 10,000 keys, half of them read again, then 30,000 new keys. With 5 samples about 840 recently read and 630 unread keys survived; with 10 samples about 320 and 95, a clearer preference for the recently read ones. With 1 sample eviction fell behind: about 4,600 of each group survived and writes were refused with OOM after about 27,300 keys in all three runs. A separate run without pipelining evicted 4,330 keys before the first refusal.
 
 ### Not run / caveats
 
 - LRU and LRM are sampled approximations, so their counts move between runs. An earlier run of the same script kept 3,251 read-hot and 3,214 write-hot keys under `allkeys-lru`; the LFU and LRM patterns held both times.
-- `maxmemory-samples` was left at its default of 5.
-- The volatile policies were not run: no key here has a TTL.
 
 | | |
 |---|---|
@@ -69,9 +90,12 @@ allkeys-random   survived read-hot  2595 write-hot  2568 cold  2636 new(first 50
 ```bash
 python3 -m venv .venv && .venv/bin/pip install redis   # or reuse another lab's venv
 ../../cloud/01-free-database/.venv/bin/python lab.py   # starts and removes its own container
+../../cloud/01-free-database/.venv/bin/python volatile.py   # volatile-* policies and maxmemory-samples
 ```
 
 출력은 영문 절과 같다(2026-11-07).
+
+`volatile.py`의 출력도 영문 절과 같다(2026-11-07).
 
 ### 관찰한 것
 
@@ -82,12 +106,13 @@ python3 -m venv .venv && .venv/bin/pip install redis   # or reuse another lab's 
 - **allkeys-random**은 그룹마다 절반 정도를 남겼다.
 - **HOTKEYS**는 CPU 기준으로 1.8초 추적해 `k:7`(전체 읽기의 절반)을 1위, `k:42`를 2위로 꼽았다. 의도한 읽기 패턴 그대로다.
 - **INFO keysizes**는 자료형별 2의 거듭제곱 히스토그램을 준다: 256바이트 구간에 문자열 2,000개, 64K 구간에 1개, 256개 항목 구간에 리스트 1개.
+- **volatile 정책은 TTL 없는 키를 건드리지 않는다.** 모든 volatile 정책에서 `persist` 키 4,000개가 다 살아남았다. 새 키 14,000개가 약 4,100개를 밀어낼 때, `volatile-lfu`와 `volatile-lru`는 읽은 `hot` 키를 지켰고(4,000개, 3,993개 남음), `volatile-lrm`은 지키지 않았다(2,645개, 다른 그룹과 비슷). `volatile-ttl`은 600초짜리 `soon` 키를(1,718개 남음) 3,600초짜리보다(2,263개, 3,911개) 더 많이 지웠다.
+- **TTL이 없으면 자리도 없다.** TTL 없는 키만 있는 `volatile-lru`에서는 27,372개에서 쓰기가 거절됐다. `noeviction`과 똑같다.
+- **`maxmemory-samples`가 LRU의 정확도를 정한다.** 키 10,000개 중 절반을 다시 읽고 새 키 30,000개를 넣었다. 샘플 5개에서는 최근 읽은 키 약 840개, 안 읽은 키 약 630개가 남았고, 10개에서는 약 320개와 95개로 최근 읽은 쪽을 더 분명히 남겼다. 샘플 1개에서는 축출이 따라가지 못했다. 그룹마다 약 4,600개가 남았고, 세 번 모두 약 27,300개에서 OOM으로 쓰기가 거절됐다. 파이프라인 없이 따로 돌린 실행은 첫 거절 전에 4,330개를 축출했다.
 
 ### 미실행 / 주의
 
 - LRU와 LRM은 샘플링 근사라서 실행마다 수가 달라진다. 같은 스크립트의 이전 실행에서 `allkeys-lru`는 read-hot 3,251개, write-hot 3,214개를 남겼다. LFU와 LRM의 패턴은 두 번 모두 같았다.
-- `maxmemory-samples`는 기본값 5 그대로 두었다.
-- volatile 정책은 실행하지 않았다. 여기 키에는 TTL이 없다.
 
 | | |
 |---|---|
