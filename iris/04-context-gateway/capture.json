@@ -1,0 +1,10 @@
+{
+ "_note": "Console captures for the Context Gateway section. Run: node scripts/capture-console.mjs iris/04-context-gateway/capture.json (mask terms in a gitignored .env next to this file; this lab's .env already holds the Gateway keys, so mask terms are appended there).",
+ "out": "docs/assets/img/iris",
+ "base": "https://cloud.redis.io/#/",
+ "theme": "dark",
+ "viewport": [1440, 765],
+ "shots": [
+  { "name": "31-gateway-full-exposure", "path": "iris/context-gateway/gw_e659c251b49c4645ae7484db8f0b42fa/configuration", "tall": true, "waitMs": 9000 }
+ ]
+}

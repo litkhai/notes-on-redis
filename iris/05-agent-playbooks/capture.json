@@ -1,0 +1,10 @@
+{
+ "_note": "Console capture of the playbook configuration with automatic FAQ extraction on. Run: node scripts/capture-console.mjs iris/05-agent-playbooks/capture.json (mask terms appended to this lab's gitignored .env).",
+ "out": "docs/assets/img/iris",
+ "base": "https://cloud.redis.io/#/",
+ "theme": "dark",
+ "viewport": [1440, 765],
+ "shots": [
+  { "name": "32-playbook-faq-extraction", "path": "iris/agent-playbooks/pb_6fef76eab80645ea83e363ae2126b208/configuration", "tall": true, "waitMs": 9000 }
+ ]
+}

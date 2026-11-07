@@ -1,0 +1,10 @@
+{
+ "_note": "Console capture of the sensitive-data exclusions with a custom detector and a semantic exclusion. Run: node scripts/capture-console.mjs iris/02-agent-memory/capture.json (mask terms appended to this lab's gitignored .env).",
+ "out": "docs/assets/img/iris",
+ "base": "https://cloud.redis.io/#/",
+ "theme": "dark",
+ "viewport": [1440, 765],
+ "shots": [
+  { "name": "33-agent-memory-custom-detectors", "path": "iris/agent-memory/stores/st_6600a732d1f645ae9f2109d1aaed6db3", "tall": true, "waitMs": 9000 }
+ ]
+}
