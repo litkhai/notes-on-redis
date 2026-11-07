@@ -36,7 +36,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | Not started | What Redis Software and Cloud Pro add, each tied to a lab or marked doc-only |
 | [Iris]({{ '/iris/' | relative_url }}) | Agent Memory run 2026-11-07 | The Iris services, one lab each, on the free plan |
 | [Compare]({{ '/compare/' | relative_url }}) | Valkey locally and ElastiCache run 2026-11-07 | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
-| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | Not started | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
+| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 01–04 run 2026-11-07 | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
 
 <div class="warn" markdown="1">
 **Cost warning.** A paid Redis Cloud Essentials database bills monthly from the moment it is created; Pro has a $200/month minimum ("first $200 free", terms unpublished). Iris starts with 5,000 free messages. Prices read 2026-11-07 at [redis.io/pricing](https://redis.io/pricing/).
@@ -74,7 +74,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | 미착수 | Redis Software와 Cloud Pro가 더해 주는 것, 랩 또는 문서만으로 구분 |
 | [Iris]({{ '/iris/' | relative_url }}) | Agent Memory 실행 2026-11-07 | Iris 서비스마다 랩 하나, 무료 플랜으로 |
 | [Compare]({{ '/compare/' | relative_url }}) | 로컬 Valkey와 ElastiCache 실행 2026-11-07 | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
-| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 미착수 | 스레딩, 영속성, 복제, Cluster, 축출, 캐시, Streams, Functions, ACL |
+| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 01–04 실행 2026-11-07 | 스레딩, 영속성, 복제, Cluster, 축출, 캐시, Streams, Functions, ACL |
 
 <div class="warn" markdown="1">
 **비용 경고.** 유료 Redis Cloud Essentials DB는 만든 순간부터 월 단위로 과금된다. Pro는 최소 월 $200("첫 $200 무료", 조건 미공개). Iris는 무료 5,000 메시지로 시작한다. 가격은 2026-11-07 [redis.io/pricing](https://redis.io/pricing/)에서 읽음.
@@ -105,7 +105,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | 未开始 | Redis Software 与 Cloud Pro 的增强功能，各自对应实验或仅文档 |
 | [Iris]({{ '/iris/' | relative_url }}) | Agent Memory 已运行 2026-11-07 | 每个 Iris 服务一个实验，使用免费方案 |
 | [Compare]({{ '/compare/' | relative_url }}) | 本地 Valkey 与 ElastiCache 已运行 2026-11-07 | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
-| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 未开始 | 线程、持久化、复制、Cluster、淘汰、缓存、Streams、Functions、ACL |
+| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 01–04 已运行 2026-11-07 | 线程、持久化、复制、Cluster、淘汰、缓存、Streams、Functions、ACL |
 
 <div class="warn" markdown="1">
 **费用提醒。** 付费 Redis Cloud Essentials 数据库自创建起按月计费；Pro 最低每月 $200（"首 $200 免费"，条款未公布）。Iris 提供 5,000 条免费消息。价格于 2026-11-07 读取自 [redis.io/pricing](https://redis.io/pricing/)。
@@ -136,7 +136,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | 未着手 | Redis Software と Cloud Pro が加えるもの、ラボまたはドキュメントのみを明示 |
 | [Iris]({{ '/iris/' | relative_url }}) | Agent Memory 実行済み 2026-11-07 | Iris サービスごとにラボひとつ、無料プランで |
 | [Compare]({{ '/compare/' | relative_url }}) | ローカル Valkey と ElastiCache を実行 2026-11-07 | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
-| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 未着手 | スレッド、永続化、レプリケーション、Cluster、エビクション、キャッシュ、Streams、Functions、ACL |
+| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 01–04 実行済み 2026-11-07 | スレッド、永続化、レプリケーション、Cluster、エビクション、キャッシュ、Streams、Functions、ACL |
 
 <div class="warn" markdown="1">
 **コストの注意。** 有料の Redis Cloud Essentials DB は作成した瞬間から月額課金される。Pro は最低月 $200（「最初の $200 は無料」、条件未公開）。Iris は無料 5,000 メッセージから。価格は 2026-11-07 に [redis.io/pricing](https://redis.io/pricing/) で読んだ。
@@ -174,7 +174,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | ยังไม่เริ่ม | สิ่งที่ Redis Software และ Cloud Pro เพิ่มเข้ามา โดยแต่ละรายการผูกกับแล็บหรือระบุว่าเป็นเอกสารเท่านั้น |
 | [Iris]({{ '/iris/' | relative_url }}) | Agent Memory รันแล้ว 2026-11-07 | บริการของ Iris หนึ่งแล็บต่อหนึ่งบริการ บนแผนฟรี |
 | [Compare]({{ '/compare/' | relative_url }}) | Valkey แบบโลคัลและ ElastiCache รันแล้ว 2026-11-07 | Redis เทียบกับ Valkey, ElastiCache, Memorystore และ Azure Managed Redis |
-| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | ยังไม่เริ่ม | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
+| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 01–04 รันแล้ว 2026-11-07 | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
 
 <div class="warn" markdown="1">
 **คำเตือนเรื่องค่าใช้จ่าย** ฐานข้อมูล Redis Cloud Essentials แบบเสียเงินจะคิดค่าบริการรายเดือนตั้งแต่ขณะที่สร้าง ส่วน Pro มีขั้นต่ำ $200/เดือน ("first $200 free" ยังไม่เผยแพร่เงื่อนไข) Iris เริ่มต้นด้วยข้อความฟรี 5,000 ข้อความ ราคาอ่านเมื่อ 2026-11-07 ที่ [redis.io/pricing](https://redis.io/pricing/)
@@ -212,7 +212,7 @@ Sejak 8.0 (GA 2025-05-01) hanya ada satu distribusi, yaitu Redis Open Source: st
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | Belum dimulai | Yang ditambahkan Redis Software dan Cloud Pro, masing-masing terkait satu lab atau ditandai hanya dokumentasi |
 | [Iris]({{ '/iris/' | relative_url }}) | Agent Memory dijalankan 2026-11-07 | Layanan Iris, satu lab per layanan, pada paket gratis |
 | [Compare]({{ '/compare/' | relative_url }}) | Valkey lokal dan ElastiCache dijalankan 2026-11-07 | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
-| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | Belum dimulai | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
+| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 01–04 dijalankan 2026-11-07 | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
 
 <div class="warn" markdown="1">
 **Peringatan biaya.** Database Redis Cloud Essentials berbayar ditagih bulanan sejak dibuat; Pro memiliki minimum $200/bulan ("first $200 free", ketentuan belum dipublikasikan). Iris dimulai dengan 5.000 pesan gratis. Harga dibaca 2026-11-07 di [redis.io/pricing](https://redis.io/pricing/).
@@ -250,7 +250,7 @@ Sejak 8.0 (GA 2025-05-01) hanya ada satu pengedaran, iaitu Redis Open Source: st
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | Belum dimulakan | Apa yang ditambah oleh Redis Software dan Cloud Pro, setiap satu dikaitkan dengan satu makmal atau ditanda sebagai dokumentasi sahaja |
 | [Iris]({{ '/iris/' | relative_url }}) | Agent Memory dijalankan 2026-11-07 | Perkhidmatan Iris, satu makmal bagi setiap perkhidmatan, pada pelan percuma |
 | [Compare]({{ '/compare/' | relative_url }}) | Valkey setempat dan ElastiCache dijalankan 2026-11-07 | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
-| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | Belum dimulakan | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
+| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 01–04 dijalankan 2026-11-07 | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
 
 <div class="warn" markdown="1">
 **Amaran kos.** Pangkalan data Redis Cloud Essentials berbayar dibilkan setiap bulan sejak ia dicipta; Pro mempunyai minimum $200/bulan ("first $200 free", terma belum diterbitkan). Iris bermula dengan 5,000 mesej percuma. Harga dibaca 2026-11-07 di [redis.io/pricing](https://redis.io/pricing/).
