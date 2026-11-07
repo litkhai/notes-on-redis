@@ -337,6 +337,16 @@
    "ms": "**Ambang** (`thresholds.py`). `minScore` bagi setiap intent menggantikan 0.70 milik Router, dan `min_score` bagi setiap panggilan menggantikan kedua-duanya, mengikut susunan dalam dokumentasi. Dengan `tls_question` pada 0.60, soalan TLS dalam bahasa Korea (0.61) dipadankan; dengan `off_topic` pada 0.85, permintaan jenaka (0.71) tidak lagi dipadankan; 0.5 bagi setiap panggilan memulihkan kelima-lima pertanyaan. Templat Router (`CUSTOM`, `MODEL`, `GUARDRAILS`, `AGENT`) ialah label: \"Every template serves the same way.\""
   },
   {
+   "type": "md",
+   "en": "**The Router's own default** is the console's **Minimum score**. Lowered from 0.70 to 0.60 for one run, it let the Korean TLS question (0.61) match with no other threshold set; then it was put back to 0.70.",
+   "ko": "**Router 자체의 기본값**은 콘솔의 **Minimum score**다. 한 번 0.70에서 0.60으로 낮추자 다른 임계값 없이도 한국어 TLS 질문(0.61)이 매칭됐다. 그 뒤 0.70으로 되돌렸다.",
+   "zh": "**Router 自身的默认值**是控制台中的 **Minimum score**。将它从 0.70 降到 0.60 运行一次后，在没有设置其他阈值的情况下，韩语的 TLS 问题（0.61）也匹配上了；随后又把它恢复为 0.70。",
+   "ja": "**Router 自身のデフォルト**は、コンソールの **Minimum score** である。これを 0.70 から 0.60 に下げて一度実行すると、ほかのしきい値を設定しなくても韓国語の TLS の質問（0.61）がマッチした。その後、0.70 に戻した。",
+   "th": "**ค่าเริ่มต้นของ Router เอง** คือ **Minimum score** ในคอนโซล เมื่อลดจาก 0.70 เป็น 0.60 สำหรับการรันหนึ่งครั้ง คำถามเรื่อง TLS ภาษาเกาหลี (0.61) จับคู่ได้โดยไม่ต้องตั้งค่าเกณฑ์อื่นเลย จากนั้นจึงตั้งกลับเป็น 0.70",
+   "id": "**Default milik Router sendiri** adalah **Minimum score** di konsol. Setelah diturunkan dari 0.70 ke 0.60 untuk satu kali jalan, pertanyaan TLS berbahasa Korea (0.61) cocok tanpa ambang batas lain yang ditetapkan; kemudian nilainya dikembalikan ke 0.70.",
+   "ms": "**Lalai milik Router sendiri** ialah **Minimum score** dalam konsol. Apabila diturunkan daripada 0.70 kepada 0.60 untuk satu larian, soalan TLS dalam bahasa Korea (0.61) dipadankan tanpa ambang lain ditetapkan; kemudian nilainya dikembalikan kepada 0.70."
+  },
+  {
    "type": "img",
    "file": "24-intent-router-intents.webp",
    "alt": {

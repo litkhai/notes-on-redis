@@ -23,7 +23,7 @@ def table(title, **kw):
 
 
 table("raw scores, every intent above 0.01", min_score=0.01, limit=2)
-table("Router default (0.70), no per-intent thresholds")
+table(f"Router default ({os.environ.get('ROUTER_DEFAULT', '0.70')}, set in the console), no per-intent thresholds")
 print("-- per-intent thresholds: tls_question 0.60 (looser), off_topic 0.85 (stricter)")
 for name, s in (("tls_question", 0.60), ("off_topic", 0.85)):
     i = router.update(name, min_score=s); print(f"   {i.name}: min_score {i.min_score}, revision {i.revision}")
