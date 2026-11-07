@@ -50,8 +50,6 @@ Deep Dive       /deep-dive/       one page per mechanism, each with a reproducib
   ├ Client-side caching
   ├ Streams
   └ Functions & ACL
-─────────────
-About           /about/
 ```
 
 Nav labels are English only; the language toggle switches page content (runpod-hols rule).

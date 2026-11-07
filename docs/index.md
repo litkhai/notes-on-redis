@@ -39,7 +39,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | [Deep Dive]({{ '/deep-dive/' | relative_url }}) | Not started | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
 
 <div class="warn" markdown="1">
-**Cost warning.** A paid Redis Cloud Essentials database bills monthly from the moment it is created; Pro has a $200/month minimum ("first $200 free", terms unpublished). Iris starts with 5,000 free messages. Delete what a lab creates. Prices read 2026-11-07 at [redis.io/pricing](https://redis.io/pricing/).
+**Cost warning.** A paid Redis Cloud Essentials database bills monthly from the moment it is created; Pro has a $200/month minimum ("first $200 free", terms unpublished). Iris starts with 5,000 free messages. Prices read 2026-11-07 at [redis.io/pricing](https://redis.io/pricing/).
 </div>
 
 </div>
@@ -77,7 +77,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 미착수 | 스레딩, 영속성, 복제, Cluster, 축출, 캐시, Streams, Functions, ACL |
 
 <div class="warn" markdown="1">
-**비용 경고.** 유료 Redis Cloud Essentials DB는 만든 순간부터 월 단위로 과금된다. Pro는 최소 월 $200("첫 $200 무료", 조건 미공개). Iris는 무료 5,000 메시지로 시작한다. 랩이 만든 것은 지운다. 가격은 2026-11-07 [redis.io/pricing](https://redis.io/pricing/)에서 읽음.
+**비용 경고.** 유료 Redis Cloud Essentials DB는 만든 순간부터 월 단위로 과금된다. Pro는 최소 월 $200("첫 $200 무료", 조건 미공개). Iris는 무료 5,000 메시지로 시작한다. 가격은 2026-11-07 [redis.io/pricing](https://redis.io/pricing/)에서 읽음.
 </div>
 
 </div>
@@ -108,7 +108,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 未开始 | 线程、持久化、复制、Cluster、淘汰、缓存、Streams、Functions、ACL |
 
 <div class="warn" markdown="1">
-**费用提醒。** 付费 Redis Cloud Essentials 数据库自创建起按月计费；Pro 最低每月 $200（"首 $200 免费"，条款未公布）。Iris 提供 5,000 条免费消息。实验结束请删除所创建的资源。价格于 2026-11-07 读取自 [redis.io/pricing](https://redis.io/pricing/)。
+**费用提醒。** 付费 Redis Cloud Essentials 数据库自创建起按月计费；Pro 最低每月 $200（"首 $200 免费"，条款未公布）。Iris 提供 5,000 条免费消息。价格于 2026-11-07 读取自 [redis.io/pricing](https://redis.io/pricing/)。
 </div>
 
 </div>
@@ -139,7 +139,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 未着手 | スレッド、永続化、レプリケーション、Cluster、エビクション、キャッシュ、Streams、Functions、ACL |
 
 <div class="warn" markdown="1">
-**コストの注意。** 有料の Redis Cloud Essentials DB は作成した瞬間から月額課金される。Pro は最低月 $200（「最初の $200 は無料」、条件未公開）。Iris は無料 5,000 メッセージから。ラボが作ったものは削除する。価格は 2026-11-07 に [redis.io/pricing](https://redis.io/pricing/) で読んだ。
+**コストの注意。** 有料の Redis Cloud Essentials DB は作成した瞬間から月額課金される。Pro は最低月 $200（「最初の $200 は無料」、条件未公開）。Iris は無料 5,000 メッセージから。価格は 2026-11-07 に [redis.io/pricing](https://redis.io/pricing/) で読んだ。
 </div>
 
 </div>
@@ -177,7 +177,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | [Deep Dive]({{ '/deep-dive/' | relative_url }}) | ยังไม่เริ่ม | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
 
 <div class="warn" markdown="1">
-**คำเตือนเรื่องค่าใช้จ่าย** ฐานข้อมูล Redis Cloud Essentials แบบเสียเงินจะคิดค่าบริการรายเดือนตั้งแต่ขณะที่สร้าง ส่วน Pro มีขั้นต่ำ $200/เดือน ("first $200 free" ยังไม่เผยแพร่เงื่อนไข) Iris เริ่มต้นด้วยข้อความฟรี 5,000 ข้อความ ควรลบสิ่งที่แล็บสร้างขึ้น ราคาอ่านเมื่อ 2026-11-07 ที่ [redis.io/pricing](https://redis.io/pricing/)
+**คำเตือนเรื่องค่าใช้จ่าย** ฐานข้อมูล Redis Cloud Essentials แบบเสียเงินจะคิดค่าบริการรายเดือนตั้งแต่ขณะที่สร้าง ส่วน Pro มีขั้นต่ำ $200/เดือน ("first $200 free" ยังไม่เผยแพร่เงื่อนไข) Iris เริ่มต้นด้วยข้อความฟรี 5,000 ข้อความ ราคาอ่านเมื่อ 2026-11-07 ที่ [redis.io/pricing](https://redis.io/pricing/)
 </div>
 
 </div>
@@ -215,7 +215,7 @@ Sejak 8.0 (GA 2025-05-01) hanya ada satu distribusi, yaitu Redis Open Source: st
 | [Deep Dive]({{ '/deep-dive/' | relative_url }}) | Belum dimulai | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
 
 <div class="warn" markdown="1">
-**Peringatan biaya.** Database Redis Cloud Essentials berbayar ditagih bulanan sejak dibuat; Pro memiliki minimum $200/bulan ("first $200 free", ketentuan belum dipublikasikan). Iris dimulai dengan 5.000 pesan gratis. Hapus apa yang dibuat oleh lab. Harga dibaca 2026-11-07 di [redis.io/pricing](https://redis.io/pricing/).
+**Peringatan biaya.** Database Redis Cloud Essentials berbayar ditagih bulanan sejak dibuat; Pro memiliki minimum $200/bulan ("first $200 free", ketentuan belum dipublikasikan). Iris dimulai dengan 5.000 pesan gratis. Harga dibaca 2026-11-07 di [redis.io/pricing](https://redis.io/pricing/).
 </div>
 
 </div>
@@ -253,7 +253,7 @@ Sejak 8.0 (GA 2025-05-01) hanya ada satu pengedaran, iaitu Redis Open Source: st
 | [Deep Dive]({{ '/deep-dive/' | relative_url }}) | Belum dimulakan | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
 
 <div class="warn" markdown="1">
-**Amaran kos.** Pangkalan data Redis Cloud Essentials berbayar dibilkan setiap bulan sejak ia dicipta; Pro mempunyai minimum $200/bulan ("first $200 free", terma belum diterbitkan). Iris bermula dengan 5,000 mesej percuma. Padamkan apa yang dicipta oleh makmal. Harga dibaca 2026-11-07 di [redis.io/pricing](https://redis.io/pricing/).
+**Amaran kos.** Pangkalan data Redis Cloud Essentials berbayar dibilkan setiap bulan sejak ia dicipta; Pro mempunyai minimum $200/bulan ("first $200 free", terma belum diterbitkan). Iris bermula dengan 5,000 mesej percuma. Harga dibaca 2026-11-07 di [redis.io/pricing](https://redis.io/pricing/).
 </div>
 
 </div>
