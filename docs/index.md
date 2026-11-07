@@ -31,7 +31,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 
 | Track | Status | What |
 |---|---|---|
-| [Setup]({{ '/setup/' | relative_url }}) | Not started | Redis 8 in Docker, `redis-cli`, Redis Insight, clients, a free Redis Cloud database |
+| [Setup]({{ '/setup/' | relative_url }}) | Run 2026-11-07 | Redis 8 in Docker, `redis-cli`, Redis Insight, clients, a free Redis Cloud database |
 | [Redis Cloud]({{ '/cloud/' | relative_url }}) | Free parts run 2026-11-07 | The console from sign-up to every menu; free and paid plans; REST API; Active-Active |
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | Not started | What Redis Software and Cloud Pro add, each tied to a lab or marked doc-only |
 | [Iris]({{ '/iris/' | relative_url }}) | Not started | The Iris services, one lab each, on the free plan |
@@ -69,7 +69,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 
 | 트랙 | 상태 | 내용 |
 |---|---|---|
-| [Setup]({{ '/setup/' | relative_url }}) | 미착수 | Docker의 Redis 8, `redis-cli`, Redis Insight, 클라이언트, 무료 Redis Cloud DB |
+| [Setup]({{ '/setup/' | relative_url }}) | 실행 2026-11-07 | Docker의 Redis 8, `redis-cli`, Redis Insight, 클라이언트, 무료 Redis Cloud DB |
 | [Redis Cloud]({{ '/cloud/' | relative_url }}) | 무료 부분 실행 2026-11-07 | 가입부터 콘솔 메뉴 전체; 무료·유료 플랜; REST API; Active-Active |
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | 미착수 | Redis Software와 Cloud Pro가 더해 주는 것, 랩 또는 문서만으로 구분 |
 | [Iris]({{ '/iris/' | relative_url }}) | 미착수 | Iris 서비스마다 랩 하나, 무료 플랜으로 |
@@ -100,7 +100,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 
 | 分类 | 状态 | 内容 |
 |---|---|---|
-| [Setup]({{ '/setup/' | relative_url }}) | 未开始 | Docker 中的 Redis 8、`redis-cli`、Redis Insight、客户端、免费 Redis Cloud 数据库 |
+| [Setup]({{ '/setup/' | relative_url }}) | 已运行 2026-11-07 | Docker 中的 Redis 8、`redis-cli`、Redis Insight、客户端、免费 Redis Cloud 数据库 |
 | [Redis Cloud]({{ '/cloud/' | relative_url }}) | 免费部分已运行 2026-11-07 | 从注册到控制台每个菜单；免费与付费方案；REST API；Active-Active |
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | 未开始 | Redis Software 与 Cloud Pro 的增强功能，各自对应实验或仅文档 |
 | [Iris]({{ '/iris/' | relative_url }}) | 未开始 | 每个 Iris 服务一个实验，使用免费方案 |
@@ -131,7 +131,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 
 | トラック | 状態 | 内容 |
 |---|---|---|
-| [Setup]({{ '/setup/' | relative_url }}) | 未着手 | Docker の Redis 8、`redis-cli`、Redis Insight、クライアント、無料の Redis Cloud DB |
+| [Setup]({{ '/setup/' | relative_url }}) | 実行済み 2026-11-07 | Docker の Redis 8、`redis-cli`、Redis Insight、クライアント、無料の Redis Cloud DB |
 | [Redis Cloud]({{ '/cloud/' | relative_url }}) | 無料部分を実行 2026-11-07 | サインアップからコンソールの全メニュー、無料・有料プラン、REST API、Active-Active |
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | 未着手 | Redis Software と Cloud Pro が加えるもの、ラボまたはドキュメントのみを明示 |
 | [Iris]({{ '/iris/' | relative_url }}) | 未着手 | Iris サービスごとにラボひとつ、無料プランで |
@@ -169,7 +169,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 
 | แทร็ก | สถานะ | เนื้อหา |
 |---|---|---|
-| [Setup]({{ '/setup/' | relative_url }}) | ยังไม่เริ่ม | Redis 8 ใน Docker, `redis-cli`, Redis Insight, ไคลเอนต์ และฐานข้อมูล Redis Cloud แบบฟรี |
+| [Setup]({{ '/setup/' | relative_url }}) | รันแล้ว 2026-11-07 | Redis 8 ใน Docker, `redis-cli`, Redis Insight, ไคลเอนต์ และฐานข้อมูล Redis Cloud แบบฟรี |
 | [Redis Cloud]({{ '/cloud/' | relative_url }}) | ส่วนที่ฟรีรันเมื่อ 2026-11-07 | คอนโซลตั้งแต่การสมัครไปจนถึงทุกเมนู แผนฟรีและแผนเสียเงิน REST API และ Active-Active |
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | ยังไม่เริ่ม | สิ่งที่ Redis Software และ Cloud Pro เพิ่มเข้ามา โดยแต่ละรายการผูกกับแล็บหรือระบุว่าเป็นเอกสารเท่านั้น |
 | [Iris]({{ '/iris/' | relative_url }}) | ยังไม่เริ่ม | บริการของ Iris หนึ่งแล็บต่อหนึ่งบริการ บนแผนฟรี |
@@ -207,7 +207,7 @@ Sejak 8.0 (GA 2025-05-01) hanya ada satu distribusi, yaitu Redis Open Source: st
 
 | Jalur | Status | Isi |
 |---|---|---|
-| [Setup]({{ '/setup/' | relative_url }}) | Belum dimulai | Redis 8 di Docker, `redis-cli`, Redis Insight, klien, dan database Redis Cloud gratis |
+| [Setup]({{ '/setup/' | relative_url }}) | Dijalankan 2026-11-07 | Redis 8 di Docker, `redis-cli`, Redis Insight, klien, dan database Redis Cloud gratis |
 | [Redis Cloud]({{ '/cloud/' | relative_url }}) | Bagian gratis dijalankan 2026-11-07 | Konsol dari pendaftaran hingga setiap menu; paket gratis dan berbayar; REST API; Active-Active |
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | Belum dimulai | Yang ditambahkan Redis Software dan Cloud Pro, masing-masing terkait satu lab atau ditandai hanya dokumentasi |
 | [Iris]({{ '/iris/' | relative_url }}) | Belum dimulai | Layanan Iris, satu lab per layanan, pada paket gratis |
@@ -245,7 +245,7 @@ Sejak 8.0 (GA 2025-05-01) hanya ada satu pengedaran, iaitu Redis Open Source: st
 
 | Trek | Status | Kandungan |
 |---|---|---|
-| [Setup]({{ '/setup/' | relative_url }}) | Belum dimulakan | Redis 8 dalam Docker, `redis-cli`, Redis Insight, klien dan pangkalan data Redis Cloud percuma |
+| [Setup]({{ '/setup/' | relative_url }}) | Dijalankan 2026-11-07 | Redis 8 dalam Docker, `redis-cli`, Redis Insight, klien dan pangkalan data Redis Cloud percuma |
 | [Redis Cloud]({{ '/cloud/' | relative_url }}) | Bahagian percuma dijalankan 2026-11-07 | Konsol dari pendaftaran hingga setiap menu; pelan percuma dan berbayar; REST API; Active-Active |
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | Belum dimulakan | Apa yang ditambah oleh Redis Software dan Cloud Pro, setiap satu dikaitkan dengan satu makmal atau ditanda sebagai dokumentasi sahaja |
 | [Iris]({{ '/iris/' | relative_url }}) | Belum dimulakan | Perkhidmatan Iris, satu makmal bagi setiap perkhidmatan, pada pelan percuma |

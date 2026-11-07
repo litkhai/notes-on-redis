@@ -5,8 +5,8 @@
 | Track | Run against a real account or container? |
 |---|---|
 | [`design/`](./design) | n/a — design v0 and two research notes, public pages read 2026-11-07; nothing run |
-| `setup/` | Not started — [#2](https://github.com/litkhai/notes-on-redis/issues/2) |
-| `local/` | Not started — [#2](https://github.com/litkhai/notes-on-redis/issues/2) |
+| `setup/` | Run 2026-11-07: Redis 8.10.3 + Redis Insight 3.8.0 in Docker (ports 16379/15540), redis-py 6.1.1 and node-redis 6.3.1 smoke tests against local and the Redis Cloud free DB. The free plan cannot enable TLS (API error recorded) |
+| `local/` | `01` (image contents, io-threads) and `02` (data types tour incl. Array and vector sets) run 2026-11-07 on Redis 8.10.3; `03` search/vector not started |
 | `cloud/` | `01` free database run 2026-11-07 (Redis 8.6.2, Seoul): connection and memory limits enforced, 100 ops/s not; `02` console walkthrough captured (31 screens, masked). Free database `notes-on-redis-free` kept for Iris; API user key `notes-on-redis-lab` exists ([#17](https://github.com/litkhai/notes-on-redis/issues/17)). Open: [#8](https://github.com/litkhai/notes-on-redis/issues/8) budget, [#12](https://github.com/litkhai/notes-on-redis/issues/12) budget, [#17](https://github.com/litkhai/notes-on-redis/issues/17) |
 | `enterprise/` | Not started — [#9](https://github.com/litkhai/notes-on-redis/issues/9) |
 | `iris/` | Not started — [#3](https://github.com/litkhai/notes-on-redis/issues/3), [#7](https://github.com/litkhai/notes-on-redis/issues/7), [#11](https://github.com/litkhai/notes-on-redis/issues/11) |

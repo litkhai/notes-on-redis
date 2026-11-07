@@ -1,0 +1,23 @@
+# Local stack for setup/, local/01 and local/02: Redis Open Source 8 and Redis Insight.
+# Host ports 16379 and 15540 (not 6379/5540) because these labs run on shared Docker hosts.
+# setup/, local/01, local/02 용 로컬 스택: Redis Open Source 8과 Redis Insight.
+# 공용 Docker 호스트를 고려해 호스트 포트는 16379, 15540.
+name: nor-local
+services:
+  redis:
+    image: redis:8.10.3
+    container_name: nor-redis8
+    ports:
+      - "127.0.0.1:16379:6379"
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+  insight:
+    image: redis/redisinsight:3.8.0
+    container_name: nor-insight
+    ports:
+      - "127.0.0.1:15540:5540"
+    environment:
+      RI_REDIS_HOST: redis          # pre-registers the database above
+      RI_REDIS_PORT: "6379"
+      RI_REDIS_ALIAS: local-redis-8
+      RI_ACCEPT_TERMS_AND_CONDITIONS: "true"
+    depends_on: [redis]

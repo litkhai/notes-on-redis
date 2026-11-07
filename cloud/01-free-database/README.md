@@ -7,7 +7,7 @@
 **Verified on Redis 8.6.2 (Redis Cloud free plan, AWS ap-northeast-2), 2026-11-07.**
 
 The free 30 MB database, created in the console in Seoul, probed from a client in Korea with
-redis-py 6.1.1 over plain TCP (TLS is off by default on the free database). The plan advertises
+redis-py 6.1.1 over plain TCP (the free plan has no TLS: turning it on is refused, see `setup/`). The plan advertises
 30 MB, 30 connections and 100 ops/s; the first two were enforced, the third was not.
 
 ### Run
@@ -83,7 +83,7 @@ deleted keys: 2826 dbsize: 0
 
 ### Not run / caveats
 
-- TLS was not turned on; the numbers are for plain TCP from one host in Korea.
+- The free plan cannot use TLS; the numbers are for plain TCP from one host in Korea.
 - Throttling may exist over longer windows or be introduced later; only 60 s was tested.
 - The database is kept for the Iris labs; the test keys were deleted.
 
@@ -97,7 +97,7 @@ deleted keys: 2826 dbsize: 0
 **확인: Redis 8.6.2(Redis Cloud 무료 플랜, AWS ap-northeast-2), 2026-11-07.**
 
 서울에 콘솔로 만든 무료 30 MB DB를, 한국의 클라이언트에서 redis-py 6.1.1과 평문 TCP로
-시험했다(무료 DB는 TLS가 기본 꺼짐). 플랜은 30 MB, 커넥션 30개, 100 ops/s를 안내한다.
+시험했다(무료 플랜에는 TLS가 없다. 켜려 하면 거절된다, `setup/` 참고). 플랜은 30 MB, 커넥션 30개, 100 ops/s를 안내한다.
 앞의 둘은 실제로 걸렸고 세 번째는 걸리지 않았다.
 
 ### 실행
@@ -130,7 +130,7 @@ cp .env.example .env   # 콘솔 Connect 패널의 URL을 붙여 넣는다(눈 �
 
 ### 미실행 / 주의
 
-- TLS는 켜지 않았다. 수치는 한국의 호스트 하나에서 평문 TCP로 잰 것이다.
+- 무료 플랜은 TLS를 쓸 수 없다. 수치는 한국의 호스트 하나에서 평문 TCP로 잰 것이다.
 - 더 긴 구간에서 제한이 있거나 나중에 생길 수 있다. 60초만 시험했다.
 - DB는 Iris 실습에 쓰려고 남겨 둔다. 시험 키는 지웠다.
 
