@@ -53,3 +53,39 @@ One page per mechanism, each with the mechanism in plain words, the official doc
 仕組みごとに一ページ — 平易な説明、公式ドキュメントへのリンク、数値や観察結果を生むスクリプト、実行した出力: スレッドとイベントループ（`io-threads`）、永続化（RDB、AOF、8.10 の `BACKUP`）、レプリケーション / Sentinel / Cluster（`PSYNC`、フェイルオーバー、16384 スロット、`CLUSTER MIGRATION`）、エビクションとメモリ（LRU / LFU / LRM、`HOTKEYS`）、クライアントサイドキャッシュ（`CLIENT TRACKING`）、Streams（コンシューマーグループ、`IDMP`、`XNACK`）、Functions と ACL。
 
 </div>
+
+<div class="lang" data-lang="th" markdown="1">
+
+## ภาษาไทย
+
+<div class="note" markdown="1">
+**สถานะ: ออกแบบเท่านั้น** ยังไม่ได้รันสิ่งใดในหน้านี้ แผนอยู่ใน [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)
+</div>
+
+หนึ่งหน้าต่อหนึ่งกลไก แต่ละหน้ามีคำอธิบายกลไกด้วยภาษาง่ายๆ ลิงก์เอกสารทางการ สคริปต์ที่ให้ตัวเลขหรือสิ่งที่สังเกตได้ และผลลัพธ์จากการรันจริง ได้แก่ threading และ event loop (`io-threads`), persistence (RDB, AOF, `BACKUP` ตั้งแต่ 8.10), replication / Sentinel / Cluster (`PSYNC`, failover, 16384 slots, `CLUSTER MIGRATION`), eviction และหน่วยความจำ (LRU / LFU / LRM, `HOTKEYS`), client-side caching (`CLIENT TRACKING`), Streams (consumer groups, `IDMP`, `XNACK`), Functions และ ACL
+
+</div>
+
+<div class="lang" data-lang="id" markdown="1">
+
+## Bahasa Indonesia
+
+<div class="note" markdown="1">
+**Status: hanya desain.** Belum ada yang dijalankan di halaman ini. Rencananya ada di [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+</div>
+
+Satu halaman per mekanisme, masing-masing berisi penjelasan mekanisme dengan kata-kata sederhana, tautan dokumen resmi, skrip yang menghasilkan angka atau hal yang dapat diamati, dan keluaran dari hasil eksekusi: threading dan event loop (`io-threads`), persistence (RDB, AOF, `BACKUP` sejak 8.10), replication / Sentinel / Cluster (`PSYNC`, failover, 16384 slot, `CLUSTER MIGRATION`), eviction dan memori (LRU / LFU / LRM, `HOTKEYS`), client-side caching (`CLIENT TRACKING`), Streams (consumer groups, `IDMP`, `XNACK`), Functions dan ACL.
+
+</div>
+
+<div class="lang" data-lang="ms" markdown="1">
+
+## Bahasa Melayu
+
+<div class="note" markdown="1">
+**Status: reka bentuk sahaja.** Belum ada apa-apa di halaman ini yang telah dijalankan. Perancangannya ada dalam [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+</div>
+
+Satu halaman bagi setiap mekanisme, setiap satu mengandungi penerangan mekanisme dalam bahasa mudah, pautan dokumen rasmi, skrip yang menghasilkan nombor atau sesuatu yang boleh diperhatikan, dan output hasil larian: threading dan event loop (`io-threads`), persistence (RDB, AOF, `BACKUP` sejak 8.10), replication / Sentinel / Cluster (`PSYNC`, failover, 16384 slot, `CLUSTER MIGRATION`), eviction dan memori (LRU / LFU / LRM, `HOTKEYS`), client-side caching (`CLIENT TRACKING`), Streams (consumer groups, `IDMP`, `XNACK`), Functions dan ACL.
+
+</div>

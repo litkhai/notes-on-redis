@@ -405,3 +405,303 @@ Public を選ぶと、ユーザーグループには IAM 認証ユーザーの�
 キャッシュは約 31 分存続した。価格表で計算すると、ストレージは約 0.2 GB 時間（最低 100 MB とメモリテスト分）、ECPU は約 500 万で、合計およそ $0.05 になる。本稿の執筆時点では AWS の請求にまだ表示されていなかった。表示された時点で、請求額を `STATUS.md` に記録する。
 
 </div>
+
+<div class="lang" data-lang="th" markdown="1">
+
+## ภาษาไทย
+
+<div class="note" markdown="1">
+**สถานะ: รันแล้วบางส่วน** ส่วนของ ElastiCache ด้านล่างรันเมื่อ 2026-11-07 ส่วนที่เหลือของหน้านี้ยังเป็นแผนใน [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)
+</div>
+
+Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey และ for Redis OSS (≤ 7.1), Azure Managed Redis (Redis Enterprise อยู่ภายใน), Memorystore for Valkey — ตารางเปรียบเทียบที่มีแหล่งอ้างอิงในทุกช่อง (ใบอนุญาต, โมดูล, Active-Active, tiering, SLA, รูปแบบราคา), ไทม์ไลน์ใบอนุญาต (BSD-3 → RSALv2/SSPL ที่ 7.4 → เพิ่ม AGPLv3 ที่ 8.0; Valkey แยกจาก 7.2.4 ภายใต้ BSD-3) และเวิร์กโหลดเดียวกันที่รันบน Redis 8.10 และ Valkey 9.1 เทียบกัน ส่วน Dragonfly, KeyDB และ Garnet อธิบายอย่างละหนึ่งย่อหน้า
+
+### ElastiCache Serverless for Valkey เทียบกับฐานข้อมูลฟรีของ Redis Cloud
+
+**รันเมื่อ 2026-11-07 ใน AWS ap-northeast-2 (โซล)** แคชแบบ serverless หนึ่งตัว Valkey 9.0 สร้างและลบผ่านคอนโซล มีอายุประมาณ 31 นาที ใช้สคริปต์ probe เดียวกันและเครื่องไคลเอนต์เครื่องเดิมในเกาหลีเหมือนกับ[แล็บฐานข้อมูลฟรีของ Redis Cloud]({{ '/cloud/' | relative_url }}) ราคามาจากรายการราคา AWS สำหรับโซลที่เผยแพร่เมื่อ 2026-10-28 และอ่านเมื่อ 2026-11-07 ข้อมูลที่ปกปิด: account ID และ alias, ARN, endpoint
+
+#### สิ่งที่แตกต่าง
+
+| | ฐานข้อมูลฟรีของ Redis Cloud | ElastiCache Serverless for Valkey |
+|---|---|---|
+| ค่าใช้จ่าย | $0 สำหรับ 30 MB | $0.101 ต่อ GB-hour ของข้อมูล (ขั้นต่ำ 100 MB, ประมาณ $7.4 ต่อเดือนเมื่อไม่ได้ใช้งาน) บวก $0.0027 ต่อหนึ่งล้าน ECPU |
+| จากสร้างถึงใช้งานได้ | ไม่กี่วินาที | 58 วินาที |
+| เอนจิน | Redis 8.6.2 | Valkey 9.0 (มีให้เลือก 9, 8 และ 7); `INFO` รายงาน `redis_version:7.2` |
+| เครือข่าย | public endpoint; allow list แบบ CIDR, ค่าเริ่มต้น 0.0.0.0/0 | ค่าเริ่มต้นเป็น VPC; มีชนิดการเชื่อมต่อ Public ที่ต้องใช้การยืนยันตัวตนแบบ IAM |
+| การยืนยันตัวตน | ผู้ใช้ default และรหัสผ่าน | IAM: โทเค็น SigV4 ที่ใช้ได้ 15 นาที, ผู้ใช้ `default.iam-user` |
+| TLS | ปิดเป็นค่าเริ่มต้น | เปิดตลอด |
+| คำสั่งหลายคีย์ | `MGET` กับคีย์ใดก็ได้ใช้งานได้ | `MGET` ข้าม slot ถูกปฏิเสธ: `Keys in request don't hash to the same slot` |
+| การเชื่อมต่อ | การเชื่อมต่อที่ 31 ถูกปฏิเสธ | เปิดได้ 40 รายการโดยไม่มีข้อผิดพลาด |
+| หน่วยความจำ | การเขียนถูกปฏิเสธที่ประมาณ 28 MB | การเขียนถูกปฏิเสธหลังจากประมาณ 1.77 GB ของค่าขนาด 10 kB โดยตั้งขีดจำกัดพื้นที่จัดเก็บไว้ที่ 1 GB |
+| การสำรองข้อมูล | ไม่มีในแผนฟรี | การสำรองอัตโนมัติปิดเป็นค่าเริ่มต้น; กล่องโต้ตอบการลบมีค่าเริ่มต้นเป็นการสำรองครั้งสุดท้าย |
+| เมตริก | 16 กราฟในคอนโซล, 5 นาทีถึง 3 เดือน | CloudWatch; 16 จาก 50 เมตริกในหน้าแคช |
+| การเข้าถึงด้วยโปรแกรม | REST API พร้อมคีย์ระดับบัญชีและผู้ใช้, Terraform และ Pulumi | AWS API, CLI, CloudFormation; MCP server สำหรับ ElastiCache |
+
+#### ผลการวัดฝั่งไคลเอนต์
+
+| Probe | Redis Cloud ฟรี, TCP ธรรมดา | ElastiCache Serverless, TLS + IAM |
+|---|---|---|
+| ไป-กลับ, ค่าเฉลี่ยของ `PING` 50 ครั้ง | 2.6 ms | 5.1 ms |
+| 1 การเชื่อมต่อ, ไม่มี pipeline | 249 ops/s | 287 ops/s |
+| 8 การเชื่อมต่อ, ไม่มี pipeline | 2,363 ops/s | 2,419 ops/s |
+| 1 การเชื่อมต่อ, pipeline 100 | 24,671 ops/s | 4,960 ops/s |
+| 8 การเชื่อมต่อ, pipeline 100 | 103,920 ops/s | 24,893 ops/s ในช่วง 15 วินาที; 45,600–54,300 INCR/s ในการรันแบบรายวินาที |
+| ต่อเนื่อง 60 วินาที, 8 × pipeline 100 | 100,840–108,780 INCR/s, คงที่ | 0–45,785 INCR/s ต่อ 5 วินาที; สามช่วง 5 วินาทีเป็นศูนย์, ไม่มีข้อผิดพลาด |
+
+แถวของ throughput ไม่ใช่คำตัดสินของบริการใดบริการหนึ่ง: ฝั่งหนึ่งเป็น TCP ธรรมดาและอีกฝั่งเป็น TLS, ไคลเอนต์เป็นโปรเซส Python เดียวในเกาหลี และแคช serverless ถูกจำกัดไว้ที่ 200,000 ECPU/s (ช่วงที่เป็นศูนย์เกิดขึ้นที่ประมาณ 40,000 INCR/s ซึ่งต่ำกว่าขีดจำกัดนั้น และยังไม่มีคำอธิบาย) ตัวเลขที่ไม่ใช้ pipeline ถูกจำกัดด้วยเวลาไป-กลับทั้งสองฝั่ง
+
+#### คอนโซลทีละหน้าจอ
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/01-elasticache-dashboard.webp' | relative_url }}" width="1440" height="765" alt="แดชบอร์ด ElastiCache ในโซลที่ไม่มีทรัพยากร" loading="lazy" decoding="async"></p>
+
+แดชบอร์ด ElastiCache: แคช Valkey, Memcached และ Redis OSS, global datastore, reserved node, การสำรองข้อมูล, subnet group และ parameter group, การจัดการผู้ใช้, การย้ายข้อมูล <small>จับภาพเมื่อ 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/02-valkey-caches-empty.webp' | relative_url }}" width="1440" height="765" alt="รายการแคช Valkey ที่ว่างเปล่า" loading="lazy" decoding="async"></p>
+
+Valkey caches เป็นรายการที่มีปุ่ม Create cache <small>จับภาพเมื่อ 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/03-create-valkey-serverless-default.webp' | relative_url }}" width="1440" height="1520" alt="ฟอร์มสร้างแคช Valkey พร้อมเอนจิน ตัวเลือกการปรับใช้ วิธีการสร้าง ชื่อ เวอร์ชันเอนจิน และชนิดการเชื่อมต่อ" loading="lazy" decoding="async"></p>
+
+ฟอร์มเดียว: เอนจิน (แนะนำ Valkey, Memcached, Redis OSS), การปรับใช้ (Serverless หรือคลัสเตอร์แบบใช้โหนด), สร้างใหม่หรือกู้คืนจากไฟล์ .rdb, เวอร์ชันเอนจิน 9, ชนิดการเชื่อมต่อ VPC <small>จับภาพเมื่อ 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/04-create-valkey-serverless-customize.webp' | relative_url }}" width="1440" height="2404" alt="การตั้งค่าแบบกำหนดเอง: ชนิดเครือข่าย การเข้ารหัส user group default.iam-user-group การสำรองข้อมูล ขีดจำกัดการใช้งาน" loading="lazy" decoding="async"></p>
+
+เมื่อเลือก Public ฟอร์มระบุว่า user group ต้องมีเฉพาะผู้ใช้ที่ยืนยันตัวตนด้วย IAM และกรอก default.iam-user-group ให้ การเข้ารหัสระหว่างส่งข้อมูลเปิดอยู่และปิดไม่ได้ที่นี่ การสำรองข้อมูลอัตโนมัติไม่ได้ถูกเลือก <small>จับภาพเมื่อ 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/05-create-valkey-serverless-filled.webp' | relative_url }}" width="1440" height="2604" alt="ฟอร์มที่กรอกแล้ว: ชื่อ notes-on-redis-valkey, Public, พื้นที่จัดเก็บสูงสุด 1 GB, สูงสุด 200,000 ECPU ต่อวินาที" loading="lazy" decoding="async"></p>
+
+ใช้ขีดจำกัดการใช้งานเป็นเพดานค่าใช้จ่าย: พื้นที่จัดเก็บข้อมูลสูงสุด 1 GB (ฟอร์มอนุญาต 1 ถึง 5,000 GB) และสูงสุด 200,000 ECPU ต่อวินาที (1,000 ถึง 15,000,000) <small>จับภาพเมื่อ 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/06-valkey-cache-details.webp' | relative_url }}" width="1440" height="1236" alt="รายละเอียดแคช: available, Valkey 9.0, Public, แสดงขีดจำกัด" loading="lazy" decoding="async"></p>
+
+รายละเอียดหลังสร้าง: สถานะ Available, เวอร์ชันเอนจิน 9.0, ชนิดการเชื่อมต่อ Public, ขีดจำกัดทั้งสองรายการ, endpoint บนพอร์ต 6379 <small>จับภาพเมื่อ 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/07-valkey-connect-cloudshell.webp' | relative_url }}" width="1440" height="2267" alt="ส่วน Connect to your cache พร้อมคำแนะนำ CloudShell และ CLI" loading="lazy" decoding="async"></p>
+
+คำแนะนำการเชื่อมต่อ: สร้างโทเค็น SigV4 ด้วย Developer Toolkit แล้วใช้ valkey-cli -c --tls --user โทเค็นใช้ได้ 15 นาที แท็บอื่น: MCP integration, Valkey GLIDE (แนะนำ), client library <small>จับภาพเมื่อ 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/08-valkey-iam-user-group.webp' | relative_url }}" width="1440" height="800" alt="default.iam-user-group ที่มีผู้ใช้หนึ่งราย คือ default.iam-user" loading="lazy" decoding="async"></p>
+
+IAM user group เริ่มต้นมีผู้ใช้หนึ่งราย คือ default.iam-user, access string เป็น ~* +@all, ใช้ได้ทั้งผ่าน Public และ VPC <small>จับภาพเมื่อ 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/09-valkey-users.webp' | relative_url }}" width="1440" height="765" alt="รายการผู้ใช้: default (เฉพาะ VPC) และ default.iam-user (Public และ VPC)" loading="lazy" decoding="async"></p>
+
+มีผู้ใช้สองราย: ผู้ใช้ default ที่ไม่มีรหัสผ่าน (เฉพาะ VPC) และผู้ใช้ IAM <small>จับภาพเมื่อ 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/10-valkey-events.webp' | relative_url }}" width="1440" height="998" alt="แท็บ Events ที่มีหนึ่งเหตุการณ์: สร้างแคชแล้วและพร้อมใช้งาน" loading="lazy" decoding="async"></p>
+
+สร้างเมื่อ 14:36:59 KST, พร้อมใช้งานเมื่อ 14:37:57 <small>จับภาพเมื่อ 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/11-valkey-monitoring.webp' | relative_url }}" width="1440" height="1800" alt="แท็บ Monitoring: ข้อมูลที่จัดเก็บ ECPU ที่ใช้ เวลาแฝงการอ่านและเขียน คำสั่งทั้งหมด อัตรา cache hit" loading="lazy" decoding="async"></p>
+
+Monitoring หลังการทดสอบ: ข้อมูลที่จัดเก็บสูงสุด 649 MB ในจุดข้อมูล 5 นาที; เวลาแฝงการอ่านสูงสุด 2.4 ms, เวลาแฝงการเขียนสูงสุด 1.4 ms ฝั่งเซิร์ฟเวอร์ <small>จับภาพเมื่อ 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/12-valkey-delete-dialog.webp' | relative_url }}" width="1440" height="765" alt="กล่องโต้ตอบการลบที่ตั้งการสำรองครั้งสุดท้ายเป็น No และพิมพ์ชื่อแล้ว" loading="lazy" decoding="async"></p>
+
+การลบต้องพิมพ์ชื่อแคชและมีค่าเริ่มต้นเป็นการสร้างการสำรองครั้งสุดท้าย; เลือก No แคชหายไปจากรายการหลังจากนั้นประมาณ 3 นาที <small>จับภาพเมื่อ 2026-11-07, AWS ap-northeast-2.</small>
+
+#### ค่าใช้จ่าย
+
+แคชมีอายุประมาณ 31 นาที ตามรายการราคา: พื้นที่จัดเก็บประมาณ 0.2 GB-hour (ขั้นต่ำ 100 MB บวกการทดสอบหน่วยความจำ) และประมาณ 5 ล้าน ECPU รวมกันราว $0.05 ขณะเขียนนี้ใบเรียกเก็บเงินของ AWS ยังไม่แสดงรายการนี้ เมื่อแสดงแล้ว จำนวนเงินที่เรียกเก็บจะบันทึกลงใน `STATUS.md`
+
+</div>
+
+<div class="lang" data-lang="id" markdown="1">
+
+## Bahasa Indonesia
+
+<div class="note" markdown="1">
+**Status: sebagian sudah dijalankan.** Bagian ElastiCache di bawah dijalankan pada 2026-11-07; sisa halaman ini masih berupa rencana di [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+</div>
+
+Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey dan for Redis OSS (≤ 7.1), Azure Managed Redis (berisi Redis Enterprise), Memorystore for Valkey — sebuah matriks dengan sumber pada setiap sel (lisensi, modul, Active-Active, tiering, SLA, model harga), linimasa lisensi (BSD-3 → RSALv2/SSPL pada 7.4 → AGPLv3 ditambahkan pada 8.0; Valkey di-fork dari 7.2.4 di bawah BSD-3), dan beban kerja yang sama dijalankan berdampingan pada Redis 8.10 dan Valkey 9.1. Dragonfly, KeyDB, dan Garnet masing-masing satu paragraf.
+
+### ElastiCache Serverless for Valkey, dibandingkan dengan database gratis Redis Cloud
+
+**Dijalankan pada 2026-11-07 di AWS ap-northeast-2 (Seoul).** Satu cache serverless, Valkey 9.0, dibuat dan dihapus melalui konsol; umurnya sekitar 31 menit. Skrip probe yang sama dan host klien yang sama di Korea seperti pada [lab database gratis Redis Cloud]({{ '/cloud/' | relative_url }}). Harga dari daftar harga AWS untuk Seoul yang terbit pada 2026-10-28, dibaca pada 2026-11-07. Disamarkan: ID dan alias akun, ARN, endpoint.
+
+#### Yang berbeda
+
+| | Database gratis Redis Cloud | ElastiCache Serverless for Valkey |
+|---|---|---|
+| Biaya | $0 untuk 30 MB | $0.101 per GB-hour data (minimum 100 MB, sekitar $7.4 sebulan saat idle) ditambah $0.0027 per sejuta ECPU |
+| Dari dibuat hingga dapat dipakai | hitungan detik | 58 dtk |
+| Engine | Redis 8.6.2 | Valkey 9.0 (tersedia 9, 8, dan 7); `INFO` melaporkan `redis_version:7.2` |
+| Jaringan | endpoint publik; allow list CIDR, 0.0.0.0/0 secara default | VPC secara default; tipe koneksi Public yang mewajibkan autentikasi IAM |
+| Autentikasi | pengguna default dan kata sandi | IAM: token SigV4 berlaku 15 menit, pengguna `default.iam-user` |
+| TLS | nonaktif secara default | selalu aktif |
+| Perintah multi-key | `MGET` atas sembarang key berhasil | `MGET` lintas slot ditolak: `Keys in request don't hash to the same slot` |
+| Koneksi | koneksi ke-31 ditolak | 40 dibuka tanpa error |
+| Memori | penulisan ditolak pada sekitar 28 MB | penulisan ditolak setelah sekitar 1.77 GB nilai 10 kB, dengan batas penyimpanan 1 GB |
+| Backup | tidak ada di paket gratis | backup otomatis nonaktif secara default; dialog hapus secara default membuat backup akhir |
+| Metrik | 16 grafik di konsol, 5 menit hingga 3 bulan | CloudWatch; 16 dari 50 metrik di halaman cache |
+| Akses terprogram | REST API dengan key akun dan pengguna, Terraform dan Pulumi | AWS API, CLI, CloudFormation; sebuah MCP server untuk ElastiCache |
+
+#### Pengukuran klien
+
+| Probe | Redis Cloud gratis, TCP biasa | ElastiCache Serverless, TLS + IAM |
+|---|---|---|
+| Round trip, rata-rata 50 `PING` | 2.6 ms | 5.1 ms |
+| 1 koneksi, tanpa pipeline | 249 ops/s | 287 ops/s |
+| 8 koneksi, tanpa pipeline | 2,363 ops/s | 2,419 ops/s |
+| 1 koneksi, pipeline 100 | 24,671 ops/s | 4,960 ops/s |
+| 8 koneksi, pipeline 100 | 103,920 ops/s | 24,893 ops/s selama 15 dtk; 45,600–54,300 INCR/s pada uji per detik |
+| 60 dtk berkelanjutan, 8 × pipeline 100 | 100,840–108,780 INCR/s, stabil | 0–45,785 INCR/s per 5 dtk; tiga jendela 5 detik bernilai nol, tanpa error |
+
+Baris throughput bukan vonis untuk salah satu layanan: satu sisi memakai TCP biasa dan sisi lain TLS, klien adalah satu proses Python di Korea, dan cache serverless dibatasi pada 200,000 ECPU/s (jendela nol terjadi pada sekitar 40,000 INCR/s, di bawah batas itu; penyebabnya belum dijelaskan). Angka tanpa pipeline dibatasi oleh round trip di kedua sisi.
+
+#### Konsol, layar demi layar
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/01-elasticache-dashboard.webp' | relative_url }}" width="1440" height="765" alt="Dasbor ElastiCache di Seoul tanpa sumber daya" loading="lazy" decoding="async"></p>
+
+Dasbor ElastiCache: cache Valkey, Memcached, dan Redis OSS, global datastore, reserved node, backup, subnet group dan parameter group, manajemen pengguna, migrasi. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/02-valkey-caches-empty.webp' | relative_url }}" width="1440" height="765" alt="Daftar cache Valkey yang kosong" loading="lazy" decoding="async"></p>
+
+Valkey caches adalah daftar dengan tombol Create cache. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/03-create-valkey-serverless-default.webp' | relative_url }}" width="1440" height="1520" alt="Formulir pembuatan cache Valkey dengan engine, opsi deployment, metode pembuatan, nama, versi engine, dan tipe koneksi" loading="lazy" decoding="async"></p>
+
+Satu formulir: engine (Valkey direkomendasikan, Memcached, Redis OSS), deployment (Serverless atau cluster berbasis node), baru atau dipulihkan dari .rdb, versi engine 9, tipe koneksi VPC. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/04-create-valkey-serverless-customize.webp' | relative_url }}" width="1440" height="2404" alt="Pengaturan kustom: tipe jaringan, enkripsi, user group default.iam-user-group, backup, batas penggunaan" loading="lazy" decoding="async"></p>
+
+Dengan Public dipilih, formulir menyatakan bahwa user group hanya boleh berisi pengguna dengan autentikasi IAM dan mengisi default.iam-user-group. Enkripsi saat transit aktif dan tidak dapat dimatikan di sini; backup otomatis tidak dicentang. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/05-create-valkey-serverless-filled.webp' | relative_url }}" width="1440" height="2604" alt="Formulir terisi: nama notes-on-redis-valkey, Public, penyimpanan maksimum 1 GB, maksimum 200,000 ECPU per detik" loading="lazy" decoding="async"></p>
+
+Batas penggunaan dipakai sebagai plafon pengeluaran: penyimpanan data maksimum 1 GB (formulir mengizinkan 1 hingga 5,000 GB) dan maksimum 200,000 ECPU per detik (1,000 hingga 15,000,000). <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/06-valkey-cache-details.webp' | relative_url }}" width="1440" height="1236" alt="Detail cache: available, Valkey 9.0, Public, batas ditampilkan" loading="lazy" decoding="async"></p>
+
+Detail setelah pembuatan: status Available, versi engine 9.0, tipe koneksi Public, kedua batas, endpoint pada port 6379. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/07-valkey-connect-cloudshell.webp' | relative_url }}" width="1440" height="2267" alt="Bagian Connect to your cache dengan petunjuk CloudShell dan CLI" loading="lazy" decoding="async"></p>
+
+Petunjuk koneksi: buat token SigV4 dengan Developer Toolkit, lalu valkey-cli -c --tls --user. Token berlaku 15 menit. Tab lain: MCP integration, Valkey GLIDE (direkomendasikan), pustaka klien. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/08-valkey-iam-user-group.webp' | relative_url }}" width="1440" height="800" alt="default.iam-user-group dengan satu pengguna default.iam-user" loading="lazy" decoding="async"></p>
+
+User group IAM default berisi satu pengguna, default.iam-user, access string ~* +@all, dapat dipakai melalui Public dan VPC. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/09-valkey-users.webp' | relative_url }}" width="1440" height="765" alt="Daftar pengguna: default (hanya VPC) dan default.iam-user (Public dan VPC)" loading="lazy" decoding="async"></p>
+
+Ada dua pengguna: pengguna default tanpa kata sandi (hanya VPC) dan pengguna IAM. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/10-valkey-events.webp' | relative_url }}" width="1440" height="998" alt="Tab Events dengan satu event: cache dibuat dan siap digunakan" loading="lazy" decoding="async"></p>
+
+Dibuat pada 14:36:59 KST, siap pada 14:37:57. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/11-valkey-monitoring.webp' | relative_url }}" width="1440" height="1800" alt="Tab Monitoring: data tersimpan, ECPU terpakai, latensi baca dan tulis, total perintah, cache hit rate" loading="lazy" decoding="async"></p>
+
+Monitoring setelah pengujian: data tersimpan mencapai puncak 649 MB pada satu datapoint 5 menit; latensi baca hingga 2.4 ms, latensi tulis hingga 1.4 ms di sisi server. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/12-valkey-delete-dialog.webp' | relative_url }}" width="1440" height="765" alt="Dialog hapus dengan backup akhir diatur ke No dan nama sudah diketik" loading="lazy" decoding="async"></p>
+
+Penghapusan meminta nama cache dan secara default membuat backup akhir; dipilih No. Cache hilang dari daftar sekitar 3 menit kemudian. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+#### Biaya
+
+Cache hidup sekitar 31 menit. Menurut daftar harga: sekitar 0.2 GB-hour penyimpanan (minimum 100 MB, ditambah uji memori) dan sekitar 5 juta ECPU, totalnya kira-kira $0.05. Tagihan AWS belum menampilkannya saat ini ditulis; jumlah yang ditagih akan dimasukkan ke `STATUS.md` ketika sudah muncul.
+
+</div>
+
+<div class="lang" data-lang="ms" markdown="1">
+
+## Bahasa Melayu
+
+<div class="note" markdown="1">
+**Status: sebahagian telah dijalankan.** Bahagian ElastiCache di bawah dijalankan pada 2026-11-07; selebihnya halaman ini masih berupa pelan dalam [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+</div>
+
+Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey dan for Redis OSS (≤ 7.1), Azure Managed Redis (mengandungi Redis Enterprise), Memorystore for Valkey — satu matriks dengan sumber bagi setiap sel (lesen, modul, Active-Active, tiering, SLA, model harga), garis masa lesen (BSD-3 → RSALv2/SSPL pada 7.4 → AGPLv3 ditambah pada 8.0; Valkey dipecahkan daripada 7.2.4 di bawah BSD-3), dan beban kerja yang sama dijalankan secara bersebelahan pada Redis 8.10 dan Valkey 9.1. Dragonfly, KeyDB dan Garnet masing-masing satu perenggan.
+
+### ElastiCache Serverless for Valkey, bersebelahan dengan pangkalan data percuma Redis Cloud
+
+**Dijalankan pada 2026-11-07 di AWS ap-northeast-2 (Seoul).** Satu cache serverless, Valkey 9.0, dicipta dan dipadam melalui konsol; hayatnya kira-kira 31 minit. Skrip probe yang sama dan hos klien yang sama di Korea seperti dalam [makmal pangkalan data percuma Redis Cloud]({{ '/cloud/' | relative_url }}). Harga daripada senarai harga AWS untuk Seoul yang diterbitkan pada 2026-10-28, dibaca pada 2026-11-07. Disamarkan: ID dan alias akaun, ARN, endpoint.
+
+#### Perbezaannya
+
+| | Pangkalan data percuma Redis Cloud | ElastiCache Serverless for Valkey |
+|---|---|---|
+| Kos | $0 untuk 30 MB | $0.101 setiap GB-hour data (minimum 100 MB, kira-kira $7.4 sebulan ketika melahu) ditambah $0.0027 setiap sejuta ECPU |
+| Dicipta hingga boleh digunakan | beberapa saat | 58 s |
+| Enjin | Redis 8.6.2 | Valkey 9.0 (9, 8 dan 7 ditawarkan); `INFO` melaporkan `redis_version:7.2` |
+| Rangkaian | endpoint awam; senarai benar CIDR, 0.0.0.0/0 secara lalai | VPC secara lalai; jenis sambungan Public yang memerlukan pengesahan IAM |
+| Pengesahan | pengguna default dan kata laluan | IAM: token SigV4 sah selama 15 minit, pengguna `default.iam-user` |
+| TLS | dimatikan secara lalai | sentiasa hidup |
+| Perintah berbilang kunci | `MGET` ke atas sebarang kunci berjaya | `MGET` merentas slot ditolak: `Keys in request don't hash to the same slot` |
+| Sambungan | sambungan ke-31 ditolak | 40 dibuka tanpa ralat |
+| Memori | penulisan ditolak pada kira-kira 28 MB | penulisan ditolak selepas kira-kira 1.77 GB nilai 10 kB, dengan had storan 1 GB ditetapkan |
+| Sandaran | tiada pada pelan percuma | sandaran automatik dimatikan secara lalai; dialog pemadaman secara lalai mencipta sandaran akhir |
+| Metrik | 16 carta dalam konsol, 5 minit hingga 3 bulan | CloudWatch; 16 daripada 50 metrik pada halaman cache |
+| Akses secara atur cara | REST API dengan kunci akaun dan pengguna, Terraform dan Pulumi | AWS API, CLI, CloudFormation; sebuah pelayan MCP untuk ElastiCache |
+
+#### Ukuran klien
+
+| Probe | Redis Cloud percuma, TCP biasa | ElastiCache Serverless, TLS + IAM |
+|---|---|---|
+| Pergi balik, purata 50 `PING` | 2.6 ms | 5.1 ms |
+| 1 sambungan, tanpa pipeline | 249 ops/s | 287 ops/s |
+| 8 sambungan, tanpa pipeline | 2,363 ops/s | 2,419 ops/s |
+| 1 sambungan, pipeline 100 | 24,671 ops/s | 4,960 ops/s |
+| 8 sambungan, pipeline 100 | 103,920 ops/s | 24,893 ops/s dalam 15 s; 45,600–54,300 INCR/s dalam larian setiap saat |
+| 60 s berterusan, 8 × pipeline 100 | 100,840–108,780 INCR/s, stabil | 0–45,785 INCR/s setiap 5 s; tiga tetingkap 5 saat pada sifar, tiada ralat |
+
+Baris throughput bukan penentu bagi mana-mana perkhidmatan: satu pihak menggunakan TCP biasa dan satu lagi TLS, klien ialah satu proses Python di Korea, dan cache serverless dihadkan pada 200,000 ECPU/s (tetingkap sifar berlaku pada kira-kira 40,000 INCR/s, di bawah had itu; puncanya tidak dapat dijelaskan). Angka tanpa pipeline dihadkan oleh pergi balik pada kedua-dua pihak.
+
+#### Konsol, skrin demi skrin
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/01-elasticache-dashboard.webp' | relative_url }}" width="1440" height="765" alt="Papan pemuka ElastiCache di Seoul tanpa sumber" loading="lazy" decoding="async"></p>
+
+Papan pemuka ElastiCache: cache Valkey, Memcached dan Redis OSS, global datastore, reserved node, sandaran, subnet group dan parameter group, pengurusan pengguna, migrasi. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/02-valkey-caches-empty.webp' | relative_url }}" width="1440" height="765" alt="Senarai cache Valkey yang kosong" loading="lazy" decoding="async"></p>
+
+Valkey caches ialah senarai dengan butang Create cache. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/03-create-valkey-serverless-default.webp' | relative_url }}" width="1440" height="1520" alt="Borang cipta cache Valkey dengan enjin, pilihan penempatan, kaedah penciptaan, nama, versi enjin dan jenis sambungan" loading="lazy" decoding="async"></p>
+
+Satu borang: enjin (Valkey disyorkan, Memcached, Redis OSS), penempatan (Serverless atau kluster berasaskan nod), baharu atau dipulihkan daripada .rdb, versi enjin 9, jenis sambungan VPC. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/04-create-valkey-serverless-customize.webp' | relative_url }}" width="1440" height="2404" alt="Tetapan tersuai: jenis rangkaian, penyulitan, user group default.iam-user-group, sandaran, had penggunaan" loading="lazy" decoding="async"></p>
+
+Apabila Public dipilih, borang menyatakan bahawa user group mesti hanya mengandungi pengguna yang disahkan IAM dan mengisi default.iam-user-group. Penyulitan semasa transit dihidupkan dan tidak boleh dimatikan di sini; sandaran automatik tidak ditandakan. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/05-create-valkey-serverless-filled.webp' | relative_url }}" width="1440" height="2604" alt="Borang yang diisi: nama notes-on-redis-valkey, Public, storan maksimum 1 GB, maksimum 200,000 ECPU sesaat" loading="lazy" decoding="async"></p>
+
+Had penggunaan digunakan sebagai siling perbelanjaan: storan data maksimum 1 GB (borang membenarkan 1 hingga 5,000 GB) dan maksimum 200,000 ECPU sesaat (1,000 hingga 15,000,000). <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/06-valkey-cache-details.webp' | relative_url }}" width="1440" height="1236" alt="Butiran cache: available, Valkey 9.0, Public, had dipaparkan" loading="lazy" decoding="async"></p>
+
+Butiran selepas penciptaan: status Available, versi enjin 9.0, jenis sambungan Public, kedua-dua had, endpoint pada port 6379. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/07-valkey-connect-cloudshell.webp' | relative_url }}" width="1440" height="2267" alt="Bahagian Connect to your cache dengan arahan CloudShell dan CLI" loading="lazy" decoding="async"></p>
+
+Arahan sambungan: jana token SigV4 dengan Developer Toolkit, kemudian valkey-cli -c --tls --user. Token sah selama 15 minit. Tab lain: MCP integration, Valkey GLIDE (disyorkan), pustaka klien. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/08-valkey-iam-user-group.webp' | relative_url }}" width="1440" height="800" alt="default.iam-user-group dengan satu pengguna default.iam-user" loading="lazy" decoding="async"></p>
+
+User group IAM lalai mengandungi satu pengguna, default.iam-user, access string ~* +@all, boleh digunakan melalui Public dan VPC. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/09-valkey-users.webp' | relative_url }}" width="1440" height="765" alt="Senarai pengguna: default (VPC sahaja) dan default.iam-user (Public dan VPC)" loading="lazy" decoding="async"></p>
+
+Terdapat dua pengguna: pengguna default tanpa kata laluan (VPC sahaja) dan pengguna IAM. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/10-valkey-events.webp' | relative_url }}" width="1440" height="998" alt="Tab Events dengan satu peristiwa: cache dicipta dan sedia digunakan" loading="lazy" decoding="async"></p>
+
+Dicipta pada 14:36:59 KST, sedia pada 14:37:57. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/11-valkey-monitoring.webp' | relative_url }}" width="1440" height="1800" alt="Tab Monitoring: data disimpan, ECPU digunakan, kependaman baca dan tulis, jumlah arahan, kadar cache hit" loading="lazy" decoding="async"></p>
+
+Monitoring selepas ujian: data disimpan memuncak pada 649 MB dalam satu titik data 5 minit; kependaman baca sehingga 2.4 ms, kependaman tulis sehingga 1.4 ms di sebelah pelayan. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+<p class="shot"><img src="{{ '/assets/img/elasticache-console/12-valkey-delete-dialog.webp' | relative_url }}" width="1440" height="765" alt="Dialog pemadaman dengan sandaran akhir ditetapkan kepada No dan nama telah ditaip" loading="lazy" decoding="async"></p>
+
+Pemadaman meminta nama cache dan secara lalai mencipta sandaran akhir; No dipilih. Cache hilang daripada senarai kira-kira 3 minit kemudian. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
+
+#### Kos
+
+Cache hidup kira-kira 31 minit. Mengikut senarai harga: kira-kira 0.2 GB-hour storan (minimum 100 MB, ditambah ujian memori) dan kira-kira 5 juta ECPU, jumlahnya lebih kurang $0.05. Bil AWS belum menunjukkannya ketika ini ditulis; jumlah yang dibilkan akan dimasukkan ke dalam `STATUS.md` apabila ia muncul.
+
+</div>

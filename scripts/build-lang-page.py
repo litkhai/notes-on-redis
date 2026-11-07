@@ -13,7 +13,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = Path(sys.argv[1]).resolve()
-LANGS = [("en", "English"), ("ko", "한국어"), ("zh", "简体中文"), ("ja", "日本語")]
+LANGS = [("en", "English"), ("ko", "한국어"), ("zh", "简体中文"), ("ja", "日本語"),
+         ("th", "ภาษาไทย"), ("id", "Bahasa Indonesia"), ("ms", "Bahasa Melayu")]
 
 
 page = json.loads(SRC.read_text())

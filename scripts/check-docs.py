@@ -59,11 +59,12 @@ def rel(p):
 def check_bilingual():
     # Anchored to line start: prose that merely mentions `## English` in
     # backticks — AGENTS.md describing this very convention — is not a section.
-    # Site pages also carry Simplified Chinese and Japanese; each section is
-    # checked against the English one.
-    names = "English|한국어|简体中文|日本語"
+    # Site pages also carry Simplified Chinese, Japanese, Thai, Indonesian and
+    # Malay (#22); each section is checked against the English one.
+    short = {"English": "EN", "한국어": "KO", "简体中文": "ZH", "日本語": "JA",
+             "ภาษาไทย": "TH", "Bahasa Indonesia": "ID", "Bahasa Melayu": "MS"}
+    names = "|".join(short)
     marker = re.compile(r"^## (?:%s)\s*$" % names, re.M)
-    short = {"English": "EN", "한국어": "KO", "简体中文": "ZH", "日本語": "JA"}
 
     checked = 0
     for p in md_files():
@@ -106,10 +107,13 @@ def check_bilingual():
 # --------------------------------------------------------------------------
 # 2. Site pages
 #
-# Each page in docs/ wraps its four languages (en, ko, zh, ja) in `.lang` blocks that the toggle
+# Each page in docs/ wraps its languages (en, ko, zh, ja, th, id, ms) in `.lang` blocks that the toggle
 # shows and hides. A missing or unbalanced block leaves content stranded in a
 # hidden div.
 # --------------------------------------------------------------------------
+SITE_LANGS = ["en", "ko", "zh", "ja", "th", "id", "ms"]
+
+
 def check_site_pages():
     checked = 0
     for p in sorted((ROOT / "docs").glob("*.md")):
@@ -126,9 +130,9 @@ def check_site_pages():
                 fail(rel(p), f"front matter missing `{key}`")
 
         langs = re.findall(r'<div class="lang" data-lang="(\w+)"', text)
-        # All four (#48). A missing block would leave its readers on English.
-        if langs != ["en", "ko", "zh", "ja"]:
-            fail(rel(p), f"expected .lang blocks en, ko, zh, ja, found {langs}")
+        # All of them (#48, #22). A missing block would leave its readers on English.
+        if langs != SITE_LANGS:
+            fail(rel(p), f"expected .lang blocks {', '.join(SITE_LANGS)}, found {langs}")
 
         depth = 0
         for m in re.finditer(r"<div\b[^>]*>|</div>", text):

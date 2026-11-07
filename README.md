@@ -80,7 +80,7 @@ redirect stub per page once the host is live.
 | Jekyll with a hand-written layout, no remote theme | No upstream gem to break, full control over the language toggle |
 | Palette from redis.io's own page styles | `#FF4438` / `#091A23` / `#F3F3F3`, read 2026-11-07, not invented |
 | Dark by default, light opt-in | A `<head>` guard applies the saved theme before first paint |
-| Sidebar contents built in the browser | Each page holds four languages; a server-rendered list would duplicate every heading |
+| Sidebar contents built in the browser | Each page holds seven languages; a server-rendered list would duplicate every heading |
 
 To preview locally without installing Ruby:
 

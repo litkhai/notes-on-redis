@@ -143,3 +143,117 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 </div>
 
 </div>
+
+<div class="lang" data-lang="th" markdown="1">
+
+## ภาษาไทย
+
+<div class="note" markdown="1">
+**สถานะ: มีเฉพาะการออกแบบ** ยังไม่ได้รันสิ่งใดในหน้านี้ แผนอยู่ใน [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)
+</div>
+
+แล็บภาคปฏิบัติสำหรับ [Redis](https://redis.io) ครอบคลุม Redis Open Source, Redis Cloud, Redis Software และ **Redis Iris** ซึ่งเป็น context engine สำหรับ AI agent ทุกอย่างที่ขึ้นเว็บไซต์นี้ผ่านการรันตรวจสอบจริง และทุกราคา ขีดจำกัด และเวอร์ชันจะระบุวันที่ที่อ่านข้อมูลนั้น
+
+### Redis ในปี 2026 คืออะไร
+
+ตั้งแต่เวอร์ชัน 8.0 (GA 2025-05-01) มีการแจกจ่ายเพียงแบบเดียวคือ Redis Open Source ประกอบด้วยโครงสร้างข้อมูลหลัก พร้อม Search, JSON, Time series, ชนิดข้อมูลเชิงความน่าจะเป็นห้าชนิด และ vector sets (beta) โดยเลือกใช้สัญญาอนุญาตได้ระหว่าง RSALv2, SSPLv1 หรือ AGPLv3 เวอร์ชัน GA ล่าสุดที่อ่านเมื่อ 2026-11-07 คือ 8.10.3 ([releases](https://github.com/redis/redis/releases)) มีสามวิธีในการรัน:
+
+| | Redis Open Source | Redis Software | Redis Cloud |
+|---|---|---|---|
+| ผู้ดำเนินการ | คุณเอง | คุณเอง บนโฮสต์หรือ Kubernetes ของคุณ | Redis Ltd. บน AWS, GCP, Azure |
+| สัญญาอนุญาต | RSALv2 / SSPLv1 / AGPLv3 | เชิงพาณิชย์ | Essentials (เริ่มที่ $5/เดือน) · Pro (ขั้นต่ำ $200/เดือน) |
+| สิ่งที่เพิ่ม | — | Active-Active, Flex, DMC proxy, RBAC/LDAP, RDI, operator | เหมือนกัน แต่มีผู้ให้บริการจัดการให้ พร้อมบริการ Iris |
+| ใช้โดย | `local/`, `deep-dive/`, `compare/01` | `enterprise/` | `cloud/`, `iris/` |
+
+### แทร็ก
+
+| แทร็ก | สถานะ | เนื้อหา |
+|---|---|---|
+| [Setup]({{ '/setup/' | relative_url }}) | ยังไม่เริ่ม | Redis 8 ใน Docker, `redis-cli`, Redis Insight, ไคลเอนต์ และฐานข้อมูล Redis Cloud แบบฟรี |
+| [Redis Cloud]({{ '/cloud/' | relative_url }}) | ส่วนที่ฟรีรันเมื่อ 2026-11-07 | คอนโซลตั้งแต่การสมัครไปจนถึงทุกเมนู แผนฟรีและแผนเสียเงิน REST API และ Active-Active |
+| [Enterprise]({{ '/enterprise/' | relative_url }}) | ยังไม่เริ่ม | สิ่งที่ Redis Software และ Cloud Pro เพิ่มเข้ามา โดยแต่ละรายการผูกกับแล็บหรือระบุว่าเป็นเอกสารเท่านั้น |
+| [Iris]({{ '/iris/' | relative_url }}) | ยังไม่เริ่ม | บริการของ Iris หนึ่งแล็บต่อหนึ่งบริการ บนแผนฟรี |
+| [Compare]({{ '/compare/' | relative_url }}) | ส่วน ElastiCache รันเมื่อ 2026-11-07 | Redis เทียบกับ Valkey, ElastiCache, Memorystore และ Azure Managed Redis |
+| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | ยังไม่เริ่ม | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
+
+<div class="warn" markdown="1">
+**คำเตือนเรื่องค่าใช้จ่าย** ฐานข้อมูล Redis Cloud Essentials แบบเสียเงินจะคิดค่าบริการรายเดือนตั้งแต่ขณะที่สร้าง ส่วน Pro มีขั้นต่ำ $200/เดือน ("first $200 free" ยังไม่เผยแพร่เงื่อนไข) Iris เริ่มต้นด้วยข้อความฟรี 5,000 ข้อความ ควรลบสิ่งที่แล็บสร้างขึ้น ราคาอ่านเมื่อ 2026-11-07 ที่ [redis.io/pricing](https://redis.io/pricing/)
+</div>
+
+</div>
+
+<div class="lang" data-lang="id" markdown="1">
+
+## Bahasa Indonesia
+
+<div class="note" markdown="1">
+**Status: baru desain.** Belum ada isi halaman ini yang dijalankan. Rencananya ada di [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+</div>
+
+Lab praktik untuk [Redis](https://redis.io): Redis Open Source, Redis Cloud, Redis Software, dan **Redis Iris**, context engine untuk agen AI. Semua yang masuk ke situs ini diverifikasi dengan menjalankannya; setiap harga, batas, dan versi mencantumkan tanggal saat dibaca.
+
+### Redis pada 2026
+
+Sejak 8.0 (GA 2025-05-01) hanya ada satu distribusi, yaitu Redis Open Source: struktur data inti ditambah Search, JSON, Time series, lima tipe probabilistik, dan vector sets (beta), dengan pilihan lisensi RSALv2, SSPLv1, atau AGPLv3. GA terbaru yang dibaca pada 2026-11-07: 8.10.3 ([releases](https://github.com/redis/redis/releases)). Ada tiga cara menjalankannya:
+
+| | Redis Open Source | Redis Software | Redis Cloud |
+|---|---|---|---|
+| Pengelola | Anda | Anda, di host atau Kubernetes Anda | Redis Ltd. di AWS, GCP, Azure |
+| Lisensi | RSALv2 / SSPLv1 / AGPLv3 | Komersial | Essentials (mulai $5/bln) · Pro (min $200/bln) |
+| Tambahan | — | Active-Active, Flex, DMC proxy, RBAC/LDAP, RDI, operator | sama, dikelola penyedia; layanan Iris |
+| Dipakai oleh | `local/`, `deep-dive/`, `compare/01` | `enterprise/` | `cloud/`, `iris/` |
+
+### Jalur
+
+| Jalur | Status | Isi |
+|---|---|---|
+| [Setup]({{ '/setup/' | relative_url }}) | Belum dimulai | Redis 8 di Docker, `redis-cli`, Redis Insight, klien, dan database Redis Cloud gratis |
+| [Redis Cloud]({{ '/cloud/' | relative_url }}) | Bagian gratis dijalankan 2026-11-07 | Konsol dari pendaftaran hingga setiap menu; paket gratis dan berbayar; REST API; Active-Active |
+| [Enterprise]({{ '/enterprise/' | relative_url }}) | Belum dimulai | Yang ditambahkan Redis Software dan Cloud Pro, masing-masing terkait satu lab atau ditandai hanya dokumentasi |
+| [Iris]({{ '/iris/' | relative_url }}) | Belum dimulai | Layanan Iris, satu lab per layanan, pada paket gratis |
+| [Compare]({{ '/compare/' | relative_url }}) | Bagian ElastiCache dijalankan 2026-11-07 | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
+| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | Belum dimulai | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
+
+<div class="warn" markdown="1">
+**Peringatan biaya.** Database Redis Cloud Essentials berbayar ditagih bulanan sejak dibuat; Pro memiliki minimum $200/bulan ("first $200 free", ketentuan belum dipublikasikan). Iris dimulai dengan 5.000 pesan gratis. Hapus apa yang dibuat oleh lab. Harga dibaca 2026-11-07 di [redis.io/pricing](https://redis.io/pricing/).
+</div>
+
+</div>
+
+<div class="lang" data-lang="ms" markdown="1">
+
+## Bahasa Melayu
+
+<div class="note" markdown="1">
+**Status: reka bentuk sahaja.** Belum ada kandungan halaman ini yang dijalankan. Pelannya terdapat dalam [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+</div>
+
+Makmal amali untuk [Redis](https://redis.io): Redis Open Source, Redis Cloud, Redis Software dan **Redis Iris**, context engine untuk ejen AI. Semua yang sampai ke tapak ini disahkan dengan menjalankannya; setiap harga, had dan versi mencatatkan tarikh ia dibaca.
+
+### Redis pada 2026
+
+Sejak 8.0 (GA 2025-05-01) hanya ada satu pengedaran, iaitu Redis Open Source: struktur data teras ditambah Search, JSON, Time series, lima jenis kebarangkalian dan vector sets (beta), dengan pilihan lesen RSALv2, SSPLv1 atau AGPLv3. GA terkini yang dibaca pada 2026-11-07: 8.10.3 ([releases](https://github.com/redis/redis/releases)). Terdapat tiga cara untuk menjalankannya:
+
+| | Redis Open Source | Redis Software | Redis Cloud |
+|---|---|---|---|
+| Siapa yang mengendalikan | Anda | Anda, pada hos atau Kubernetes anda | Redis Ltd. di AWS, GCP, Azure |
+| Lesen | RSALv2 / SSPLv1 / AGPLv3 | Komersial | Essentials (bermula $5/bln) · Pro (min $200/bln) |
+| Tambahan | — | Active-Active, Flex, DMC proxy, RBAC/LDAP, RDI, operator | sama, diurus oleh penyedia; perkhidmatan Iris |
+| Digunakan oleh | `local/`, `deep-dive/`, `compare/01` | `enterprise/` | `cloud/`, `iris/` |
+
+### Trek
+
+| Trek | Status | Kandungan |
+|---|---|---|
+| [Setup]({{ '/setup/' | relative_url }}) | Belum dimulakan | Redis 8 dalam Docker, `redis-cli`, Redis Insight, klien dan pangkalan data Redis Cloud percuma |
+| [Redis Cloud]({{ '/cloud/' | relative_url }}) | Bahagian percuma dijalankan 2026-11-07 | Konsol dari pendaftaran hingga setiap menu; pelan percuma dan berbayar; REST API; Active-Active |
+| [Enterprise]({{ '/enterprise/' | relative_url }}) | Belum dimulakan | Apa yang ditambah oleh Redis Software dan Cloud Pro, setiap satu dikaitkan dengan satu makmal atau ditanda sebagai dokumentasi sahaja |
+| [Iris]({{ '/iris/' | relative_url }}) | Belum dimulakan | Perkhidmatan Iris, satu makmal bagi setiap perkhidmatan, pada pelan percuma |
+| [Compare]({{ '/compare/' | relative_url }}) | Bahagian ElastiCache dijalankan 2026-11-07 | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
+| [Deep Dive]({{ '/deep-dive/' | relative_url }}) | Belum dimulakan | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
+
+<div class="warn" markdown="1">
+**Amaran kos.** Pangkalan data Redis Cloud Essentials berbayar dibilkan setiap bulan sejak ia dicipta; Pro mempunyai minimum $200/bulan ("first $200 free", terma belum diterbitkan). Iris bermula dengan 5,000 mesej percuma. Padamkan apa yang dicipta oleh makmal. Harga dibaca 2026-11-07 di [redis.io/pricing](https://redis.io/pricing/).
+</div>
+
+</div>

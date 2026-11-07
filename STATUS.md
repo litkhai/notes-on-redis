@@ -12,7 +12,7 @@
 | `iris/` | Not started — [#3](https://github.com/litkhai/notes-on-redis/issues/3), [#7](https://github.com/litkhai/notes-on-redis/issues/7), [#11](https://github.com/litkhai/notes-on-redis/issues/11) |
 | `compare/` | `02` ElastiCache Serverless for Valkey run 2026-11-07 (Valkey 9.0, Seoul, Public + IAM): created, probed with the `cloud/01` script, deleted after ~31 min; console walkthrough captured (12 screens). `01` and the matrix not started — [#5](https://github.com/litkhai/notes-on-redis/issues/5) |
 | `deep-dive/` | Not started — [#6](https://github.com/litkhai/notes-on-redis/issues/6), [#10](https://github.com/litkhai/notes-on-redis/issues/10) |
-| [`docs/`](./docs) | Shell only (layout, palette, nav, four-language stub pages); **not deployed** — no Vercel project, no DNS; [#13](https://github.com/litkhai/notes-on-redis/issues/13) |
+| [`docs/`](./docs) | Live at https://redis.litkhai.dev (Vercel, deploys on push to `main`); seven languages (#22); `/cloud/` and the ElastiCache part of `/compare/` have content, the rest are stubs. Pages redirect stubs not added yet: [#13](https://github.com/litkhai/notes-on-redis/issues/13) |
 
 ## CI
 
@@ -30,6 +30,6 @@ files in `.githooks/pre-commit` — enable once per clone with `git config core.
 
 ## Open decisions
 
-[`design/DESIGN.md`](./design/DESIGN.md) §8 — Essentials now or later ([#8](https://github.com/litkhai/notes-on-redis/issues/8)), Pro and ElastiCache ([#12](https://github.com/litkhai/notes-on-redis/issues/12)), Vercel timing ([#13](https://github.com/litkhai/notes-on-redis/issues/13)), two or four languages ([#14](https://github.com/litkhai/notes-on-redis/issues/14)). Skeleton with every lab directory: [#1](https://github.com/litkhai/notes-on-redis/issues/1).
+[`design/DESIGN.md`](./design/DESIGN.md) §8 — Essentials now or later ([#8](https://github.com/litkhai/notes-on-redis/issues/8)), Pro and ElastiCache ([#12](https://github.com/litkhai/notes-on-redis/issues/12)), Vercel timing ([#13](https://github.com/litkhai/notes-on-redis/issues/13)), Skeleton with every lab directory: [#1](https://github.com/litkhai/notes-on-redis/issues/1).
 
 How an agent picks up an issue: [`design/AGENT-GUIDE.md`](./design/AGENT-GUIDE.md).

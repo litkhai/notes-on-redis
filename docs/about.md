@@ -53,3 +53,39 @@ Kee Hoon Lee 的非官方动手实验，与 Redis Ltd. 无关。Redis 是 Redis 
 Kee Hoon Lee による非公式ハンズオンラボで、Redis Ltd. とは無関係。Redis は Redis Ltd. の登録商標。ソース: [github.com/litkhai/notes-on-redis](https://github.com/litkhai/notes-on-redis)、MIT。[runpod-hols](https://runpod.litkhai.dev) の型に [notes-on-clickhouse](https://clickhouse.litkhai.dev) のコンソールウォークスルー形式を加えた。実行したものはリポジトリの `STATUS.md` に。
 
 </div>
+
+<div class="lang" data-lang="th" markdown="1">
+
+## ภาษาไทย
+
+<div class="note" markdown="1">
+**สถานะ: มีเฉพาะการออกแบบ** ยังไม่ได้รันสิ่งใดในหน้านี้ แผนอยู่ใน [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)
+</div>
+
+แล็บภาคปฏิบัติแบบไม่เป็นทางการโดย Kee Hoon Lee ไม่มีความเกี่ยวข้องกับ Redis Ltd. Redis เป็นเครื่องหมายการค้าจดทะเบียนของ Redis Ltd. ซอร์สโค้ด: [github.com/litkhai/notes-on-redis](https://github.com/litkhai/notes-on-redis), MIT สร้างตามแบบของ [runpod-hols](https://runpod.litkhai.dev) โดยใช้รูปแบบการนำชมคอนโซลของ [notes-on-clickhouse](https://clickhouse.litkhai.dev) สิ่งที่รันแล้วดูได้ใน `STATUS.md` ในรีโพซิทอรี
+
+</div>
+
+<div class="lang" data-lang="id" markdown="1">
+
+## Bahasa Indonesia
+
+<div class="note" markdown="1">
+**Status: baru desain.** Belum ada isi halaman ini yang dijalankan. Rencananya ada di [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+</div>
+
+Lab praktik tidak resmi oleh Kee Hoon Lee, tidak berafiliasi dengan Redis Ltd. Redis adalah merek dagang terdaftar milik Redis Ltd. Sumber: [github.com/litkhai/notes-on-redis](https://github.com/litkhai/notes-on-redis), MIT. Dibuat mengikuti pola [runpod-hols](https://runpod.litkhai.dev) dengan format panduan konsol dari [notes-on-clickhouse](https://clickhouse.litkhai.dev). Apa yang sudah dijalankan: `STATUS.md` di repositori.
+
+</div>
+
+<div class="lang" data-lang="ms" markdown="1">
+
+## Bahasa Melayu
+
+<div class="note" markdown="1">
+**Status: reka bentuk sahaja.** Belum ada kandungan halaman ini yang dijalankan. Pelannya terdapat dalam [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+</div>
+
+Makmal amali tidak rasmi oleh Kee Hoon Lee, tiada kaitan dengan Redis Ltd. Redis ialah tanda dagangan berdaftar milik Redis Ltd. Sumber: [github.com/litkhai/notes-on-redis](https://github.com/litkhai/notes-on-redis), MIT. Dibina mengikut acuan [runpod-hols](https://runpod.litkhai.dev) dengan format panduan konsol daripada [notes-on-clickhouse](https://clickhouse.litkhai.dev). Apa yang telah dijalankan: `STATUS.md` dalam repositori.
+
+</div>

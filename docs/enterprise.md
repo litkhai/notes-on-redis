@@ -53,3 +53,39 @@ Redis Software 与 Redis Cloud Pro 相对 Redis Open Source 的增强 — Active
 Redis Software と Redis Cloud Pro が Redis Open Source に加えるもの — Active-Active（CRDT）、Redis Flex（RAM + SSD）、DMC プロキシとシャーディングポリシー、99.999 % SLA、RBAC/LDAP/TLS、RDI、Kubernetes オペレーター、Redis Insight、マルチテナンシー。まず表: 機能、どこにあるか、ラボで示すかドキュメントのみか。ベンダーの主張と測定結果は分けて書く。
 
 </div>
+
+<div class="lang" data-lang="th" markdown="1">
+
+## ภาษาไทย
+
+<div class="note" markdown="1">
+**สถานะ: ออกแบบเท่านั้น** ยังไม่ได้รันสิ่งใดในหน้านี้ แผนอยู่ใน [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)
+</div>
+
+สิ่งที่ Redis Software และ Redis Cloud Pro เพิ่มขึ้นจาก Redis Open Source ได้แก่ Active-Active (CRDT), Redis Flex (RAM + SSD), พร็อกซี DMC และนโยบายการทำ sharding, SLA 99.999 %, RBAC/LDAP/TLS, RDI, Kubernetes operator, Redis Insight และ multi-tenancy เริ่มด้วยตารางก่อน: ฟีเจอร์ มีอยู่ที่ใด และมีแล็บแสดงให้ดูหรือเป็นเพียงเอกสารอย่างเดียว ข้อกล่าวอ้างของผู้ขายและผลที่วัดได้จริงแยกออกจากกัน
+
+</div>
+
+<div class="lang" data-lang="id" markdown="1">
+
+## Bahasa Indonesia
+
+<div class="note" markdown="1">
+**Status: hanya desain.** Belum ada yang dijalankan di halaman ini. Rencananya ada di [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+</div>
+
+Apa yang ditambahkan Redis Software dan Redis Cloud Pro dibandingkan Redis Open Source: Active-Active (CRDT), Redis Flex (RAM + SSD), proksi DMC dan kebijakan sharding, SLA 99,999 %, RBAC/LDAP/TLS, RDI, operator Kubernetes, Redis Insight, dan multi-tenancy. Diawali tabel: fitur, di mana fitur itu tersedia, dan apakah ada lab yang menunjukkannya atau halaman ini hanya berisi dokumentasi. Klaim vendor dan hasil pengukuran dipisahkan.
+
+</div>
+
+<div class="lang" data-lang="ms" markdown="1">
+
+## Bahasa Melayu
+
+<div class="note" markdown="1">
+**Status: reka bentuk sahaja.** Belum ada apa-apa di halaman ini yang telah dijalankan. Perancangannya ada dalam [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+</div>
+
+Apa yang ditambah oleh Redis Software dan Redis Cloud Pro berbanding Redis Open Source: Active-Active (CRDT), Redis Flex (RAM + SSD), proksi DMC dan dasar sharding, SLA 99.999 %, RBAC/LDAP/TLS, RDI, operator Kubernetes, Redis Insight dan multi-tenancy. Bermula dengan jadual: ciri, di mana ia wujud, dan sama ada ada makmal yang menunjukkannya atau halaman ini hanya dokumentasi. Dakwaan vendor dan keputusan yang diukur diasingkan.
+
+</div>
