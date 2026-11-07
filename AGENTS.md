@@ -3,7 +3,8 @@
 > Harness: khai-harness core@8f514e8 · context public · bilingual yes
 
 Conventions are in [`README.md`](./README.md) → *How This Repository Works*.
-The design and the research behind it: [`design/`](./design).
+The design and the research behind it: [`design/`](./design); the procedure for picking up an
+issue: [`design/AGENT-GUIDE.md`](./design/AGENT-GUIDE.md).
 What has been run and what has not: [`STATUS.md`](./STATUS.md).
 Written is not deployed — check `STATUS.md` before saying something works.
 
