@@ -7,10 +7,10 @@
 | [`design/`](./design) | n/a — design v0 and two research notes, public pages read 2026-11-07; nothing run |
 | `setup/` | Not started — [#2](https://github.com/litkhai/notes-on-redis/issues/2) |
 | `local/` | Not started — [#2](https://github.com/litkhai/notes-on-redis/issues/2) |
-| `cloud/` | Not started — no Redis Cloud account yet; [#4](https://github.com/litkhai/notes-on-redis/issues/4), [#8](https://github.com/litkhai/notes-on-redis/issues/8) budget, [#12](https://github.com/litkhai/notes-on-redis/issues/12) budget |
+| `cloud/` | `01` free database run 2026-11-07 (Redis 8.6.2, Seoul): connection and memory limits enforced, 100 ops/s not; `02` console walkthrough captured (31 screens, masked). Free database `notes-on-redis-free` kept for Iris; API user key `notes-on-redis-lab` exists ([#17](https://github.com/litkhai/notes-on-redis/issues/17)). Open: [#8](https://github.com/litkhai/notes-on-redis/issues/8) budget, [#12](https://github.com/litkhai/notes-on-redis/issues/12) budget, [#17](https://github.com/litkhai/notes-on-redis/issues/17) |
 | `enterprise/` | Not started — [#9](https://github.com/litkhai/notes-on-redis/issues/9) |
 | `iris/` | Not started — [#3](https://github.com/litkhai/notes-on-redis/issues/3), [#7](https://github.com/litkhai/notes-on-redis/issues/7), [#11](https://github.com/litkhai/notes-on-redis/issues/11) |
-| `compare/` | Not started — [#5](https://github.com/litkhai/notes-on-redis/issues/5), [#12](https://github.com/litkhai/notes-on-redis/issues/12) budget |
+| `compare/` | Not started — [#5](https://github.com/litkhai/notes-on-redis/issues/5); ElastiCache [#16](https://github.com/litkhai/notes-on-redis/issues/16) (approved by the user, cache not created yet) |
 | `deep-dive/` | Not started — [#6](https://github.com/litkhai/notes-on-redis/issues/6), [#10](https://github.com/litkhai/notes-on-redis/issues/10) |
 | [`docs/`](./docs) | Shell only (layout, palette, nav, four-language stub pages); **not deployed** — no Vercel project, no DNS; [#13](https://github.com/litkhai/notes-on-redis/issues/13) |
 
@@ -25,7 +25,7 @@ files in `.githooks/pre-commit` — enable once per clone with `git config core.
 
 | Date | What | Amount |
 |---|---|---|
-| — | nothing yet | $0 |
+| 2026-11-07 | Redis Cloud free database, Seoul (`cloud/01`, `cloud/02`) | $0 |
 
 ## Open decisions
 

@@ -1,0 +1,125 @@
+{
+ "_note": "Screens 01-06, 08 and 09 were one-time states (empty account, create forms, first-visit dialog, load test) and are not reproducible from this manifest; see README. Replace <db-id>/<sub-id> with your IDs (they are masked in captures via MASK_TERMS).",
+ "out": "docs/assets/img/cloud-console",
+ "base": "https://cloud.redis.io/#/",
+ "theme": "dark",
+ "viewport": [
+  1440,
+  765
+ ],
+ "shots": [
+  {
+   "name": "07-connect-dialog",
+   "path": "databases/<db-id>/subscription/<sub-id>/view-bdb/configuration",
+   "button": "Connect"
+  },
+  {
+   "name": "10-database-alerts",
+   "path": "databases/<db-id>/subscription/<sub-id>/view-bdb/configuration",
+   "tab": "Alerts",
+   "tall": true
+  },
+  {
+   "name": "11-database-slowlog",
+   "path": "databases/<db-id>/subscription/<sub-id>/view-bdb/configuration",
+   "tab": "Slowlog"
+  },
+  {
+   "name": "12-databases-list",
+   "path": "databases"
+  },
+  {
+   "name": "13-subscriptions",
+   "path": "subscriptions"
+  },
+  {
+   "name": "14-redis-search",
+   "path": "vector-search",
+   "tall": true
+  },
+  {
+   "name": "15-data-integration",
+   "path": "data-integration",
+   "tall": true
+  },
+  {
+   "name": "16-iris",
+   "path": "iris",
+   "tall": true,
+   "waitMs": 12000
+  },
+  {
+   "name": "17-logs-system",
+   "path": "service-log/system"
+  },
+  {
+   "name": "18-logs-sessions",
+   "path": "service-log/system",
+   "tab": "Sessions"
+  },
+  {
+   "name": "19-usage",
+   "path": "usage-report/memory"
+  },
+  {
+   "name": "20-api-keys",
+   "path": "access-management/api-keys"
+  },
+  {
+   "name": "21-team",
+   "path": "access-management/api-keys",
+   "tab": "Team"
+  },
+  {
+   "name": "22-single-sign-on",
+   "path": "access-management/api-keys",
+   "tab": "Single Sign-On"
+  },
+  {
+   "name": "23-data-access-users",
+   "path": "data-access-control/users"
+  },
+  {
+   "name": "24-data-access-roles",
+   "path": "data-access-control/users",
+   "tab": "Roles"
+  },
+  {
+   "name": "25-redis-acls",
+   "path": "data-access-control/users",
+   "tab": "Redis ACLs"
+  },
+  {
+   "name": "26-billing-history",
+   "path": "billing-and-payments/billing-history"
+  },
+  {
+   "name": "27-payment-methods",
+   "path": "billing-and-payments/billing-history",
+   "tab": "Payment Methods"
+  },
+  {
+   "name": "28-credits",
+   "path": "billing-and-payments/billing-history",
+   "tab": "Credits"
+  },
+  {
+   "name": "29-integrations",
+   "path": "integrations",
+   "tall": true
+  },
+  {
+   "name": "30-settings",
+   "path": "account-settings/account",
+   "tall": true
+  },
+  {
+   "name": "31-account-menu",
+   "path": "databases",
+   "click": [
+    1351,
+    40
+   ]
+  }
+ ]
+}

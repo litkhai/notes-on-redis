@@ -66,8 +66,9 @@ Screenshots: `docs/assets/img/<slug>/NN-<name>.webp`, 2x, WebP quality 82, maske
 (account ID, endpoints, e-mail, IPs, amounts) before commit. Markup:
 `<img src="…" width="W" height="H" alt="<what the screen shows, in that language>" loading="lazy" decoding="async">`
 followed by a paragraph with the capture date and version. No `<figure>`.
-`scripts/capture-console.mjs <manifest.json>` captures from a Playwright storage state saved
-after a manual login; the state file is gitignored and never committed.
+`scripts/capture-console.mjs <manifest.json>` attaches over CDP to a Chrome you are already logged
+into (`--remote-debugging-port=9222`), masks in the DOM and refuses to save a screen with a leak term
+still visible. Personal mask terms go in a gitignored `.env` next to the manifest.
 
 ### 5. Money and accounts
 
@@ -126,8 +127,9 @@ python3 scripts/check-docs.py -v           # 시작 전과 푸시 전에 통과�
 
 캡처: `docs/assets/img/<slug>/NN-<이름>.webp`, 2x, WebP 품질 82, 커밋 전에 가림(계정 ID,
 엔드포인트, 이메일, IP, 금액). 마크업은 `<img … loading="lazy" decoding="async">` 뒤에 촬영
-날짜·버전 문단, `<figure>` 없음. `scripts/capture-console.mjs <manifest.json>`은 수동 로그인
-뒤 저장한 Playwright storage state로 캡처한다. state 파일은 gitignore, 절대 커밋하지 않는다.
+날짜·버전 문단, `<figure>` 없음. `scripts/capture-console.mjs <manifest.json>`은 이미 로그인된 Chrome에
+CDP로 붙어(`--remote-debugging-port=9222`) DOM에서 가리고, 누출 문자열이 남은 화면은 저장하지 않는다.
+개인 문자열은 매니페스트 옆 gitignore된 `.env`에 둔다.
 
 ### 5. 돈과 계정
 
