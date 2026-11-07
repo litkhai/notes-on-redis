@@ -15,6 +15,8 @@ Official documentation: [Scaling with Redis Cluster](https://redis.io/docs/lates
 ```bash
 docker compose up -d
 ./run.sh       # creates the cluster on first run
+../../cloud/01-free-database/.venv/bin/python failover.py 15000   # kill a primary under writes; default cluster-node-timeout
+../../cloud/01-free-database/.venv/bin/python failover.py 3000    # the same with a 3 s timeout
 docker compose down
 ```
 
@@ -51,16 +53,55 @@ $ ./run.sh
 [OK] 899737 keys in 3 masters.
 ```
 
+`failover.py` output as it appeared (2026-11-07), after `run.sh`:
+
+```text
+cluster-node-timeout 15000 ms; primaries ['10.231.78.14', '10.231.78.15', '10.231.78.16']; victim nor-cl-node4 (10.231.78.14) holds 'k:0', 'k:3' is on 10.231.78.15
+killed nor-cl-node4 (SIGKILL)
+key on the killed primary    writes 353, failed 6, longest outage 16.2 s, errors ['ConnectionError', 'TimeoutError']
+                             last value 347, successful writes 347, increments lost 0
+key on another primary       writes 1229, failed 1, longest outage 1.0 s, errors ['ClusterDownError']
+                             last value 1228, successful writes 1228, increments lost 0
+cluster_state seen from a replica: ok at 0.3 s, fail at 18.0 s, ok at 19.3 s
+replica promoted (seen in CLUSTER NODES) 19.3 s after the kill
+after restarting the old primary (7.3 s until it rejoined as a replica):
+   10.231.78.14:6379@16379 slave
+   10.231.78.13:6379@16379 master
+   10.231.78.15:6379@16379 master
+   10.231.78.16:6379@16379 master
+   10.231.78.12:6379@16379 slave
+   10.231.78.11:6379@16379 myself,slave
+
+cluster-node-timeout 3000 ms; primaries ['10.231.78.13', '10.231.78.15', '10.231.78.16']; victim nor-cl-node3 (10.231.78.13) holds 'k:0', 'k:3' is on 10.231.78.15
+killed nor-cl-node3 (SIGKILL)
+key on the killed primary    writes 309, failed 3, longest outage 4.1 s, errors ['ConnectionError', 'TimeoutError']
+                             last value 306, successful writes 306, increments lost 0
+key on another primary       writes 545, failed 1, longest outage 1.0 s, errors ['ClusterDownError']
+                             last value 544, successful writes 544, increments lost 0
+cluster_state seen from a replica: ok at 0.4 s, fail at 4.1 s, ok at 5.3 s
+replica promoted (seen in CLUSTER NODES) 5.3 s after the kill
+after restarting the old primary (0.7 s until it rejoined as a replica):
+   10.231.78.14:6379@16379 master
+   10.231.78.13:6379@16379 slave
+   10.231.78.15:6379@16379 master
+   10.231.78.16:6379@16379 master
+   10.231.78.12:6379@16379 slave
+   10.231.78.11:6379@16379 myself,slave
+```
+
 ### What was observed
 
 - **Slots.** `user:1` → 10778 and `user:2` → 6777; `{user:1}:cart` and `{user:1}:orders` both hash only `user:1` and land in 10778 with it.
 - **Redirects.** Asking node 1 for `user:2` returns `MOVED 6777 10.231.78.12:6379`; `redis-cli -c` follows it. Cluster-aware clients do the same and cache the slot map.
 - **Multi-key.** `MSET user:1 a user:2 b` → `CROSSSLOT`; the same with a shared hash tag → `OK`.
+- **Failover takes the node timeout plus about a second.** A primary killed with SIGKILL under writes every 20 ms: with the default `cluster-node-timeout` of 15 s, a replica of the cluster saw `cluster_state:fail` at 18.0 s and the promotion at 19.3 s. The redis-py cluster client could not write that primary's key for about 16 s. With 3 s, the same took 4.1 s, 5.3 s and about 4 s. No increment was lost either way, but the cluster has no persistence and replication is asynchronous, so that is luck of timing, not a guarantee.
+- **The whole cluster refuses writes for a moment.** Keys on the primaries that stayed up got one `ClusterDownError`, about 1 s long, in both runs: between the node being flagged FAIL and its replica taking over, some slots have no owner, and with the default `cluster-require-full-coverage yes` every node answers `CLUSTERDOWN`.
+- **The old primary comes back as a replica.** Restarted, it rejoined as a replica of the node that replaced it, within 1–8 s.
 - **Atomic slot migration.** `CLUSTER MIGRATION IMPORT 0 999` on the destination moved 1,000 slots from node 1 to node 2 in 44 ms by the task's own start and end times, with `write_pause_ms 0`, while `redis-benchmark --cluster` wrote at about 200,000 requests/s and reported no errors (it follows redirects itself). Slot 0's keys were on node 2 afterwards and `redis-cli --cluster check` agreed on 899,737 keys across three masters.
 
 ### Not run / caveats
 
-- Failover inside the cluster (a primary stopped, its replica promoted) was not run.
+- Failover was measured on one host with SIGKILL; a network partition behaves differently, and was not run.
 - The migration moved a small dataset on one host; large slots and cross-host links will take longer.
 
 | | |
@@ -81,21 +122,26 @@ $ ./run.sh
 ```bash
 docker compose up -d
 ./run.sh       # creates the cluster on first run
+../../cloud/01-free-database/.venv/bin/python failover.py 15000   # kill a primary under writes; default cluster-node-timeout
+../../cloud/01-free-database/.venv/bin/python failover.py 3000    # the same with a 3 s timeout
 docker compose down
 ```
 
-출력은 영문 절과 같다(2026-11-07).
+출력은 영문 절과 같다(2026-11-07). `failover.py`의 출력도 마찬가지다.
 
 ### 관찰한 것
 
 - **슬롯.** `user:1` → 10778, `user:2` → 6777. `{user:1}:cart`와 `{user:1}:orders`는 `user:1`만 해시해서 함께 10778에 들어간다.
 - **리디렉션.** 노드 1에 `user:2`를 물으면 `MOVED 6777 10.231.78.12:6379`. `redis-cli -c`는 따라간다. 클러스터를 아는 클라이언트도 같고, 슬롯 지도를 캐시한다.
 - **여러 키.** `MSET user:1 a user:2 b` → `CROSSSLOT`. 같은 해시 태그를 쓰면 `OK`.
+- **장애 조치에는 노드 타임아웃에 약 1초가 더 걸린다.** 20 ms마다 쓰는 중에 주 서버를 SIGKILL로 죽였다. 기본 `cluster-node-timeout` 15초에서는 클러스터의 복제본이 18.0초에 `cluster_state:fail`, 19.3초에 승격을 봤고, redis-py 클러스터 클라이언트는 그 주 서버의 키에 약 16초 동안 쓰지 못했다. 3초로 바꾸면 같은 값이 4.1초, 5.3초, 약 4초. 두 경우 모두 잃은 증가는 없었지만, 이 클러스터는 영속성이 없고 복제는 비동기라 타이밍이 운 좋았던 것이지 보장이 아니다.
+- **잠깐 동안 클러스터 전체가 쓰기를 거절한다.** 살아 있는 주 서버의 키도 두 번 모두 약 1초짜리 `ClusterDownError`를 한 번 받았다. 노드가 FAIL로 표시된 뒤 복제본이 넘겨받기 전까지 주인 없는 슬롯이 생기고, 기본값 `cluster-require-full-coverage yes`에서는 모든 노드가 `CLUSTERDOWN`으로 답한다.
+- **옛 주 서버는 복제본으로 돌아온다.** 재시작하면 자기를 대신한 노드의 복제본으로 1–8초 안에 다시 들어왔다.
 - **원자적 슬롯 이전.** 대상 노드에서 `CLUSTER MIGRATION IMPORT 0 999`가 슬롯 1,000개를 노드 1에서 노드 2로 옮겼다. 작업 자체의 시작·끝 시각으로 44 ms, `write_pause_ms 0`. 그동안 `redis-benchmark --cluster`가 초당 약 200,000으로 쓰며 오류를 보고하지 않았다(리디렉션을 스스로 따라감). 이전 뒤 슬롯 0의 키는 노드 2에 있었고, `redis-cli --cluster check`는 주 서버 셋에 키 899,737개로 일치했다.
 
 ### 미실행 / 주의
 
-- 클러스터 안의 장애 조치(주 서버를 멈추고 복제본 승격)는 실행하지 않았다.
+- 장애 조치는 호스트 하나에서 SIGKILL로 쟀다. 네트워크 분할은 다르게 동작하며, 실행하지 않았다.
 - 이전한 데이터는 작고 호스트도 하나였다. 큰 슬롯과 호스트 간 연결은 더 오래 걸린다.
 
 | | |
