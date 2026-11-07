@@ -95,7 +95,7 @@ notes-on-redis/
 ├── scripts/
 │   ├── check-docs.py           copied from runpod-hols
 │   ├── pages-redirect.py       copied from runpod-hols
-│   └── capture-console.mjs     Playwright manifest capture (adapted from notes-on-clickhouse capture-play.mjs)
+│   └── capture-console.mjs     attaches to a logged-in Chrome over CDP, masks, captures from a manifest
 ├── design/                     this file and the research notes
 ├── AGENTS.md (CLAUDE.md →)     harness core + repo rules
 ├── STATUS.md                   what has been run, with dates and versions
@@ -138,7 +138,7 @@ Title: **"Redis Cloud, from sign-up to every console menu"**. Structure copied f
 4. Database screen — Configuration, Metrics (each chart named), Slowlog, Security (RBAC roles,
    ACL rules, source IP), Backups/import, Redis Insight launch, Connect snippets.
 5. Subscription screen — plan, region, payment, upgrade path to Pro.
-6. Account menu — Users, API keys (REST API; paid only), SSO/SAML, Billing & payments
+6. Account menu — Users, API keys (REST API; works on the free plan, checked 2026-11-07), SSO/SAML, Billing & payments
    (cost report CSV), Usage, Audit/logs, Notifications.
 7. First-week checklist.
 8. Screenshots: `docs/assets/img/cloud-console/NN-name.webp`, 2x, WebP q82, `<img src width height alt loading="lazy" decoding="async">`
