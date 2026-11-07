@@ -1,0 +1,43 @@
+# Source database for the CDC lab: Postgres 17 with logical decoding on (wal_level=logical, pgoutput).
+# Made-up data only. The password is a lab value for a cluster that exists for an hour.
+apiVersion: v1
+kind: Namespace
+metadata: {name: source}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: pg-init, namespace: source}
+data:
+  init.sql: |
+    CREATE TABLE customer (id int PRIMARY KEY, name text NOT NULL, email text, country text, credit_limit int);
+    INSERT INTO customer SELECT g, 'customer-' || g, 'c' || g || '@example.com',
+      (ARRAY['KR','JP','TH','ID','MY'])[1 + g % 5], 1000 * (1 + g % 7) FROM generate_series(1, 1000) g;
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: postgres, namespace: source}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: postgres}}
+  template:
+    metadata: {labels: {app: postgres}}
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:17
+          args: ["-c", "wal_level=logical", "-c", "max_replication_slots=4", "-c", "max_wal_senders=4"]
+          env:
+            - {name: POSTGRES_USER, value: rdi}
+            - {name: POSTGRES_PASSWORD, value: rdi-lab-pw}
+            - {name: POSTGRES_DB, value: shop}
+          ports: [{containerPort: 5432}]
+          volumeMounts: [{name: init, mountPath: /docker-entrypoint-initdb.d}]
+          readinessProbe: {exec: {command: ["pg_isready", "-U", "rdi", "-d", "shop"]}, periodSeconds: 3}
+      volumes: [{name: init, configMap: {name: pg-init}}]
+---
+apiVersion: v1
+kind: Service
+metadata: {name: postgres, namespace: source}
+spec:
+  selector: {app: postgres}
+  ports: [{port: 5432}]

@@ -1,0 +1,23 @@
+# One transformation: derive a tier from credit_limit, drop the e-mail, write JSON under customer:<id>.
+name: customer
+source:
+  server_name: postgresql
+  schema: public
+  table: customer
+transform:
+  - uses: add_field
+    with:
+      field: tier
+      language: sql
+      expression: CASE WHEN credit_limit >= 5000 THEN 'gold' ELSE 'standard' END
+  - uses: remove_field
+    with:
+      field: email
+output:
+  - uses: redis.write
+    with:
+      connection: target
+      data_type: json
+      key:
+        expression: concat(['customer:', id])
+        language: jmespath

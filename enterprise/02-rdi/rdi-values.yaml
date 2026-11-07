@@ -1,0 +1,6 @@
+# RDI 2.2.1 Helm values for the lab. The RDI database is rdi-state on the operator's cluster
+# (enterprise/03-operator-kind). Its port, password and the JWT key are passed with --set by up.sh, never stored here.
+connection:
+  host: rdi-state.rec.svc.cluster.local
+  ssl:
+    enabled: false
