@@ -108,6 +108,8 @@ MemoryETL (beta): an extractor copies a custom memory type's prompt and turns up
 
 With three examples per intent the default threshold is too strict; more examples or a lower threshold is the first tuning step. Each match took 560–1,090 ms from Korea.
 
+**Thresholds** (`thresholds.py`). A per-intent `minScore` overrides the Router's 0.70, and a per-call `min_score` overrides both, as the docs order them. With `tls_question` at 0.60 the Korean TLS question (0.61) matched; with `off_topic` at 0.85 a joke request (0.71) no longer did; a per-call 0.5 brought all five back. Router templates (`CUSTOM`, `MODEL`, `GUARDRAILS`, `AGENT`) are labels: "Every template serves the same way."
+
 <p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="Intent Router intents list with targets tool, model, agent and guardrail, and a Try a query box" loading="lazy" decoding="async"></p>
 
 Intents with their targets and example counts; Try a query matches from the console. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
@@ -149,6 +151,8 @@ Both upstreams behind one endpoint, each switchable on or off. <small>Captured 2
 
 A second version of an FAQ stayed a draft and discovery kept serving version 1 until `faqs publish --version 2`. Keys follow the same workflow: read, write, propose, publish, full. The console lists Agent Playbooks and no LangCache entry.
 
+**Skills and proposals** (`more.py`). A skill is a zipped folder with `SKILL.md` and reference files; this one checks a workload against the free plan's measured limits. Once published, `discover` returned it for an English sizing question and an agent loaded its steps and reference file on demand. The open proposal was edited, accepted into an unpublished FAQ, and found by `discover` only after `publish_faq`.
+
 <p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="Playbook registry with four published FAQs, one at version 2" loading="lazy" decoding="async"></p>
 
 The registry shows publication state and latest version per FAQ. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
@@ -173,6 +177,8 @@ Proposals wait in an inbox until someone accepts and publishes them. <small>Capt
 **The one trap found:** redis-py 8.1.0 sets a 5 s socket timeout by default, shorter than the SDK's 15 s blocking read. The SDK takes each timeout for a Redis outage, so it never declares the producer lost. Set `REDIS_SOCKET_TIMEOUT` above the heartbeat interval.
 
 Lens traces agent turns over OpenTelemetry. On Redis Cloud its records database must be "A Redis Cloud Essentials or Pro database", so on the free plan **New Lens** is disabled. Pointed at a loopback receiver instead, the SDK sent one OTLP/HTTP request per turn. The turn's spans included the Agent Memory search, recorded with no extra code, plus the app's own retrieval and a custom step. With `IRIS_LENS_CAPTURE_CONTENT=false` the query and document texts were dropped, leaving IDs, scores and hashes. Docs: [Agent Mesh](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/), [FastAPI SSE SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/fastapi-sse-sdk/), [A2A SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/a2a-sdk/), [Lens](https://redis.io/docs/latest/develop/ai/context-engine/lens/), [Create Lens](https://redis.io/docs/latest/operate/iris/lens/create-lens/). Lab: [`iris/06-lens-and-mesh`](https://github.com/litkhai/notes-on-redis/tree/main/iris/06-lens-and-mesh).
+
+**Handing off a task** (`mesh_takeover.py`). With `takeover=True`, a task whose process was killed after three of six steps was refused on another replica while the dead process's heartbeat lease lasted (a refusal still returns HTTP 200; only the Task history shows it), then claimed at 15.1 s; the new process skipped the finished steps and completed the rest. With the default `takeover=False`, a reader marked the same task failed with `producer_lost` after 12.1 s, and it could not be resumed.
 
 <p class="shot"><img src="{{ '/assets/img/iris/29-lens-free-plan.webp' | relative_url }}" width="1440" height="1351" alt="The Lens page in the Redis Cloud console with the New Lens button greyed out on a free-plan account" loading="lazy" decoding="async"></p>
 
@@ -302,6 +308,8 @@ MemoryETL(베타): extractor는 사용자 정의 기억 유형의 프롬프트�
 
 의도마다 예시 셋이면 기본 임계값이 너무 엄격하다. 예시를 늘리거나 임계값을 낮추는 것이 첫 조정이다. 매칭은 한국에서 건마다 560–1,090 ms였다.
 
+**임계값**(`thresholds.py`). 의도별 `minScore`는 Router의 0.70을 덮어쓰고, 호출별 `min_score`는 둘 다 덮어쓴다. 문서의 순서 그대로다. `tls_question`을 0.60으로 두자 한국어 TLS 질문(0.61)이 매칭됐고, `off_topic`을 0.85로 두자 농담 요청(0.71)은 더는 매칭되지 않았다. 호출별 0.5는 다섯 질의를 모두 되살렸다. Router 템플릿(`CUSTOM`, `MODEL`, `GUARDRAILS`, `AGENT`)은 라벨이다: "Every template serves the same way."
+
 <p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="도구·모델·에이전트·가드레일 대상이 있는 Intent Router 의도 목록과 질의 시험 칸" loading="lazy" decoding="async"></p>
 
 의도와 대상, 예시 수. Try a query로 콘솔에서 바로 맞춰 볼 수 있다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
@@ -343,6 +351,8 @@ Context Surface는 데이터 모델이다. 엔티티를 키 템플릿에 대응�
 
 FAQ의 두 번째 버전은 초안으로 남았고, `faqs publish --version 2` 전까지 검색은 버전 1을 냈다. 키도 같은 흐름을 따른다: read, write, propose, publish, full. 콘솔에는 Agent Playbooks가 있고 LangCache 항목은 없다.
 
+**Skill과 제안**(`more.py`). Skill은 `SKILL.md`와 참조 파일을 담은 압축 폴더다. 이 skill은 무료 플랜의 측정 한도로 워크로드를 판정한다. 게시 뒤 영어 용량 질문에 `discover`가 이것을 돌려줬고, 에이전트는 단계와 참조 파일을 필요할 때 불러왔다. 열린 제안은 고쳐 쓴 뒤 게시되지 않은 FAQ로 수락됐고, `publish_faq` 뒤에야 `discover`에 나왔다.
+
 <p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="FAQ 네 개가 공개됐고 하나는 버전 2인 Playbook 레지스트리" loading="lazy" decoding="async"></p>
 
 레지스트리는 FAQ마다 공개 상태와 최신 버전을 보여 준다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
@@ -367,6 +377,8 @@ FAQ의 두 번째 버전은 초안으로 남았고, `faqs publish --version 2` �
 **찾은 함정 하나:** redis-py 8.1.0은 소켓 제한 시간 기본값이 5초로, SDK의 15초 블로킹 읽기보다 짧다. SDK는 시간 초과를 매번 Redis 장애로 여겨 생산자 유실을 선언하지 않는다. `REDIS_SOCKET_TIMEOUT`을 하트비트 간격보다 길게 둔다.
 
 Lens는 OpenTelemetry로 에이전트 턴을 추적한다. Redis Cloud에서는 기록용 DB가 "A Redis Cloud Essentials or Pro database"여야 해서 무료 플랜에서는 **New Lens**가 비활성이다. 대신 루프백 수신기를 가리키게 하자 SDK는 턴마다 OTLP/HTTP 요청 하나를 보냈다. 턴의 스팬에는 코드를 더하지 않아도 기록된 Agent Memory 검색, 앱 자체 검색, 사용자 정의 단계가 있었다. `IRIS_LENS_CAPTURE_CONTENT=false`면 질의와 문서 텍스트가 빠지고 ID, 점수, 해시만 남았다. 문서: [Agent Mesh](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/), [FastAPI SSE SDK 가이드](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/fastapi-sse-sdk/), [A2A SDK 가이드](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/a2a-sdk/), [Lens](https://redis.io/docs/latest/develop/ai/context-engine/lens/), [Create Lens](https://redis.io/docs/latest/operate/iris/lens/create-lens/). 실습: [`iris/06-lens-and-mesh`](https://github.com/litkhai/notes-on-redis/tree/main/iris/06-lens-and-mesh).
+
+**태스크 넘기기**(`mesh_takeover.py`). `takeover=True`에서는 여섯 단계 중 셋을 마치고 프로세스가 죽은 태스크를, 죽은 프로세스의 하트비트 임대가 남아 있는 동안 다른 복제본이 거절당했다(거절도 HTTP 200을 돌려주고, Task 기록으로만 알 수 있다). 15.1초에 넘겨받았고, 새 프로세스는 끝난 단계를 건너뛰고 나머지를 마쳤다. 기본값 `takeover=False`에서는 리더가 12.1초 뒤 같은 태스크를 `producer_lost`로 실패 처리했고, 다시 재개할 수 없었다.
 
 <p class="shot"><img src="{{ '/assets/img/iris/29-lens-free-plan.webp' | relative_url }}" width="1440" height="1351" alt="Redis Cloud 콘솔의 Lens 페이지. 무료 플랜 계정이라 New Lens 버튼이 회색으로 비활성" loading="lazy" decoding="async"></p>
 
@@ -496,6 +508,8 @@ MemoryETL（beta）：extractor 复制自定义记忆类型的提示，把上传
 
 每个 intent 只有三条示例时，默认阈值过严；增加示例或降低阈值是调优的第一步。每次匹配在韩国耗时 560–1,090 ms。
 
+**阈值**（`thresholds.py`）。每个 intent 的 `minScore` 会覆盖 Router 的 0.70，每次调用的 `min_score` 又会覆盖两者，与文档给出的顺序一致。把 `tls_question` 设为 0.60 后，韩语的 TLS 问题（0.61）匹配上了；把 `off_topic` 设为 0.85 后，一条讲笑话的请求（0.71）不再匹配；每次调用设为 0.5，则五个查询全部恢复。Router 模板（`CUSTOM`、`MODEL`、`GUARDRAILS`、`AGENT`）只是标签："Every template serves the same way."
+
 <p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="Intent Router 意图列表，目标有 tool、model、agent 和 guardrail，下方有 Try a query 输入框" loading="lazy" decoding="async"></p>
 
 各 intent 及其目标和示例数；用 Try a query 可直接在控制台中匹配。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
@@ -537,6 +551,8 @@ Context Surface 是一个数据模型：实体映射到键模板，字段有类�
 
 某条 FAQ 的第二个版本一直是草稿，发现服务持续返回版本 1，直到执行 `faqs publish --version 2`。密钥遵循同样的流程：read、write、propose、publish、full。控制台列出了 Agent Playbooks，没有 LangCache 条目。
 
+**Skill 与提案**（`more.py`）。Skill 是一个压缩文件夹，里面有 `SKILL.md` 和参考文件；这个 skill 用免费计划的实测上限来检查工作负载。发布之后，`discover` 为一个英文的容量规划问题返回了它，agent 按需加载了它的步骤和参考文件。那个未处理的提案经过修改后被接受为一个未发布的 FAQ，直到 `publish_faq` 之后才被 `discover` 找到。
+
 <p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="Playbook 注册表，四条 FAQ 已发布，其中一条为版本 2" loading="lazy" decoding="async"></p>
 
 注册表显示每条 FAQ 的发布状态和最新版本。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
@@ -561,6 +577,8 @@ Context Surface 是一个数据模型：实体映射到键模板，字段有类�
 **发现的唯一陷阱：** redis-py 8.1.0 默认设置 5 秒的套接字超时，比 SDK 的 15 秒阻塞读取更短。SDK 把每次超时都当作 Redis 故障，因此永远不会宣告生产者丢失。请把 `REDIS_SOCKET_TIMEOUT` 设置为大于心跳间隔。
 
 Lens 通过 OpenTelemetry 追踪 agent 的每一轮。在 Redis Cloud 上，它的记录数据库必须是 "A Redis Cloud Essentials or Pro database"，所以在免费计划上 **New Lens** 是禁用的。改为指向回环接收器后，SDK 每轮发送一个 OTLP/HTTP 请求。该轮的 span 包括无需额外代码就被记录的 Agent Memory 搜索，以及应用自己的检索和一个自定义步骤。设置 `IRIS_LENS_CAPTURE_CONTENT=false` 后，查询和文档文本被丢弃，只剩 ID、分数和哈希。文档： [Agent Mesh](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/)、[FastAPI SSE SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/fastapi-sse-sdk/)、[A2A SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/a2a-sdk/)、[Lens](https://redis.io/docs/latest/develop/ai/context-engine/lens/)、[Create Lens](https://redis.io/docs/latest/operate/iris/lens/create-lens/)。实验： [`iris/06-lens-and-mesh`](https://github.com/litkhai/notes-on-redis/tree/main/iris/06-lens-and-mesh)。
+
+**移交任务**（`mesh_takeover.py`）。使用 `takeover=True` 时，一个任务在六个步骤中完成三个后进程被杀；只要已死进程的心跳租约还在，另一个副本接手就被拒绝（拒绝仍然返回 HTTP 200，只有 Task 历史里能看到），随后在 15.1 秒时被接手；新进程跳过了已完成的步骤并完成了其余部分。使用默认的 `takeover=False` 时，读取方在 12.1 秒后把同一个任务标记为失败，原因为 `producer_lost`，并且无法恢复。
 
 <p class="shot"><img src="{{ '/assets/img/iris/29-lens-free-plan.webp' | relative_url }}" width="1440" height="1351" alt="Redis Cloud 控制台中的 Lens 页面，免费计划账户上的 New Lens 按钮为灰色" loading="lazy" decoding="async"></p>
 
@@ -690,6 +708,8 @@ MemoryETL（beta）：extractor はカスタム記憶タイプのプロンプト
 
 intent ごとの例が三つだと既定のしきい値は厳しすぎる。例を増やすかしきい値を下げるのが最初の調整である。一回のマッチは韓国から 560〜1,090 ms かかった。
 
+**しきい値**（`thresholds.py`）。インテントごとの `minScore` は Router の 0.70 を上書きし、呼び出しごとの `min_score` はその両方を上書きする。ドキュメントの順序どおりである。`tls_question` を 0.60 にすると韓国語の TLS の質問（0.61）がマッチし、`off_topic` を 0.85 にすると冗談を頼む依頼（0.71）はもうマッチしなくなった。呼び出しごとに 0.5 を指定すると、五つのクエリがすべて戻った。Router のテンプレート（`CUSTOM`、`MODEL`、`GUARDRAILS`、`AGENT`）はラベルである："Every template serves the same way."
+
 <p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="ターゲットが tool、model、agent、guardrail の Intent Router の intent 一覧と Try a query 欄" loading="lazy" decoding="async"></p>
 
 intent とそのターゲット、例の数。Try a query でコンソールから直接マッチを試せる。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
@@ -731,6 +751,8 @@ Context Surface はデータモデルである。エンティティをキーの�
 
 FAQ の二つ目のバージョンは下書きのままで、`faqs publish --version 2` を実行するまで discovery はバージョン 1 を返し続けた。キーも同じ流れで、read、write、propose、publish、full の順になる。コンソールには Agent Playbooks が並び、LangCache の項目はない。
 
+**Skill と提案**（`more.py`）。Skill は `SKILL.md` と参照ファイルを入れた zip 圧縮のフォルダである。この skill は、無料プランの実測した上限に照らしてワークロードを判定する。公開後、`discover` は英語の容量見積もりの質問にこれを返し、エージェントは手順と参照ファイルを必要なときに読み込んだ。未処理の提案は編集してから未公開の FAQ として承認され、`publish_faq` の後でようやく `discover` で見つかった。
+
 <p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="公開済みの FAQ 四件を並べた Playbook レジストリ。うち一件はバージョン 2" loading="lazy" decoding="async"></p>
 
 レジストリは FAQ ごとに公開状態と最新バージョンを示す。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
@@ -755,6 +777,8 @@ FAQ の二つ目のバージョンは下書きのままで、`faqs publish --ver
 **見つかった罠は一つ：** redis-py 8.1.0 はソケットのタイムアウトを既定で 5 秒にしており、SDK の 15 秒のブロッキング読み取りより短い。SDK はタイムアウトのたびに Redis の障害とみなすので、プロデューサー喪失を宣言しない。`REDIS_SOCKET_TIMEOUT` はハートビート間隔より長く設定する。
 
 Lens は OpenTelemetry でエージェントのターンをトレースする。Redis Cloud では記録用データベースが "A Redis Cloud Essentials or Pro database" でなければならないため、無料プランでは **New Lens** は無効になる。代わりにループバックの受信側を指定すると、SDK はターンごとに OTLP/HTTP リクエストを一つ送った。ターンのスパンには、追加コードなしで記録された Agent Memory の検索、アプリ自身の検索、カスタムステップが含まれていた。`IRIS_LENS_CAPTURE_CONTENT=false` にするとクエリと文書のテキストが落とされ、ID、スコア、ハッシュだけが残った。ドキュメント： [Agent Mesh](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/)、[FastAPI SSE SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/fastapi-sse-sdk/)、[A2A SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/a2a-sdk/)、[Lens](https://redis.io/docs/latest/develop/ai/context-engine/lens/)、[Create Lens](https://redis.io/docs/latest/operate/iris/lens/create-lens/)。実習： [`iris/06-lens-and-mesh`](https://github.com/litkhai/notes-on-redis/tree/main/iris/06-lens-and-mesh)。
+
+**タスクの引き継ぎ**（`mesh_takeover.py`）。`takeover=True` では、六つのステップのうち三つを終えたところでプロセスが kill されたタスクは、死んだプロセスのハートビートのリースが残っている間、別のレプリカからの引き継ぎを拒否され（拒否でも HTTP 200 が返り、Task の履歴にだけ表れる）、15.1 秒で引き継がれた。新しいプロセスは終わったステップを飛ばして残りを完了した。デフォルトの `takeover=False` では、リーダーが 12.1 秒後に同じタスクを `producer_lost` で失敗にし、再開はできなかった。
 
 <p class="shot"><img src="{{ '/assets/img/iris/29-lens-free-plan.webp' | relative_url }}" width="1440" height="1351" alt="Redis Cloud コンソールの Lens ページ。無料プランのアカウントなので New Lens ボタンがグレーで無効" loading="lazy" decoding="async"></p>
 
@@ -884,6 +908,8 @@ MemoryETL (beta): extractor คัดลอก prompt ของประเภ�
 
 เมื่อมีสามตัวอย่างต่อ intent เกณฑ์เริ่มต้นเข้มงวดเกินไป การเพิ่มตัวอย่างหรือลดเกณฑ์คือขั้นแรกของการปรับจูน การจับคู่แต่ละครั้งใช้เวลา 560–1,090 ms จากเกาหลี
 
+**ค่าเกณฑ์** (`thresholds.py`) `minScore` ต่อ intent จะแทนที่ 0.70 ของ Router และ `min_score` ต่อการเรียกจะแทนที่ทั้งสองค่า ตามลำดับที่เอกสารระบุ เมื่อตั้ง `tls_question` ที่ 0.60 คำถามเรื่อง TLS ภาษาเกาหลี (0.61) จับคู่ได้ เมื่อตั้ง `off_topic` ที่ 0.85 คำขอให้เล่าเรื่องตลก (0.71) ก็ไม่จับคู่อีกต่อไป และการตั้งค่า 0.5 ต่อการเรียกทำให้ทั้งห้าคำค้นกลับมาจับคู่ได้ เทมเพลตของ Router (`CUSTOM`, `MODEL`, `GUARDRAILS`, `AGENT`) เป็นเพียงป้ายกำกับ: "Every template serves the same way."
+
 <p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="รายการ intent ของ Intent Router ที่มีเป้าหมาย tool, model, agent และ guardrail พร้อมช่อง Try a query" loading="lazy" decoding="async"></p>
 
 intent พร้อมเป้าหมายและจำนวนตัวอย่าง; Try a query ใช้จับคู่จากคอนโซลได้ทันที <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
@@ -925,6 +951,8 @@ upstream ทั้งสองอยู่หลัง endpoint เดียว 
 
 FAQ เวอร์ชันที่สองยังเป็นฉบับร่าง และ discovery ยังคงให้บริการเวอร์ชัน 1 จนกว่าจะรัน `faqs publish --version 2` key ก็ใช้ลำดับเดียวกัน: read, write, propose, publish, full คอนโซลแสดง Agent Playbooks และไม่มีรายการ LangCache
 
+**Skill และข้อเสนอ** (`more.py`) Skill คือโฟลเดอร์ที่บีบอัดเป็น zip ซึ่งมี `SKILL.md` และไฟล์อ้างอิง skill นี้ตรวจเวิร์กโหลดเทียบกับขีดจำกัดของแผนฟรีที่วัดได้ หลังเผยแพร่แล้ว `discover` ส่งคืน skill นี้เมื่อถามเรื่องการประเมินขนาดเป็นภาษาอังกฤษ และเอเจนต์โหลดขั้นตอนกับไฟล์อ้างอิงของมันตามต้องการ ข้อเสนอที่ยังเปิดอยู่ถูกแก้ไข ยอมรับเข้าเป็น FAQ ที่ยังไม่เผยแพร่ และ `discover` พบก็ต่อเมื่อหลัง `publish_faq`
+
 <p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="ทะเบียน Playbook ที่มี FAQ ที่เผยแพร่แล้วสี่รายการ หนึ่งในนั้นเป็นเวอร์ชัน 2" loading="lazy" decoding="async"></p>
 
 ทะเบียนแสดงสถานะการเผยแพร่และเวอร์ชันล่าสุดของแต่ละ FAQ <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
@@ -949,6 +977,8 @@ FAQ เวอร์ชันที่สองยังเป็นฉบับ�
 **กับดักข้อเดียวที่พบ:** redis-py 8.1.0 ตั้ง socket timeout เริ่มต้นไว้ 5 วินาที สั้นกว่าการอ่านแบบบล็อกของ SDK ที่ 15 วินาที SDK ถือว่าทุก timeout คือ Redis ล่ม จึงไม่เคยประกาศว่าผู้ผลิตหายไป ให้ตั้ง `REDIS_SOCKET_TIMEOUT` ให้มากกว่าช่วง heartbeat
 
 Lens ติดตามเทิร์นของเอเจนต์ผ่าน OpenTelemetry บน Redis Cloud ฐานข้อมูลบันทึกของมันต้องเป็น "A Redis Cloud Essentials or Pro database" ดังนั้นบนแผนฟรี **New Lens** จึงถูกปิดใช้งาน เมื่อชี้ไปยังตัวรับแบบ loopback แทน SDK ส่งคำขอ OTLP/HTTP หนึ่งรายการต่อเทิร์น span ของเทิร์นประกอบด้วยการค้นหา Agent Memory ที่ถูกบันทึกโดยไม่ต้องเขียนโค้ดเพิ่ม บวกกับการดึงข้อมูลของแอปเองและขั้นตอนแบบกำหนดเอง เมื่อตั้ง `IRIS_LENS_CAPTURE_CONTENT=false` ข้อความของคำค้นและเอกสารจะถูกตัดออก เหลือเพียง ID คะแนน และแฮช เอกสาร: [Agent Mesh](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/), [FastAPI SSE SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/fastapi-sse-sdk/), [A2A SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/a2a-sdk/), [Lens](https://redis.io/docs/latest/develop/ai/context-engine/lens/), [Create Lens](https://redis.io/docs/latest/operate/iris/lens/create-lens/) แล็บ: [`iris/06-lens-and-mesh`](https://github.com/litkhai/notes-on-redis/tree/main/iris/06-lens-and-mesh)
+
+**การส่งต่องาน** (`mesh_takeover.py`) เมื่อใช้ `takeover=True` งานที่โพรเซสถูก kill หลังทำเสร็จสามจากหกขั้นตอน ถูกปฏิเสธบนเรพลิกาอีกตัวตราบที่ heartbeat lease ของโพรเซสที่ตายแล้วยังไม่หมด (การปฏิเสธยังคืน HTTP 200 และเห็นได้จากประวัติ Task เท่านั้น) จากนั้นถูกรับช่วงที่ 15.1 วินาที โพรเซสใหม่ข้ามขั้นตอนที่เสร็จแล้วและทำส่วนที่เหลือจนครบ เมื่อใช้ค่าเริ่มต้น `takeover=False` ตัวอ่านทำเครื่องหมายงานเดียวกันว่าล้มเหลวด้วย `producer_lost` หลังผ่านไป 12.1 วินาที และไม่สามารถกลับมาทำต่อได้
 
 <p class="shot"><img src="{{ '/assets/img/iris/29-lens-free-plan.webp' | relative_url }}" width="1440" height="1351" alt="หน้า Lens ในคอนโซล Redis Cloud ที่ปุ่ม New Lens เป็นสีเทาบนบัญชีแผนฟรี" loading="lazy" decoding="async"></p>
 
@@ -1078,6 +1108,8 @@ MemoryETL (beta): extractor menyalin prompt tipe memori kustom dan mengubah doku
 
 Dengan tiga contoh per intent, ambang bawaan terlalu ketat; menambah contoh atau menurunkan ambang adalah langkah penyetelan pertama. Setiap pencocokan memakan waktu 560–1,090 ms dari Korea.
 
+**Ambang batas** (`thresholds.py`). `minScore` per intent menggantikan 0.70 milik Router, dan `min_score` per panggilan menggantikan keduanya, sesuai urutan dalam dokumentasi. Dengan `tls_question` di 0.60, pertanyaan TLS berbahasa Korea (0.61) cocok; dengan `off_topic` di 0.85, permintaan lelucon (0.71) tidak lagi cocok; 0.5 per panggilan mengembalikan kelima kueri. Template Router (`CUSTOM`, `MODEL`, `GUARDRAILS`, `AGENT`) hanyalah label: "Every template serves the same way."
+
 <p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="Daftar intent Intent Router dengan target tool, model, agent, dan guardrail, serta kotak Try a query" loading="lazy" decoding="async"></p>
 
 Intent beserta target dan jumlah contohnya; Try a query mencocokkan langsung dari konsol. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
@@ -1119,6 +1151,8 @@ Kedua upstream berada di balik satu endpoint, masing-masing dapat diaktifkan ata
 
 Versi kedua sebuah FAQ tetap berstatus draf dan discovery terus menyajikan versi 1 sampai `faqs publish --version 2` dijalankan. Kunci mengikuti alur yang sama: read, write, propose, publish, full. Konsol menampilkan Agent Playbooks dan tidak ada entri LangCache.
 
+**Skill dan proposal** (`more.py`). Skill adalah folder terkompresi yang berisi `SKILL.md` dan file referensi; skill ini memeriksa beban kerja terhadap batas terukur paket gratis. Setelah dipublikasikan, `discover` mengembalikannya untuk pertanyaan perencanaan kapasitas berbahasa Inggris dan agen memuat langkah serta file referensinya sesuai kebutuhan. Proposal yang masih terbuka diedit, diterima ke dalam FAQ yang belum dipublikasikan, dan baru ditemukan oleh `discover` setelah `publish_faq`.
+
 <p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="Registri Playbook dengan empat FAQ yang diterbitkan, satu di antaranya versi 2" loading="lazy" decoding="async"></p>
 
 Registri menampilkan status penerbitan dan versi terbaru setiap FAQ. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
@@ -1143,6 +1177,8 @@ Usulan menunggu di kotak masuk sampai seseorang menerima dan menerbitkannya. <sm
 **Satu jebakan yang ditemukan:** redis-py 8.1.0 menetapkan batas waktu soket 5 detik secara bawaan, lebih pendek daripada pembacaan pemblokiran 15 detik milik SDK. SDK menganggap setiap batas waktu sebagai gangguan Redis, sehingga tidak pernah menyatakan produsen hilang. Atur `REDIS_SOCKET_TIMEOUT` lebih besar dari interval heartbeat.
 
 Lens melacak giliran agen lewat OpenTelemetry. Di Redis Cloud, basis data pencatatnya harus "A Redis Cloud Essentials or Pro database", sehingga pada paket gratis **New Lens** dinonaktifkan. Setelah diarahkan ke penerima loopback, SDK mengirim satu permintaan OTLP/HTTP per giliran. Span giliran itu mencakup pencarian Agent Memory yang tercatat tanpa kode tambahan, ditambah pengambilan milik aplikasi sendiri dan satu langkah kustom. Dengan `IRIS_LENS_CAPTURE_CONTENT=false`, teks kueri dan dokumen dibuang, menyisakan ID, skor, dan hash. Dokumentasi: [Agent Mesh](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/), [FastAPI SSE SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/fastapi-sse-sdk/), [A2A SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/a2a-sdk/), [Lens](https://redis.io/docs/latest/develop/ai/context-engine/lens/), [Create Lens](https://redis.io/docs/latest/operate/iris/lens/create-lens/). Lab: [`iris/06-lens-and-mesh`](https://github.com/litkhai/notes-on-redis/tree/main/iris/06-lens-and-mesh).
+
+**Menyerahkan tugas** (`mesh_takeover.py`). Dengan `takeover=True`, sebuah tugas yang prosesnya dimatikan setelah tiga dari enam langkah ditolak di replika lain selama lease heartbeat proses yang mati masih berlaku (penolakan tetap mengembalikan HTTP 200; hanya riwayat Task yang menunjukkannya), lalu diambil alih pada 15.1 detik; proses baru melewati langkah yang sudah selesai dan menyelesaikan sisanya. Dengan `takeover=False` bawaan, seorang pembaca menandai tugas yang sama gagal dengan `producer_lost` setelah 12.1 detik, dan tugas itu tidak bisa dilanjutkan.
 
 <p class="shot"><img src="{{ '/assets/img/iris/29-lens-free-plan.webp' | relative_url }}" width="1440" height="1351" alt="Halaman Lens di konsol Redis Cloud dengan tombol New Lens berwarna abu-abu pada akun paket gratis" loading="lazy" decoding="async"></p>
 
@@ -1272,6 +1308,8 @@ MemoryETL (beta): extractor menyalin prompt jenis memori tersuai dan menukar dok
 
 Dengan tiga contoh bagi setiap intent, ambang lalai terlalu ketat; menambah contoh atau menurunkan ambang ialah langkah penalaan pertama. Setiap padanan mengambil masa 560–1,090 ms dari Korea.
 
+**Ambang** (`thresholds.py`). `minScore` bagi setiap intent menggantikan 0.70 milik Router, dan `min_score` bagi setiap panggilan menggantikan kedua-duanya, mengikut susunan dalam dokumentasi. Dengan `tls_question` pada 0.60, soalan TLS dalam bahasa Korea (0.61) dipadankan; dengan `off_topic` pada 0.85, permintaan jenaka (0.71) tidak lagi dipadankan; 0.5 bagi setiap panggilan memulihkan kelima-lima pertanyaan. Templat Router (`CUSTOM`, `MODEL`, `GUARDRAILS`, `AGENT`) ialah label: "Every template serves the same way."
+
 <p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="Senarai intent Intent Router dengan sasaran tool, model, agent dan guardrail, serta kotak Try a query" loading="lazy" decoding="async"></p>
 
 Intent beserta sasaran dan bilangan contohnya; Try a query memadankan terus dari konsol. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
@@ -1313,6 +1351,8 @@ Kedua-dua upstream berada di sebalik satu endpoint, masing-masing boleh dihidupk
 
 Versi kedua sesuatu FAQ kekal sebagai draf dan discovery terus menyajikan versi 1 sehingga `faqs publish --version 2` dijalankan. Kunci mengikuti aliran kerja yang sama: read, write, propose, publish, full. Konsol menyenaraikan Agent Playbooks dan tiada entri LangCache.
 
+**Skill dan cadangan** (`more.py`). Skill ialah folder termampat yang mengandungi `SKILL.md` dan fail rujukan; skill ini menyemak beban kerja berdasarkan had terukur pelan percuma. Selepas diterbitkan, `discover` mengembalikannya untuk soalan pengiraan saiz dalam bahasa Inggeris dan ejen memuatkan langkah serta fail rujukannya apabila diperlukan. Cadangan yang masih terbuka disunting, diterima ke dalam FAQ yang belum diterbitkan, dan hanya ditemui oleh `discover` selepas `publish_faq`.
+
 <p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="Daftar Playbook dengan empat FAQ yang diterbitkan, satu daripadanya versi 2" loading="lazy" decoding="async"></p>
 
 Daftar ini memaparkan status penerbitan dan versi terkini bagi setiap FAQ. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
@@ -1337,6 +1377,8 @@ Cadangan menunggu dalam peti masuk sehingga seseorang menerima dan menerbitkanny
 **Satu perangkap yang ditemui:** redis-py 8.1.0 menetapkan had masa soket 5 saat secara lalai, lebih pendek daripada bacaan menyekat 15 saat milik SDK. SDK menganggap setiap had masa sebagai gangguan Redis, jadi ia tidak pernah mengisytiharkan pengeluar hilang. Tetapkan `REDIS_SOCKET_TIMEOUT` melebihi sela heartbeat.
 
 Lens menjejak giliran ejen melalui OpenTelemetry. Di Redis Cloud, pangkalan data rekodnya mesti "A Redis Cloud Essentials or Pro database", jadi pada pelan percuma **New Lens** dilumpuhkan. Setelah diarahkan ke penerima loopback, SDK menghantar satu permintaan OTLP/HTTP bagi setiap giliran. Span giliran itu termasuk carian Agent Memory yang direkodkan tanpa kod tambahan, serta pengambilan milik aplikasi sendiri dan satu langkah tersuai. Dengan `IRIS_LENS_CAPTURE_CONTENT=false`, teks pertanyaan dan dokumen dibuang, meninggalkan ID, skor dan hash. Dokumentasi: [Agent Mesh](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/), [FastAPI SSE SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/fastapi-sse-sdk/), [A2A SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/a2a-sdk/), [Lens](https://redis.io/docs/latest/develop/ai/context-engine/lens/), [Create Lens](https://redis.io/docs/latest/operate/iris/lens/create-lens/). Makmal: [`iris/06-lens-and-mesh`](https://github.com/litkhai/notes-on-redis/tree/main/iris/06-lens-and-mesh).
+
+**Menyerahkan tugas** (`mesh_takeover.py`). Dengan `takeover=True`, sesuatu tugas yang prosesnya dimatikan selepas tiga daripada enam langkah ditolak pada replika lain selagi lease heartbeat proses yang mati masih berlaku (penolakan masih memulangkan HTTP 200; hanya sejarah Task menunjukkannya), kemudian diambil alih pada 15.1 saat; proses baharu melangkau langkah yang sudah selesai dan melengkapkan bakinya. Dengan `takeover=False` lalai, seorang pembaca menandakan tugas yang sama gagal dengan `producer_lost` selepas 12.1 saat, dan ia tidak boleh disambung semula.
 
 <p class="shot"><img src="{{ '/assets/img/iris/29-lens-free-plan.webp' | relative_url }}" width="1440" height="1351" alt="Halaman Lens dalam konsol Redis Cloud dengan butang New Lens berwarna kelabu pada akaun pelan percuma" loading="lazy" decoding="async"></p>
 

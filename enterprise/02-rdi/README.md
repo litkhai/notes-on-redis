@@ -17,6 +17,7 @@ Official documentation: [RDI overview](https://redis.io/docs/latest/integrate/re
 ./up.sh                     # Postgres, the RDI chart and CLI (downloaded into .rdi/), secrets, pipeline (~3 min)
 ./cdc.sh                    # time an UPDATE, INSERT, DELETE and a 1,000-row UPDATE until they show in Redis
 ../03-operator-kind/down.sh
+./classic.sh                # the same pipeline on the classic processor, then cdc.sh twice
 ```
 
 `up.sh` output as it appeared (2026-11-07):
@@ -123,6 +124,70 @@ Performance:
 
 The pipeline is [`pipeline/config.yaml.in`](./pipeline/config.yaml.in) (the target port is filled in at run time) and [`pipeline/jobs/customer.yaml`](./pipeline/jobs/customer.yaml).
 
+`classic.sh` output as it appeared (2026-11-07):
+
+```text
+== pods with the Flink processor
+   collector-api
+   collector-postgresql
+   flink-processor-jobmanager
+   flink-processor-taskmanager
+   rdi-api
+   rdi-operator
+   rdi-reloader
+   processors:
+     type: classic
+     target_data_type: json
+Waiting for pipeline default to deploy...
+Pipeline default deployed.
+redeployed after 40 s
+== pods with the classic processor
+   collector-api
+   collector-postgresql
+   processor
+   rdi-api
+   rdi-metrics-exporter
+   rdi-operator
+   rdi-reloader
+Processor:
+  Type:  classic
+  Properties:
+    target_data_type:  json
+
+Jobs:
+Statistics:
+  Name                        Total  Pending  Inserted  Updated  Deleted  Filtered  Rejected  Deduplicated  Last Arrival
+  ----                        -----  -------  --------  -------  -------  --------  --------  ------------  ------------
+  postgresql.public.customer  0      0        0         0        0        0         0         0             2026-11-07T12:25:44Z
+
+##### cdc.sh run 1
+== UPDATE one row: customer 7 credit_limit -> 9000 + run number (tier gold)
+   visible after 1103 ms
+== INSERT one row: customer 1001
+   visible after 772 ms
+== DELETE one row: customer 1
+   gone after 995 ms
+== UPDATE every row in one transaction (1000 rows): credit_limit + 1, watching customer 1001
+   all updates visible after 794 ms
+== the overhead in these numbers: one kubectl exec of psql that changes nothing
+   109 ms
+== the transformation on the new row
+{"id":1001,"name":"customer-1001","country":"KR","credit_limit":2001,"tier":"standard"}
+##### cdc.sh run 2
+== UPDATE one row: customer 7 credit_limit -> 9000 + run number (tier gold)
+   visible after 211 ms
+== INSERT one row: customer 1002
+   visible after 944 ms
+== DELETE one row: customer 2
+   gone after 781 ms
+== UPDATE every row in one transaction (1000 rows): credit_limit + 1, watching customer 1002
+   all updates visible after 1035 ms
+== the overhead in these numbers: one kubectl exec of psql that changes nothing
+   133 ms
+== the transformation on the new row
+{"id":1002,"name":"customer-1002","country":"KR","credit_limit":2001,"tier":"standard"}
+```
+
 ### What was observed
 
 - **The chart is small and quick.** The RDI chart installed in 32 s and started three pods: API, operator and reloader. The collector and processor pods appear only when a pipeline is deployed.
@@ -131,10 +196,12 @@ The pipeline is [`pipeline/config.yaml.in`](./pipeline/config.yaml.in) (the targ
 - **Change latency.** From issuing the SQL to the change being readable in Redis, three runs: one-row UPDATE 0.2–1.5 s, INSERT 0.8–1.1 s, DELETE 0.4–1.1 s, a 1,000-row UPDATE in one transaction 0.8–1.5 s. Each figure includes about 0.11 s of `kubectl exec` and the watcher's 20 ms polling. In an earlier session, the first change after the snapshot took 3.9 s and later ones 0.2–0.9 s.
 - **Deletes delete.** Deleting a row removed its key.
 - **"Connected: no" for the target.** `redis-di describe` showed the target as not connected even while rows were arriving in it. It was not investigated further.
+- **The classic processor runs in one pod.** With `processors.type: classic` the redeploy took 40 s and replaced Flink's job manager and task manager with a single `processor` pod plus `rdi-metrics-exporter`. Change latency stayed in the same range: 0.2–1.1 s over two runs. The statistics counters started again from zero after the switch.
+- **Write-behind is not part of RDI 2.2.** The RDI 2.2 documentation has no write-behind (Redis to a database) section. The write-behind pages that remain describe an older engine that needs RedisGears Python 1.2.6 on the cluster, and Redis Software 8.2.6-25 ships no RedisGears ([`01`](../01-redis-software-docker/README.md)). It could not be run here.
 
 ### Not run / caveats
 
-- RDI's write-behind (Redis to the database), the classic processor and the Redis Insight RDI view were not run.
+- The Redis Insight RDI view was not run.
 - Production settings were not used: no TLS, no replica for the RDI database, and the Postgres user is a superuser rather than a user with only replication rights.
 - Latency comes from one host with all components on it; it is an order of magnitude, not a benchmark.
 - Managed RDI on Redis Cloud is Pro only ([#12](https://github.com/litkhai/notes-on-redis/issues/12)).
@@ -159,9 +226,12 @@ RDI는 관계형 테이블을 Redis로 복사하고 변경 데이터 캡처(CDC)
 ./up.sh                     # Postgres, the RDI chart and CLI (downloaded into .rdi/), secrets, pipeline (~3 min)
 ./cdc.sh                    # time an UPDATE, INSERT, DELETE and a 1,000-row UPDATE until they show in Redis
 ../03-operator-kind/down.sh
+./classic.sh                # the same pipeline on the classic processor, then cdc.sh twice
 ```
 
 출력은 영문 절과 같다(2026-11-07). 파이프라인은 [`pipeline/config.yaml.in`](./pipeline/config.yaml.in)(대상 포트는 실행 때 채움)과 [`pipeline/jobs/customer.yaml`](./pipeline/jobs/customer.yaml)이다.
+
+`classic.sh`의 출력도 영문 절과 같다(2026-11-07).
 
 ### 관찰한 것
 
@@ -171,10 +241,12 @@ RDI는 관계형 테이블을 Redis로 복사하고 변경 데이터 캡처(CDC)
 - **변경 지연.** SQL을 보낸 때부터 Redis에서 읽힐 때까지, 세 번 실행: 한 행 UPDATE 0.2–1.5초, INSERT 0.8–1.1초, DELETE 0.4–1.1초, 한 트랜잭션의 1,000행 UPDATE 0.8–1.5초. 수치마다 `kubectl exec` 약 0.11초와 감시자의 20 ms 폴링이 들어 있다. 이전 세션에서는 스냅샷 뒤 첫 변경이 3.9초, 이후는 0.2–0.9초였다.
 - **삭제는 삭제된다.** 행을 지우면 키가 사라졌다.
 - **대상이 "Connected: no".** 행이 들어오는 동안에도 `redis-di describe`는 대상을 연결 안 됨으로 표시했다. 더 조사하지 않았다.
+- **classic 프로세서는 파드 하나로 돈다.** `processors.type: classic`으로 다시 배포하는 데 40초가 걸렸고, Flink의 job manager와 task manager 대신 `processor` 파드 하나와 `rdi-metrics-exporter`가 떴다. 변경 지연은 두 번 실행에서 0.2–1.1초로 같은 범위였다. 바꾼 뒤 통계 카운터는 0부터 다시 시작했다.
+- **write-behind는 RDI 2.2에 없다.** RDI 2.2 문서에는 write-behind(Redis에서 DB로) 절이 없다. 남아 있는 write-behind 페이지는 클러스터에 RedisGears Python 1.2.6이 필요한 예전 엔진을 설명하는데, Redis Software 8.2.6-25에는 RedisGears가 없다([`01`](../01-redis-software-docker/README.md)). 여기서는 실행할 수 없었다.
 
 ### 미실행 / 주의
 
-- RDI의 write-behind(Redis에서 DB로), classic 프로세서, Redis Insight의 RDI 화면은 실행하지 않았다.
+- Redis Insight의 RDI 화면은 실행하지 않았다.
 - 운영 설정은 쓰지 않았다: TLS 없음, RDI DB에 복제본 없음, Postgres 사용자는 복제 권한만 가진 사용자가 아니라 슈퍼유저.
 - 지연은 모든 구성 요소가 호스트 하나에 있는 상태에서 쟀다. 규모를 보는 값이지 벤치마크가 아니다.
 - Redis Cloud의 관리형 RDI는 Pro 전용이다([#12](https://github.com/litkhai/notes-on-redis/issues/12)).

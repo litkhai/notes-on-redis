@@ -47,6 +47,8 @@ What Redis Software and Redis Cloud Pro add over Redis Open Source — Active-Ac
 
 The proxy is what makes a sharded database look like one Redis to a plain client: multi-key reads and writes cross shards, transactions do not.
 
+**Modules and TLS** (`tls.py`). The cluster ships JSON, Bloom, Search and time series in several versions each, and no RedisGears. A database with `tls_mode: enabled` closed plain TCP connections; a client connected only with the cluster's proxy certificate (`GET /v1/cluster/certificates`) as its CA, and a PING round trip on that connection took 0.13 ms.
+
 <p class="shot"><img src="{{ '/assets/img/enterprise/01-rs-databases.webp' | relative_url }}" width="1440" height="765" alt="Cluster Manager UI databases list with db-b, 4 shards" loading="lazy" decoding="async"></p>
 
 Cluster Manager UI: the databases list after re-sharding. <small>Captured 2026-11-07, Redis Software 8.2.6-25.</small>
@@ -88,6 +90,8 @@ Database settings: sharding, OSS Cluster API off, proxy policy, capabilities and
 | UPDATE of all 1,000 rows in one transaction | visible after 0.8–1.5 s |
 
 The latencies include about 0.11 s of `kubectl exec` and come from one host, so read them as an order of magnitude. With no processor type set, the pipeline ran on Flink, the default since RDI 2.0. `redis-di describe` showed the target as "Connected: no" while rows were arriving; that was not investigated. Docs: [RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). Lab: [`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).
+
+**Classic processor and write-behind** (`classic.sh`). With `processors.type: classic` the same pipeline ran in one `processor` pod instead of Flink's job and task managers, with changes visible in 0.2–1.1 s. Write-behind (Redis to a database) is not in the RDI 2.2 documentation; the older write-behind engine needs RedisGears Python 1.2.6, which Redis Software 8.2.6 does not ship, so it could not be run.
 
 ### Not run yet
 
@@ -136,6 +140,8 @@ Redis Software와 Redis Cloud Pro가 Redis Open Source에 더해 주는 것 — 
 
 샤드가 나뉜 DB가 일반 클라이언트에게 Redis 하나처럼 보이게 하는 것이 프록시다. 여러 키 읽기·쓰기는 샤드를 넘지만 트랜잭션은 넘지 않는다.
 
+**모듈과 TLS**(`tls.py`). 클러스터에는 JSON, Bloom, Search, time series가 버전 여러 개씩 들어 있고 RedisGears는 없다. `tls_mode: enabled`인 DB는 평문 TCP 연결을 끊었고, 클라이언트는 클러스터 프록시 인증서(`GET /v1/cluster/certificates`)를 CA로 줬을 때만 연결됐다. 그 연결에서 PING 왕복은 0.13 ms.
+
 <p class="shot"><img src="{{ '/assets/img/enterprise/01-rs-databases.webp' | relative_url }}" width="1440" height="765" alt="샤드 4개인 db-b가 있는 Cluster Manager UI의 DB 목록" loading="lazy" decoding="async"></p>
 
 Cluster Manager UI: 재샤딩 뒤의 DB 목록. <small>2026-11-07 캡처, Redis Software 8.2.6-25.</small>
@@ -177,6 +183,8 @@ DB 설정: 샤딩, OSS Cluster API 꺼짐, 프록시 정책, 기능, 내구성�
 | 한 트랜잭션으로 1,000행 전부 UPDATE | 0.8–1.5초 뒤 보임 |
 
 지연에는 `kubectl exec` 약 0.11초가 들어 있고 호스트 하나에서 쟀으므로 규모로만 읽는다. 프로세서 종류를 정하지 않으면 RDI 2.0부터의 기본값인 Flink로 돈다. 행이 들어오는 동안에도 `redis-di describe`는 대상을 "Connected: no"로 표시했다. 조사하지 않았다. 문서: [RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). 실습: [`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).
+
+**classic 프로세서와 write-behind**(`classic.sh`). `processors.type: classic`이면 같은 파이프라인이 Flink의 job·task manager 대신 `processor` 파드 하나로 돌았고, 변경은 0.2–1.1초 안에 보였다. write-behind(Redis에서 DB로)는 RDI 2.2 문서에 없다. 예전 write-behind 엔진은 RedisGears Python 1.2.6이 필요한데 Redis Software 8.2.6에는 없어서 실행할 수 없었다.
 
 ### 아직 실행하지 않은 것
 
@@ -225,6 +233,8 @@ Redis Software 和 Redis Cloud Pro 在 Redis Open Source 之上增加了什么�
 
 代理让分片数据库在普通客户端看来就像一个 Redis：多键读写可以跨分片，事务则不行。
 
+**模块与 TLS**（`tls.py`）。集群自带 JSON、Bloom、Search 和 time series，每个都有多个版本，没有 RedisGears。`tls_mode: enabled` 的数据库关闭了明文 TCP 连接；客户端只有把集群的代理证书（`GET /v1/cluster/certificates`）作为 CA 才能连上，该连接上一次 PING 往返耗时 0.13 ms。
+
 <p class="shot"><img src="{{ '/assets/img/enterprise/01-rs-databases.webp' | relative_url }}" width="1440" height="765" alt="Cluster Manager UI 的数据库列表，其中 db-b 有 4 个分片" loading="lazy" decoding="async"></p>
 
 Cluster Manager UI：重新分片之后的数据库列表。 <small>2026-11-07 截取，Redis Software 8.2.6-25。</small>
@@ -266,6 +276,8 @@ Cluster Manager UI：重新分片之后的数据库列表。 <small>2026-11-07 �
 | 在一个事务中 UPDATE 全部 1,000 行 | 0.8–1.5 秒后可见 |
 
 这些延迟包含约 0.11 秒的 `kubectl exec`，且来自同一台主机，因此只应视为数量级。未设置 processor 类型时，管道在 Flink 上运行，这是自 RDI 2.0 起的默认值。管道在接收行的同时，`redis-di describe` 却把目标显示为 "Connected: no"；对此没有深入调查。 文档：[RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). 实验：[`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).
+
+**classic 处理器与 write-behind**（`classic.sh`）。设置 `processors.type: classic` 后，同一条管道在一个 `processor` pod 中运行，而不是 Flink 的 job 和 task manager，变更在 0.2–1.1 秒内可见。write-behind（从 Redis 写到数据库）不在 RDI 2.2 文档中；旧的 write-behind 引擎需要 RedisGears Python 1.2.6，而 Redis Software 8.2.6 并未提供，所以无法运行。
 
 ### 尚未运行
 
@@ -314,6 +326,8 @@ Redis Software と Redis Cloud Pro が Redis Open Source に加えるもの — 
 
 プロキシのおかげで、シャーディングされたデータベースは通常のクライアントからは 1 つの Redis に見える。複数キーの読み書きはシャードをまたげるが、トランザクションはまたげない。
 
+**モジュールと TLS**（`tls.py`）。クラスターには JSON、Bloom、Search、time series がそれぞれ複数のバージョンで入っていて、RedisGears はない。`tls_mode: enabled` のデータベースは平文の TCP 接続を切断し、クライアントはクラスターのプロキシ証明書（`GET /v1/cluster/certificates`）を CA として渡したときだけ接続できた。その接続での PING の往復は 0.13 ms だった。
+
 <p class="shot"><img src="{{ '/assets/img/enterprise/01-rs-databases.webp' | relative_url }}" width="1440" height="765" alt="シャード 4 つの db-b がある Cluster Manager UI のデータベース一覧" loading="lazy" decoding="async"></p>
 
 Cluster Manager UI: リシャーディング後のデータベース一覧。 <small>2026-11-07 取得、Redis Software 8.2.6-25。</small>
@@ -355,6 +369,8 @@ Cluster Manager UI: リシャーディング後のデータベース一覧。 <s
 | 1,000 行すべてを 1 トランザクションで UPDATE | 0.8–1.5 秒後に見える |
 
 レイテンシには約 0.11 秒の `kubectl exec` が含まれ、1 台のホストでの結果なので、桁の目安として読むこと。processor の種類を指定しなかった場合、パイプラインは RDI 2.0 以降のデフォルトである Flink 上で動いた。行が届いている間も、`redis-di describe` はターゲットを "Connected: no" と表示した。これは調べていない。 ドキュメント: [RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). ラボ: [`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).
+
+**classic プロセッサーと write-behind**（`classic.sh`）。`processors.type: classic` にすると、同じパイプラインが Flink の job・task manager の代わりに `processor` pod 一つで動き、変更は 0.2–1.1 秒で見えた。write-behind（Redis からデータベースへ）は RDI 2.2 のドキュメントにない。以前の write-behind エンジンには RedisGears Python 1.2.6 が必要だが、Redis Software 8.2.6 には含まれていないため、実行できなかった。
 
 ### 未実行
 
@@ -403,6 +419,8 @@ Active-Active には Redis Cloud Pro か複数の Redis Software クラスター
 
 proxy คือสิ่งที่ทำให้ฐานข้อมูลแบบ sharded ดูเป็น Redis ตัวเดียวสำหรับไคลเอนต์ทั่วไป: การอ่านและเขียนหลายคีย์ข้าม shard ได้ แต่ transaction ข้ามไม่ได้
 
+**โมดูลและ TLS** (`tls.py`) คลัสเตอร์มาพร้อม JSON, Bloom, Search และ time series อย่างละหลายเวอร์ชัน และไม่มี RedisGears ฐานข้อมูลที่ตั้ง `tls_mode: enabled` ตัดการเชื่อมต่อ TCP แบบข้อความล้วน ไคลเอนต์เชื่อมต่อได้เฉพาะเมื่อใช้ใบรับรองพร็อกซีของคลัสเตอร์ (`GET /v1/cluster/certificates`) เป็น CA และ PING ไปกลับบนการเชื่อมต่อนั้นใช้เวลา 0.13 ms
+
 <p class="shot"><img src="{{ '/assets/img/enterprise/01-rs-databases.webp' | relative_url }}" width="1440" height="765" alt="รายการฐานข้อมูลใน Cluster Manager UI โดย db-b มี 4 shard" loading="lazy" decoding="async"></p>
 
 Cluster Manager UI: รายการฐานข้อมูลหลัง re-sharding <small>จับภาพเมื่อ 2026-11-07, Redis Software 8.2.6-25</small>
@@ -444,6 +462,8 @@ Cluster Manager UI: รายการฐานข้อมูลหลัง re
 | UPDATE ทั้ง 1,000 แถวในทรานแซกชันเดียว | เห็นหลัง 0.8–1.5 วินาที |
 
 ค่าความหน่วงรวม `kubectl exec` ราว 0.11 วินาทีและมาจากโฮสต์เดียว จึงควรอ่านเป็นลำดับขนาดเท่านั้น เมื่อไม่ได้ตั้งชนิด processor ไปป์ไลน์รันบน Flink ซึ่งเป็นค่าเริ่มต้นตั้งแต่ RDI 2.0 `redis-di describe` แสดงเป้าหมายเป็น "Connected: no" ทั้งที่แถวกำลังเข้ามา เรื่องนี้ไม่ได้ตรวจสอบ เอกสาร: [RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). แล็บ: [`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).
+
+**classic processor และ write-behind** (`classic.sh`) เมื่อตั้ง `processors.type: classic` ไปป์ไลน์เดียวกันรันใน `processor` pod ตัวเดียว แทน job และ task manager ของ Flink โดยเห็นการเปลี่ยนแปลงภายใน 0.2–1.1 วินาที write-behind (จาก Redis ไปยังฐานข้อมูล) ไม่อยู่ในเอกสาร RDI 2.2 เอนจิน write-behind รุ่นเก่าต้องใช้ RedisGears Python 1.2.6 ซึ่ง Redis Software 8.2.6 ไม่ได้ให้มา จึงรันไม่ได้
 
 ### ยังไม่ได้รัน
 
@@ -492,6 +512,8 @@ Apa yang ditambahkan Redis Software dan Redis Cloud Pro di atas Redis Open Sourc
 
 Proxy-lah yang membuat database ter-shard tampak sebagai satu Redis bagi klien biasa: baca dan tulis multi-key dapat lintas shard, transaksi tidak.
 
+**Modul dan TLS** (`tls.py`). Klaster menyertakan JSON, Bloom, Search, dan time series dalam beberapa versi masing-masing, serta tidak ada RedisGears. Basis data dengan `tls_mode: enabled` menutup koneksi TCP polos; klien hanya bisa terhubung dengan sertifikat proxy klaster (`GET /v1/cluster/certificates`) sebagai CA-nya, dan satu kali bolak-balik PING pada koneksi itu memakan waktu 0.13 ms.
+
 <p class="shot"><img src="{{ '/assets/img/enterprise/01-rs-databases.webp' | relative_url }}" width="1440" height="765" alt="Daftar database Cluster Manager UI dengan db-b, 4 shard" loading="lazy" decoding="async"></p>
 
 Cluster Manager UI: daftar database setelah re-sharding. <small>Ditangkap 2026-11-07, Redis Software 8.2.6-25.</small>
@@ -533,6 +555,8 @@ Pengaturan database: sharding, OSS Cluster API nonaktif, kebijakan proxy, kapabi
 | UPDATE seluruh 1,000 baris dalam satu transaksi | terlihat setelah 0,8–1,5 dtk |
 
 Latensi itu sudah termasuk sekitar 0,11 dtk untuk `kubectl exec` dan berasal dari satu host, jadi bacalah sebagai orde besarnya saja. Tanpa tipe processor yang ditetapkan, pipeline berjalan di Flink, yang menjadi bawaan sejak RDI 2.0. `redis-di describe` menampilkan target sebagai "Connected: no" saat baris sedang berdatangan; hal itu tidak diselidiki. Dokumentasi: [RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). Lab: [`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).
+
+**Prosesor classic dan write-behind** (`classic.sh`). Dengan `processors.type: classic`, pipeline yang sama berjalan dalam satu pod `processor`, bukan job dan task manager milik Flink, dengan perubahan terlihat dalam 0.2–1.1 detik. Write-behind (dari Redis ke basis data) tidak ada dalam dokumentasi RDI 2.2; mesin write-behind yang lama membutuhkan RedisGears Python 1.2.6, yang tidak disertakan Redis Software 8.2.6, sehingga tidak bisa dijalankan.
 
 ### Belum dijalankan
 
@@ -581,6 +605,8 @@ Apa yang ditambah oleh Redis Software dan Redis Cloud Pro berbanding Redis Open 
 
 Proxy yang menjadikan pangkalan data ter-shard kelihatan seperti satu Redis kepada klien biasa: bacaan dan tulisan berbilang key boleh merentasi shard, transaksi tidak boleh.
 
+**Modul dan TLS** (`tls.py`). Kluster menyertakan JSON, Bloom, Search dan time series dalam beberapa versi setiap satu, dan tiada RedisGears. Pangkalan data dengan `tls_mode: enabled` menutup sambungan TCP biasa; klien hanya berjaya bersambung dengan sijil proksi kluster (`GET /v1/cluster/certificates`) sebagai CA-nya, dan satu pusingan PING pada sambungan itu mengambil masa 0.13 ms.
+
 <p class="shot"><img src="{{ '/assets/img/enterprise/01-rs-databases.webp' | relative_url }}" width="1440" height="765" alt="Senarai pangkalan data Cluster Manager UI dengan db-b, 4 shard" loading="lazy" decoding="async"></p>
 
 Cluster Manager UI: senarai pangkalan data selepas re-sharding. <small>Ditangkap 2026-11-07, Redis Software 8.2.6-25.</small>
@@ -622,6 +648,8 @@ Tetapan pangkalan data: sharding, OSS Cluster API dimatikan, dasar proxy, keupay
 | UPDATE kesemua 1,000 baris dalam satu transaksi | kelihatan selepas 0.8–1.5 s |
 
 Kependaman itu termasuk kira-kira 0.11 s untuk `kubectl exec` dan datang daripada satu hos, jadi bacalah sebagai anggaran magnitud sahaja. Tanpa jenis processor ditetapkan, saluran paip berjalan pada Flink, iaitu lalai sejak RDI 2.0. `redis-di describe` menunjukkan sasaran sebagai "Connected: no" semasa baris sedang tiba; perkara itu tidak disiasat. Dokumen: [RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). Makmal: [`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).
+
+**Pemproses classic dan write-behind** (`classic.sh`). Dengan `processors.type: classic`, pipeline yang sama berjalan dalam satu pod `processor`, bukan job dan task manager milik Flink, dengan perubahan kelihatan dalam 0.2–1.1 saat. Write-behind (daripada Redis ke pangkalan data) tiada dalam dokumentasi RDI 2.2; enjin write-behind yang lama memerlukan RedisGears Python 1.2.6, yang tidak disertakan oleh Redis Software 8.2.6, jadi ia tidak dapat dijalankan.
 
 ### Belum dijalankan
 
