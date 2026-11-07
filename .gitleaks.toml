@@ -20,6 +20,13 @@ keywords = ["redis://", "rediss://"]
 tags = ["redis", "credential"]
 
 [[rules]]
+id = "redis-iris-api-key"
+description = "Redis Iris API key (Access & Identity), shown once at creation"
+regex = '''iris_[A-Za-z0-9_\-]{40,}'''
+keywords = ["iris_"]
+tags = ["redis", "iris", "credential"]
+
+[[rules]]
 id = "redis-cloud-api-key"
 description = "Redis Cloud REST API account key / user key in a header or assignment"
 regex = '''(?i)(x-api-key|x-api-secret-key|REDISCLOUD_(ACCESS|SECRET)_KEY)\s*[:=]\s*["']?[A-Za-z0-9]{20,}'''
