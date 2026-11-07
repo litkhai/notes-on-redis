@@ -35,7 +35,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | [Redis Cloud]({{ '/cloud/' | relative_url }}) | Free parts run 2026-11-07 | The console from sign-up to every menu; free and paid plans; REST API; Active-Active |
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | Not started | What Redis Software and Cloud Pro add, each tied to a lab or marked doc-only |
 | [Iris]({{ '/iris/' | relative_url }}) | Not started | The Iris services, one lab each, on the free plan |
-| [Compare]({{ '/compare/' | relative_url }}) | Not started | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
+| [Compare]({{ '/compare/' | relative_url }}) | ElastiCache part run 2026-11-07 | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
 | [Deep Dive]({{ '/deep-dive/' | relative_url }}) | Not started | Threading, persistence, replication, Cluster, eviction, caching, Streams, Functions, ACL |
 
 <div class="warn" markdown="1">
@@ -73,7 +73,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | [Redis Cloud]({{ '/cloud/' | relative_url }}) | 무료 부분 실행 2026-11-07 | 가입부터 콘솔 메뉴 전체; 무료·유료 플랜; REST API; Active-Active |
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | 미착수 | Redis Software와 Cloud Pro가 더해 주는 것, 랩 또는 문서만으로 구분 |
 | [Iris]({{ '/iris/' | relative_url }}) | 미착수 | Iris 서비스마다 랩 하나, 무료 플랜으로 |
-| [Compare]({{ '/compare/' | relative_url }}) | 미착수 | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
+| [Compare]({{ '/compare/' | relative_url }}) | ElastiCache 부분 실행 2026-11-07 | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
 | [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 미착수 | 스레딩, 영속성, 복제, Cluster, 축출, 캐시, Streams, Functions, ACL |
 
 <div class="warn" markdown="1">
@@ -104,7 +104,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | [Redis Cloud]({{ '/cloud/' | relative_url }}) | 免费部分已运行 2026-11-07 | 从注册到控制台每个菜单；免费与付费方案；REST API；Active-Active |
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | 未开始 | Redis Software 与 Cloud Pro 的增强功能，各自对应实验或仅文档 |
 | [Iris]({{ '/iris/' | relative_url }}) | 未开始 | 每个 Iris 服务一个实验，使用免费方案 |
-| [Compare]({{ '/compare/' | relative_url }}) | 未开始 | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
+| [Compare]({{ '/compare/' | relative_url }}) | ElastiCache 部分已运行 2026-11-07 | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
 | [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 未开始 | 线程、持久化、复制、Cluster、淘汰、缓存、Streams、Functions、ACL |
 
 <div class="warn" markdown="1">
@@ -135,7 +135,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | [Redis Cloud]({{ '/cloud/' | relative_url }}) | 無料部分を実行 2026-11-07 | サインアップからコンソールの全メニュー、無料・有料プラン、REST API、Active-Active |
 | [Enterprise]({{ '/enterprise/' | relative_url }}) | 未着手 | Redis Software と Cloud Pro が加えるもの、ラボまたはドキュメントのみを明示 |
 | [Iris]({{ '/iris/' | relative_url }}) | 未着手 | Iris サービスごとにラボひとつ、無料プランで |
-| [Compare]({{ '/compare/' | relative_url }}) | 未着手 | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
+| [Compare]({{ '/compare/' | relative_url }}) | ElastiCache 部分を実行 2026-11-07 | Redis vs Valkey vs ElastiCache vs Memorystore vs Azure Managed Redis |
 | [Deep Dive]({{ '/deep-dive/' | relative_url }}) | 未着手 | スレッド、永続化、レプリケーション、Cluster、エビクション、キャッシュ、Streams、Functions、ACL |
 
 <div class="warn" markdown="1">
