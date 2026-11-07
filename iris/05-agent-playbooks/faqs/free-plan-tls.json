@@ -1,0 +1,9 @@
+{
+ "entryKey": "free-plan-tls",
+ "question": "Can I turn on TLS on a Redis Cloud free database?",
+ "answer": "No. The free plan does not support TLS: the REST API refuses enableTls with FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN. Use a paid plan for anything that needs encryption in transit.",
+ "intents": [
+  "tls",
+  "free-plan"
+ ]
+}
