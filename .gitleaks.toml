@@ -1,0 +1,43 @@
+# gitleaks configuration for redis-hols (layout follows runpod-hols / clickhouse-hols)
+#
+# This repository is public. The labs talk to Redis Cloud (REST API key +
+# secret key) and to databases whose connection string carries a password
+# (`redis://default:<password>@host:port`). The default rules catch URL
+# credentials; the rules below also catch Redis Cloud API keys and a bare
+# default-user password pasted into prose or a log excerpt.
+#
+# Local use:   gitleaks git . --config .gitleaks.toml --no-banner --redact
+# Staged only: gitleaks git --staged --config .gitleaks.toml --no-banner --redact
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "redis-url-password"
+description = "Redis connection URL with embedded password"
+regex = '''rediss?://[A-Za-z0-9_.-]*:[^@\s<>$]{8,}@[A-Za-z0-9.-]+'''
+keywords = ["redis://", "rediss://"]
+tags = ["redis", "credential"]
+
+[[rules]]
+id = "redis-cloud-api-key"
+description = "Redis Cloud REST API account key / user key in a header or assignment"
+regex = '''(?i)(x-api-key|x-api-secret-key|REDISCLOUD_(ACCESS|SECRET)_KEY)\s*[:=]\s*["']?[A-Za-z0-9]{20,}'''
+keywords = ["x-api-key", "x-api-secret-key", "REDISCLOUD_ACCESS_KEY", "REDISCLOUD_SECRET_KEY"]
+tags = ["redis", "credential"]
+
+[allowlist]
+description = "Placeholders and documented example values"
+regexTarget = "match"
+
+paths = [
+    '''\.example$''',
+    '''(^|/)\.gitleaks\.toml$''',
+]
+
+regexes = [
+    # placeholder shapes used throughout the docs
+    '''<[A-Za-z_ -]+>''',
+    '''(?i)(your|example|placeholder|changeme|dummy|xxx+|redacted|password@)''',
+    '''\$\{?[A-Za-z_][A-Za-z0-9_]*\}?''',
+]

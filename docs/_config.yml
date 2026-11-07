@@ -1,0 +1,53 @@
+title: Redis Hands-On Labs
+description: Redis Open Source, Redis Cloud, Enterprise, Iris, comparisons and deep dives — hands-on labs (EN/KO/中文/日本語)
+lang: en
+
+# Served at https://redis.litkhai.dev (Vercel). litkhai.github.io/redis-hols
+# will publish redirect stubs built from the same pages once the host is live.
+baseurl: ""
+url: "https://redis.litkhai.dev"
+
+repo_url: https://github.com/litkhai/redis-hols
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  hard_wrap: false
+
+# No remote theme on purpose — a self-contained layout has no upstream
+# gem-compatibility risk and gives full control over the language toggle.
+# 원격 테마를 쓰지 않는다. 자체 레이아웃은 gem 호환성 문제가 없고
+# 언어 토글을 완전히 제어할 수 있다.
+theme: null
+plugins: []
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor
+  - vercel.json
+
+# Nav, grouped. A divider is drawn wherever `group` changes. Labels are
+# English only — the language toggle switches page content, not the chrome.
+# `group` is not displayed; the layout reads it only to place dividers.
+# 그룹으로 나눈 네비게이션. `group` 이 바뀌는 지점마다 구분선이 그려진다.
+# 라벨은 영문만. 언어 토글이 바꾸는 것은 본문이지 UI 가 아니다.
+nav:
+  # Start here / 시작
+  - { title: Overview, url: /, group: start }
+  - { title: Setup, url: /setup/, group: start }
+
+  # The product tracks / 제품 트랙
+  - { title: Redis Cloud, url: /cloud/, group: products }
+  - { title: Enterprise, url: /enterprise/, group: products }
+  - { title: Iris, url: /iris/, group: products }
+
+  # Side by side with the alternatives / 대안과 나란히
+  - { title: Compare, url: /compare/, group: compare }
+
+  # Mechanisms / 동작 원리
+  - { title: Deep Dive, url: /deep-dive/, group: readings }
+
+  # The repository itself / 저장소 자체
+  - { title: About, url: /about/, group: about }

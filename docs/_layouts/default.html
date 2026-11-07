@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
+<meta name="description" content="{{ page.description | default: site.description }}">
+<meta name="theme-color" content="#06111a">
+<!-- Applied before first paint so a saved light theme does not flash dark.
+     첫 페인트 전에 적용해 라이트 테마 저장 시 다크가 번쩍이지 않게 한다. -->
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('redis-hols-theme');
+    document.documentElement.dataset.theme = (t === 'light' || t === 'dark') ? t : 'dark';
+  } catch (e) { /* private mode — keep the dark default */ }
+})();
+</script>
+<link rel="stylesheet" href="{{ '/assets/style.css' | relative_url }}">
+</head>
+<body>
+
+<!-- Header and nav stick together as one block. Sticking them separately
+     would need the header's height hardcoded into the nav's `top`, which
+     breaks as soon as the header wraps on a narrow screen.
+     헤더와 네비게이션을 한 블록으로 묶어 고정한다. 따로 고정하면 네비게이션의
+     `top` 에 헤더 높이를 하드코딩해야 하는데, 좁은 화면에서 헤더가 줄바꿈되는
+     순간 어긋난다. -->
+<div class="topbar" id="topbar">
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="{{ '/' | relative_url }}">
+      <span class="brand-mark">▮</span> {{ site.title }}
+    </a>
+    <div class="header-right">
+      <!-- One icon instead of a button per language: four labels would crowd
+           the bar on a phone. The menu items keep `data-set-lang`, so the same
+           bind() drives them.
+           언어마다 버튼을 두지 않고 아이콘 하나로 묶는다. 라벨 네 개는 휴대폰에서
+           상단 바를 비좁게 만든다. 메뉴 항목은 `data-set-lang` 을 그대로 쓰므로
+           같은 bind() 가 처리한다. -->
+      <div class="lang-menu" id="lang-menu">
+        <button type="button" class="lang-trigger" id="lang-trigger"
+                aria-haspopup="true" aria-expanded="false" aria-controls="lang-list"
+                title="Language / 언어 / 语言 / 言語">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M3 12h18"/>
+            <path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/>
+          </svg>
+          <span class="lang-code" id="lang-code">EN</span>
+          <span class="visually-hidden">Language</span>
+        </button>
+        <div class="lang-list" id="lang-list" role="menu" hidden>
+          <button type="button" role="menuitemradio" data-set-lang="en" lang="en" class="active">English</button>
+          <button type="button" role="menuitemradio" data-set-lang="ko" lang="ko">한국어</button>
+          <button type="button" role="menuitemradio" data-set-lang="zh" lang="zh-Hans">简体中文</button>
+          <button type="button" role="menuitemradio" data-set-lang="ja" lang="ja">日本語</button>
+        </div>
+      </div>
+      <div class="switch" role="group" aria-label="Theme">
+        <button type="button" data-set-theme="dark" class="active" title="Dark / 다크">&#9789;</button>
+        <button type="button" data-set-theme="light" title="Light / 라이트">&#9788;</button>
+      </div>
+      <a class="gh" href="{{ site.repo_url }}">GitHub</a>
+    </div>
+  </div>
+</header>
+
+<nav class="site-nav">
+  <div class="wrap nav-inner">
+    {% assign cur = page.url | remove: site.baseurl %}
+    {% assign here = '' %}
+    {% for item in site.nav %}
+      {% if cur == item.url %}{% assign here = item %}{% endif %}
+    {% endfor %}
+    {% assign prev_group = '' %}
+    {% for item in site.nav %}
+      {% unless item.parent %}
+        {% if prev_group != '' and item.group != prev_group %}
+          <span class="nav-divider" aria-hidden="true"></span>
+        {% endif %}
+        <a href="{{ item.url | relative_url }}"
+           class="{% if cur == item.url or here.parent == item.title %}current{% endif %}">{{ item.title }}</a>
+        {% assign prev_group = item.group %}
+      {% endunless %}
+    {% endfor %}
+  </div>
+</nav>
+
+</div><!-- /.topbar -->
+
+<div class="wrap layout">
+
+  <!-- Page-level navigation stays in the header bar. This sidebar carries only
+       the current page's sections, and appears on wide screens.
+       페이지 단위 이동은 상단 바가 담당한다. 이 사이드바는 현재 페이지의
+       섹션만 담으며 넓은 화면에서만 나타난다.
+
+       Filled in by script: the headings of whichever language block is
+       visible. Building it server-side would list every heading twice, once
+       per language, and half the anchors would point into a hidden block.
+       스크립트가 채운다. 현재 보이는 언어 블록의 제목만 넣는다. 서버 사이드로
+       만들면 제목이 두 배로 나열되고, 앵커 절반이 숨겨진 블록을 가리킨다. -->
+  {%- comment -%}
+    Child pages of the current section. Server-side, because the tree is the
+    same in both languages — only the heading list below it is per-language.
+    현재 섹션의 자식 페이지. 트리는 두 언어가 같으므로 서버 사이드로 만든다.
+    언어마다 달라지는 것은 그 아래 제목 목록뿐이다.
+  {%- endcomment -%}
+  {% if here.parent %}{% assign section = here.parent %}{% else %}{% assign section = here.title %}{% endif %}
+  {% assign kids = site.nav | where: 'parent', section %}
+  {% assign parent_item = site.nav | where: 'title', section | first %}
+
+  <aside class="sidebar {% if kids.size > 0 %}has-section{% endif %}" id="page-sidebar"
+         {% if kids.size == 0 %}hidden{% endif %}>
+    {% if kids.size > 0 %}
+    <!-- One tree, not two lists: the current page's headings nest under the
+         page they belong to, so there is a single place to look and a single
+         thing highlighted.
+         목록 두 개가 아니라 트리 하나다. 현재 페이지의 제목들이 그 페이지 아래에
+         중첩되므로, 볼 곳도 강조되는 것도 하나뿐이다. -->
+    <nav aria-label="In this section">
+      <p class="side-group">In this section</p>
+      <ul class="side-tree">
+        <li>
+          <a href="{{ parent_item.url | relative_url }}"
+             class="{% if cur == parent_item.url %}here{% endif %}">{{ parent_item.title }}</a>
+          {% if cur == parent_item.url %}<ul class="side-toc" id="page-toc"></ul>{% endif %}
+        </li>
+        {% for kid in kids %}
+        <li class="side-child">
+          <a href="{{ kid.url | relative_url }}"
+             class="{% if cur == kid.url %}here{% endif %}">{{ kid.title }}</a>
+          {% if cur == kid.url %}<ul class="side-toc" id="page-toc"></ul>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </nav>
+    {% else %}
+    <nav aria-label="On this page">
+      <p class="side-group">On this page</p>
+      <ul class="side-toc" id="page-toc"></ul>
+    </nav>
+    {% endif %}
+  </aside>
+
+  <main class="content">
+    {{ content }}
+  </main>
+
+</div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <!-- English only: the footer is chrome, and the language toggle governs
+         page content rather than the frame around it.
+         영문만 사용한다. 푸터는 UI 이고, 언어 토글이 관장하는 것은 본문이다. -->
+    <p>
+      Unofficial hands-on labs. Not affiliated with Redis Ltd.
+    </p>
+    <p>
+      <a href="{{ site.repo_url }}">Source on GitHub</a> ·
+      <a href="https://redis.io/docs/latest/">Redis Docs</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+// Two independent preferences, same segmented-switch pattern.
+// 서로 독립적인 두 설정이 같은 세그먼트 스위치 패턴을 공유한다.
+(function () {
+  // Language: the saved choice, else the browser's language, else EN. Without
+  // JS every language block stays visible, so the page degrades to showing
+  // all of them — never to nothing. A page that lacks the chosen language
+  // shows English rather than an empty main.
+  // 언어: 저장된 선택, 없으면 브라우저 언어, 그것도 아니면 EN. JS 가 없으면
+  // 모든 블록이 보이므로 최악의 경우에도 전부 표시될 뿐 빈 페이지가 되지 않는다.
+  // 선택한 언어가 없는 페이지는 빈 본문 대신 영어를 보여준다.
+  var LANG_TAG = { en: 'en', ko: 'ko', zh: 'zh-Hans', ja: 'ja' };
+  var LANG_CODE = { en: 'EN', ko: 'KO', zh: '中', ja: '日' };
+  var browserLang = (navigator.language || 'en').slice(0, 2).toLowerCase();
+  bind({
+    key: 'redis-hols-lang',
+    attr: 'data-set-lang',
+    fallback: LANG_TAG[browserLang] ? browserLang : 'en',
+    valid: ['en', 'ko', 'zh', 'ja'],
+    onApply: function (mode) {
+      var shown = document.querySelector('.lang[data-lang="' + mode + '"]') ? mode : 'en';
+      document.documentElement.lang = LANG_TAG[shown];
+      document.querySelectorAll('.lang').forEach(function (el) {
+        el.hidden = el.getAttribute('data-lang') !== shown;
+      });
+      var code = document.getElementById('lang-code');
+      if (code) code.textContent = LANG_CODE[mode];
+      document.querySelectorAll('[data-set-lang]').forEach(function (b) {
+        b.setAttribute('aria-checked', b.getAttribute('data-set-lang') === mode ? 'true' : 'false');
+      });
+      setLangMenu(false);
+      buildToc();
+    }
+  });
+
+  // The language menu: opens on the globe, closes on a choice, Escape or a
+  // click elsewhere.
+  // 언어 메뉴: 지구본으로 열고, 선택·Escape·바깥 클릭으로 닫는다.
+  function setLangMenu(open) {
+    var list = document.getElementById('lang-list');
+    var trigger = document.getElementById('lang-trigger');
+    if (!list || !trigger) return;
+    list.hidden = !open;
+    trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  var langTrigger = document.getElementById('lang-trigger');
+  if (langTrigger) {
+    langTrigger.addEventListener('click', function (e) {
+      e.stopPropagation();
+      setLangMenu(document.getElementById('lang-list').hidden);
+    });
+    document.addEventListener('click', function (e) {
+      if (!document.getElementById('lang-menu').contains(e.target)) setLangMenu(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { setLangMenu(false); langTrigger.focus(); }
+    });
+  }
+
+  // Publish the pinned bar's height so the sidebar's sticky offset and the
+  // anchor scroll-margin can clear it. Measured rather than hardcoded: the
+  // header wraps on narrow screens, which changes the height.
+  //
+  // 고정된 상단 바의 높이를 노출해 사이드바의 sticky 오프셋과 앵커
+  // scroll-margin 이 이를 피하도록 한다. 좁은 화면에서 헤더가 줄바꿈되며
+  // 높이가 달라지므로 하드코딩하지 않고 측정한다.
+  var topbar = document.getElementById('topbar');
+  if (topbar) {
+    var publishHeight = function () {
+      document.documentElement.style.setProperty(
+        '--topbar-h', topbar.offsetHeight + 'px');
+    };
+    publishHeight();
+    if (window.ResizeObserver) {
+      new ResizeObserver(publishHeight).observe(topbar);
+    } else {
+      window.addEventListener('resize', publishHeight);
+    }
+  }
+
+  var spy = null;
+
+  // Sidebar table of contents for the current page.
+  //
+  // Built from the DOM rather than at build time because each page carries
+  // both languages: a server-rendered list would name every heading twice, and
+  // half the anchors would point into a hidden block, where jumps do nothing.
+  //
+  // 현재 페이지의 사이드바 목차.
+  //
+  // 빌드 시점이 아니라 DOM 에서 만든다. 각 페이지가 두 언어를 모두 담고 있어
+  // 서버에서 만들면 제목이 두 번씩 나열되고, 앵커 절반이 숨겨진 블록을 가리켜
+  // 클릭해도 아무 일이 일어나지 않는다.
+  function buildToc() {
+    var list = document.getElementById('page-toc');
+    var aside = document.getElementById('page-sidebar');
+    if (!list) return;
+
+    var visible = document.querySelector('.lang:not([hidden])') || document;
+
+    // h2 and h3, minus the language header each block opens with — that is
+    // always the first h2 and would read as "English" sitting above the real
+    // contents. Pages that use only h3 are unaffected.
+    //
+    // h2 와 h3 를 담되, 각 블록 첫머리의 언어 제목은 뺀다. 항상 첫 h2 이고,
+    // 목차 맨 위에 "English" 가 얹히는 꼴이 된다. h3 만 쓰는 페이지는 영향 없다.
+    var headings = Array.prototype.slice.call(visible.querySelectorAll('h2[id], h3[id]'));
+    if (headings.length && headings[0].tagName === 'H2') headings.shift();
+
+    list.textContent = '';
+    if (spy) { spy.disconnect(); spy = null; }
+
+    // A page with no sections gets no sidebar, rather than an empty heading —
+    // unless it carries a section tree, which is server-rendered and stands on
+    // its own.
+    // 섹션이 없는 페이지는 빈 제목만 남기지 말고 사이드바 자체를 숨긴다.
+    // 단 섹션 트리가 있으면 예외다. 서버에서 렌더링되며 그 자체로 의미가 있다.
+    // With a section tree the sidebar has something to show even for a page
+    // with no headings, so only hide it when both are empty. Do not touch the
+    // list's parent here — in tree mode that is the <li> holding the current
+    // page's own link.
+    // 섹션 트리가 있으면 제목이 없는 페이지에서도 보여줄 것이 있으므로, 둘 다
+    // 비었을 때만 숨긴다. list 의 부모는 건드리지 않는다. 트리 모드에서는 그것이
+    // 현재 페이지 링크를 담은 <li> 다.
+    var hasTree = aside && aside.classList.contains('has-section');
+    if (aside) aside.hidden = headings.length === 0 && !hasTree;
+    if (!headings.length) return;
+
+    headings.forEach(function (h) {
+      var li = document.createElement('li');
+      var a = document.createElement('a');
+      a.href = '#' + h.id;
+      a.textContent = h.textContent;
+      a.dataset.target = h.id;
+      a.className = h.tagName === 'H2' ? 'lvl-2' : 'lvl-3';
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+
+    // Highlight whichever heading is nearest the top of the viewport.
+    // 뷰포트 상단에 가장 가까운 제목을 강조한다.
+    var links = {};
+    list.querySelectorAll('a').forEach(function (a) { links[a.dataset.target] = a; });
+
+    spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        Object.keys(links).forEach(function (k) { links[k].classList.remove('active'); });
+        if (links[e.target.id]) links[e.target.id].classList.add('active');
+      });
+    }, { rootMargin: '0px 0px -75% 0px', threshold: 0 });
+
+    headings.forEach(function (h) { spy.observe(h); });
+  }
+
+  // Theme: dark by default. The <head> script already set the attribute;
+  // this only syncs the button state and handles clicks.
+  // 테마: 기본 다크. <head> 스크립트가 이미 속성을 설정했으므로
+  // 여기서는 버튼 상태 동기화와 클릭 처리만 한다.
+  bind({
+    key: 'redis-hols-theme',
+    attr: 'data-set-theme',
+    fallback: 'dark',
+    valid: ['dark', 'light'],
+    onApply: function (mode) {
+      document.documentElement.dataset.theme = mode;
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', mode === 'light' ? '#ffffff' : '#06111a');
+    }
+  });
+
+  function bind(cfg) {
+    var buttons = document.querySelectorAll('[' + cfg.attr + ']');
+
+    function apply(mode) {
+      cfg.onApply(mode);
+      buttons.forEach(function (b) {
+        b.classList.toggle('active', b.getAttribute(cfg.attr) === mode);
+      });
+      try { localStorage.setItem(cfg.key, mode); } catch (e) { /* private mode */ }
+    }
+
+    buttons.forEach(function (b) {
+      b.addEventListener('click', function () { apply(b.getAttribute(cfg.attr)); });
+    });
+
+    // Anything not in `valid` falls back to the default — this also clears
+    // stale values written by earlier versions of this page.
+    // `valid` 에 없는 값은 기본값으로 되돌린다. 이전 버전이 저장한 값도 이렇게 정리된다.
+    var saved = null;
+    try { saved = localStorage.getItem(cfg.key); } catch (e) { /* private mode */ }
+    apply(cfg.valid.indexOf(saved) !== -1 ? saved : cfg.fallback);
+  }
+})();
+</script>
+{%- comment -%} Per-page scripts, e.g. the sizing calculators (#58). / 페이지별 스크립트 (#58). {%- endcomment -%}
+{%- for js in page.scripts %}
+<script src="{{ js | relative_url }}" defer></script>
+{%- endfor %}
+
+</body>
+</html>
