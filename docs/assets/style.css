@@ -149,6 +149,10 @@ html:lang(ja) body {
 
   /* hidden is set by script when a page has no sections */
   .sidebar[hidden] { display: none; }
+
+  /* With the sidebar hidden, main would otherwise land in the 200px column (#19).
+     사이드바가 숨겨지면 main이 200px 열에 들어가므로 두 열을 모두 쓰게 한다. */
+  .sidebar[hidden] + .content { grid-column: 1 / -1; }
 }
 
 .side-group {
