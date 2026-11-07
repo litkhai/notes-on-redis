@@ -1,0 +1,41 @@
+# Six Redis 8.10.3 nodes with cluster mode on, fixed addresses, nothing published to the host.
+# run.sh creates the cluster (3 primaries, 3 replicas) and runs the experiments.
+# 클러스터 모드를 켠 Redis 8.10.3 노드 6개, 고정 주소, 호스트로 포트를 열지 않는다.
+name: nor-cluster
+networks:
+  cl:
+    ipam:
+      config: [{ subnet: 10.231.78.0/24 }]
+x-node: &node
+  image: redis:8.10.3
+services:
+  node1:
+    <<: *node
+    container_name: nor-cl-node1
+    networks: { cl: { ipv4_address: 10.231.78.11 } }
+    command: ["redis-server", "--cluster-enabled", "yes", "--cluster-announce-ip", "10.231.78.11", "--save", "", "--appendonly", "no"]
+  node2:
+    <<: *node
+    container_name: nor-cl-node2
+    networks: { cl: { ipv4_address: 10.231.78.12 } }
+    command: ["redis-server", "--cluster-enabled", "yes", "--cluster-announce-ip", "10.231.78.12", "--save", "", "--appendonly", "no"]
+  node3:
+    <<: *node
+    container_name: nor-cl-node3
+    networks: { cl: { ipv4_address: 10.231.78.13 } }
+    command: ["redis-server", "--cluster-enabled", "yes", "--cluster-announce-ip", "10.231.78.13", "--save", "", "--appendonly", "no"]
+  node4:
+    <<: *node
+    container_name: nor-cl-node4
+    networks: { cl: { ipv4_address: 10.231.78.14 } }
+    command: ["redis-server", "--cluster-enabled", "yes", "--cluster-announce-ip", "10.231.78.14", "--save", "", "--appendonly", "no"]
+  node5:
+    <<: *node
+    container_name: nor-cl-node5
+    networks: { cl: { ipv4_address: 10.231.78.15 } }
+    command: ["redis-server", "--cluster-enabled", "yes", "--cluster-announce-ip", "10.231.78.15", "--save", "", "--appendonly", "no"]
+  node6:
+    <<: *node
+    container_name: nor-cl-node6
+    networks: { cl: { ipv4_address: 10.231.78.16 } }
+    command: ["redis-server", "--cluster-enabled", "yes", "--cluster-announce-ip", "10.231.78.16", "--save", "", "--appendonly", "no"]

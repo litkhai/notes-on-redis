@@ -1,0 +1,40 @@
+# One primary, two replicas, three Sentinels on a private network with fixed addresses.
+# Sentinel is pointed at an IP, not a container name: with names, stopping the primary made
+# Docker's DNS fail lookups for "primary" and the Sentinels stalled (see README).
+# Nothing is published to the host; the experiment runs commands with docker exec.
+# 고정 주소의 사설 네트워크에 주 서버 하나, 복제본 둘, Sentinel 셋. Sentinel에는 컨테이너
+# 이름이 아니라 IP를 준다(README 참고). 호스트로 포트를 열지 않는다.
+name: nor-repl
+networks:
+  repl:
+    ipam:
+      config: [{ subnet: 10.231.77.0/24 }]
+x-redis: &redis
+  image: redis:8.10.3
+  networks: { repl: {} }
+x-sentinel: &sentinel
+  image: redis:8.10.3
+  depends_on: [primary, replica1, replica2]
+  command: >
+    sh -c 'printf "port 26379\nsentinel monitor mymaster 10.231.77.10 6379 2\nsentinel down-after-milliseconds mymaster 3000\nsentinel failover-timeout mymaster 10000\n" > /tmp/s.conf && exec redis-sentinel /tmp/s.conf'
+services:
+  primary:
+    <<: *redis
+    container_name: nor-repl-primary
+    networks: { repl: { ipv4_address: 10.231.77.10 } }
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+  replica1:
+    <<: *redis
+    container_name: nor-repl-replica1
+    networks: { repl: { ipv4_address: 10.231.77.11 } }
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--replicaof", "10.231.77.10", "6379"]
+    depends_on: [primary]
+  replica2:
+    <<: *redis
+    container_name: nor-repl-replica2
+    networks: { repl: { ipv4_address: 10.231.77.12 } }
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--replicaof", "10.231.77.10", "6379"]
+    depends_on: [primary]
+  sentinel1: { <<: *sentinel, container_name: nor-repl-sentinel1, networks: { repl: { ipv4_address: 10.231.77.21 } } }
+  sentinel2: { <<: *sentinel, container_name: nor-repl-sentinel2, networks: { repl: { ipv4_address: 10.231.77.22 } } }
+  sentinel3: { <<: *sentinel, container_name: nor-repl-sentinel3, networks: { repl: { ipv4_address: 10.231.77.23 } } }

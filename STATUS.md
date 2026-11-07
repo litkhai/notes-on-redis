@@ -11,7 +11,7 @@
 | `enterprise/` | Not started — [#9](https://github.com/litkhai/notes-on-redis/issues/9) |
 | `iris/` | `01` run 2026-11-07: Agent Memory service `notes-on-redis-memory` on the free DB (endpoint region us-east-1), keys `notes-on-redis-lab` (read) and `notes-on-redis-lab-write` (expire 2026-12-07); redis-iris 1.0.1 SDK and CLI end to end. Message count not shown anywhere. `02`–`06`: [#7](https://github.com/litkhai/notes-on-redis/issues/7), [#11](https://github.com/litkhai/notes-on-redis/issues/11) |
 | `compare/` | `01` run 2026-11-07: Redis 8.10.3 vs Valkey 9.1.3 and valkey-bundle 9.1 (commands, data types, memory, benchmarks); `matrix.md` rebuilt with a source per cell; `02` ElastiCache Serverless for Valkey run 2026-11-07 and deleted. Licence timeline and alternatives still planned |
-| `deep-dive/` | Not started — [#6](https://github.com/litkhai/notes-on-redis/issues/6), [#10](https://github.com/litkhai/notes-on-redis/issues/10) |
+| `deep-dive/` | `01`–`04` run 2026-11-07 on Redis 8.10.3: io-threads 1/2/4/8, RDB fork/COW, AOF fsync, multi-part AOF, BACKUP + preload-file restore, partial/full resync, WAIT per connection, Sentinel failover (4.4 s with IPs, 284 s with container names), six-node cluster and atomic slot migration. `05`–`08`: [#10](https://github.com/litkhai/notes-on-redis/issues/10) |
 | [`docs/`](./docs) | Live at https://redis.litkhai.dev (Vercel, deploys on push to `main`); seven languages (#22); `/cloud/` and the ElastiCache part of `/compare/` have content, the rest are stubs. Pages redirect stubs not added yet: [#13](https://github.com/litkhai/notes-on-redis/issues/13) |
 
 ## CI
