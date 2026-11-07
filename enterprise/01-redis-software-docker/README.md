@@ -18,8 +18,11 @@ Official documentation: [Redis Software](https://redis.io/docs/latest/operate/rs
 cp .env.example .env               # admin user and password for the new cluster
 docker compose up -d               # UI on https://127.0.0.1:18443, REST API on 19443, databases 12000-12009
 set -a; . ./.env; set +a
-curl -sk -X POST https://127.0.0.1:19443/v1/bootstrap/create_cluster -H 'Content-Type: application/json'   -d "{"action":"create_cluster","cluster":{"name":"nor-rs.local"},"credentials":{"username":"$RS_USER","password":"$RS_PASS"}}"
+curl -sk -X POST https://127.0.0.1:19443/v1/bootstrap/create_cluster -H 'Content-Type: application/json' \
+  -d '{"action":"create_cluster","cluster":{"name":"nor-rs.local"},"credentials":{"username":"'"$RS_USER"'","password":"'"$RS_PASS"'"}}'
+sleep 60                           # the cluster finishes bootstrapping in the background
 ../../cloud/01-free-database/.venv/bin/python lab.py
+../../cloud/01-free-database/.venv/bin/python tls.py           # modules shipped with the cluster, and a database with TLS on its endpoint
 ```
 
 Output as it appeared (2026-11-07):
@@ -56,6 +59,52 @@ Output as it appeared (2026-11-07):
    shards in use: 4 of 4
 ```
 
+`tls.py` output as it appeared (2026-11-07):
+
+```text
+== modules shipped with the cluster (GET /v1/modules)
+   ReJSON         8.8.2
+   ReJSON         8.6.6
+   ReJSON         8.4.7
+   ReJSON         8.2.12
+   ReJSON         8.0.7
+   ReJSON         2.8.20
+   ReJSON         2.6.25
+   ReJSON         2.4.20
+   bf             8.8.1
+   bf             8.6.4
+   bf             8.4.7
+   bf             8.2.14
+   bf             8.0.10
+   bf             2.8.22
+   bf             2.6.30
+   search         8.8.8
+   search         8.6.12
+   search         8.4.14
+   search         8.2.17
+   search         8.0.3
+   search         2.10.33
+   search         2.8.39
+   timeseries     8.8.8
+   timeseries     8.6.12
+   timeseries     8.4.19
+   timeseries     8.2.17
+   timeseries     8.0.7
+   timeseries     1.12.19
+   timeseries     1.10.29
+   timeseries     1.8.28
+   RedisGears present: False
+== a database with TLS on its endpoint
+   create: 200 
+   tls_mode enabled, enforce_client_authentication disabled, port 12005
+   proxy certificate from GET /v1/cluster/certificates: -----BEGIN CERTIFICATE----- (1627 bytes)
+   plain TCP                                      -> ConnectionError: Connection closed by server.
+   TLS, proxy cert as CA, hostname not checked    -> SET ok, GET b'v'
+   TLS, no CA given (system store)                -> ConnectionError: Error 1 connecting to localhost:12005. [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify
+   500 PINGs over TLS on one connection: 0.132 ms each
+   db-tls deleted
+```
+
 ### What was observed
 
 - **Trial terms, read from `/v1/license`:** features `trial` and `bigstore`, 30 days from cluster creation (2026-11-07 to 2026-12-07), at most 4 shards. A fifth shard was refused: "License permits 4 total shards, but there are 5 total shards in use."
@@ -66,10 +115,13 @@ Output as it appeared (2026-11-07):
 - **Replication needs nodes:** a replicated database on one node was refused with "Not enough nodes to perform replication", before any licence check.
 - **Re-sharding in place:** 2 → 4 shards with 10,000 keys took about 6 s; all keys were still there afterwards.
 - The cluster page shows "Cluster degraded" for a one-node cluster.
+- **Modules shipped with 8.2.6-25.** `GET /v1/modules` lists JSON, Bloom (`bf`), Search and time series, several versions of each so databases of older Redis versions keep working. **RedisGears is not there**, so the old RDI write-behind, which needs RedisGears Python 1.2.6, cannot run on this release (see [`02-rdi`](../02-rdi/README.md)).
+- **TLS on a database endpoint.** A database created with `tls_mode: enabled` and `enforce_client_authentication: disabled` closed plain TCP connections at once. A redis-py client with `ssl=True` connected only when given the cluster's proxy certificate from `GET /v1/cluster/certificates` as its CA; with the system store it failed `CERTIFICATE_VERIFY_FAILED`. Hostname checking was off because the self-signed certificate names the cluster, not `localhost`. A PING round trip on one TLS connection took 0.13 ms.
+- **The bootstrap command in an earlier version of this README was broken.** Its JSON was in double quotes inside double quotes, so the shell stripped them. It is fixed above.
 
 ### Not run / caveats
 
-- LDAP, TLS on the database endpoints and Active-Active need more than one node or more setup; not run.
+- LDAP, mutual TLS (client certificates) and Active-Active need more setup or more than one node; not run.
 - Redis Flex (RAM + SSD) needs local NVMe configuration; not run.
 
 | | |
@@ -93,11 +145,15 @@ Output as it appeared (2026-11-07):
 cp .env.example .env               # 새 클러스터의 관리자 계정과 비밀번호
 docker compose up -d               # UI는 https://127.0.0.1:18443, REST API는 19443, DB는 12000-12009
 set -a; . ./.env; set +a
-curl -sk -X POST https://127.0.0.1:19443/v1/bootstrap/create_cluster -H 'Content-Type: application/json'   -d "{"action":"create_cluster","cluster":{"name":"nor-rs.local"},"credentials":{"username":"$RS_USER","password":"$RS_PASS"}}"
+curl -sk -X POST https://127.0.0.1:19443/v1/bootstrap/create_cluster -H 'Content-Type: application/json' \
+  -d '{"action":"create_cluster","cluster":{"name":"nor-rs.local"},"credentials":{"username":"'"$RS_USER"'","password":"'"$RS_PASS"'"}}'
+sleep 60                           # the cluster finishes bootstrapping in the background
 ../../cloud/01-free-database/.venv/bin/python lab.py
 ```
 
 출력은 영문 절과 같다(2026-11-07).
+
+`tls.py`의 출력도 영문 절과 같다(2026-11-07).
 
 ### 관찰한 것
 
@@ -109,10 +165,13 @@ curl -sk -X POST https://127.0.0.1:19443/v1/bootstrap/create_cluster -H 'Content
 - **복제에는 노드가 필요하다:** 노드 하나에서 복제 DB는 라이선스 검사 전에 "Not enough nodes to perform replication"으로 거절됐다.
 - **데이터를 둔 채 재샤딩:** 키 10,000개로 2 → 4샤드에 약 6초, 키는 모두 남아 있었다.
 - 노드 하나짜리 클러스터는 클러스터 화면에 "Cluster degraded"로 표시된다.
+- **8.2.6-25에 들어 있는 모듈.** `GET /v1/modules`는 JSON, Bloom(`bf`), Search, time series를 버전 여러 개씩 보여 준다. 이전 Redis 버전의 DB가 계속 돌게 하려는 것이다. **RedisGears는 없다.** 그래서 RedisGears Python 1.2.6이 필요한 예전 RDI write-behind는 이 릴리스에서 돌 수 없다([`02-rdi`](../02-rdi/README.md) 참고).
+- **DB 엔드포인트의 TLS.** `tls_mode: enabled`, `enforce_client_authentication: disabled`로 만든 DB는 평문 TCP 연결을 바로 끊었다. `ssl=True`인 redis-py 클라이언트는 `GET /v1/cluster/certificates`의 클러스터 프록시 인증서를 CA로 줬을 때만 연결됐고, 시스템 인증서 저장소로는 `CERTIFICATE_VERIFY_FAILED`로 실패했다. 자체 서명 인증서에 `localhost`가 아니라 클러스터 이름이 들어 있어 호스트 이름 검사는 껐다. TLS 연결 하나에서 PING 왕복은 0.13 ms.
+- **이 README 이전 버전의 부트스트랩 명령은 깨져 있었다.** JSON을 큰따옴표 안에 큰따옴표로 넣어서 셸이 따옴표를 지웠다. 위에서 고쳤다.
 
 ### 미실행 / 주의
 
-- LDAP, DB 엔드포인트의 TLS, Active-Active는 노드가 더 있거나 설정이 더 필요해 실행하지 않았다.
+- LDAP, 상호 TLS(클라이언트 인증서), Active-Active는 설정이 더 필요하거나 노드가 더 있어야 해서 실행하지 않았다.
 - Redis Flex(RAM + SSD)는 로컬 NVMe 설정이 필요해 실행하지 않았다.
 
 | | |

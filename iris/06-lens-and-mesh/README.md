@@ -20,6 +20,7 @@ python3 -m venv .venv      # Python 3.11+; the lab used 3.12 through uv
 .venv/bin/python mesh_lab.py      # Agent Mesh: local Redis 8.10.3 in Docker, four app processes, about 3 minutes
 .venv/bin/python lens_local.py    # Lens SDK against a loopback receiver; reads ../02-agent-memory/.env
 node ../../scripts/capture-console.mjs capture.json   # console screens, from the repository root
+.venv/bin/python mesh_takeover.py  # A2A hand-off: kill the running process, resume elsewhere (takeover=True), and the default
 ```
 
 Agent Mesh output as it appeared (2026-11-07). The apps are `mesh_sse_app.py` and `mesh_a2a_app.py`, adapted from the two quickstart demos.
@@ -169,6 +170,42 @@ resource: {'telemetry.sdk.name': 'opentelemetry', 'service.instance.id': '4450f4
 
 Captured 2026-11-07 on the free plan: **New Lens** is disabled.
 
+`mesh_takeover.py` output as it appeared (2026-11-07):
+
+```text
+== 1. takeover=True: A runs the task, dies after three steps, B takes it over
+   task 79f18bf6… started on A
+   A v1 task [] TASK_STATE_WORKING
+   A v2 artifactUpdate ['step-1 by 28301']
+   A v3 artifactUpdate ['step-2 by 28301']
+   A v4 artifactUpdate ['step-3 by 28301']
+   A killed (SIGKILL); saved cursor v4
+A2A task is running in another process; not running it here
+A2A task is running in another process; not running it here
+A2A task is running in another process; not running it here
+A2A task is running in another process; not running it here
+A2A task is running in another process; not running it here
+A2A task is running in another process; not running it here
+     0.0 s  POST B /resume -> HTTP 200 {"resumed_on": 28302, "accepted": false, "state": "TASK_STATE_WORKING", "artifacts": ["step-1", "step-2", "step-3"]}
+     2.0 s  POST B /resume -> HTTP 200 {"resumed_on": 28302, "accepted": false, "state": "TASK_STATE_WORKING", "artifacts": ["step-1", "step-2", "step-3"]}
+    15.1 s  POST B /resume -> HTTP 200 {"resumed_on": 28302, "accepted": true, "state": "TASK_STATE_COMPLETED", "artifacts": ["step-1", "step-2", "step-3", "step-4", "step-5", "step-6"]}
+   resume attempts: 7; accepted 15.1 s after the kill
+   B v9 task ['step-1 by 28301', 'step-2 by 28301', 'step-3 by 28301', 'step-4 by 28302', 'step-5 by 28302', 'step-6 by 28302'] TASK_STATE_COMPLETED
+   artifacts in the finished task: ['step-1 by 28301', 'step-2 by 28301', 'step-3 by 28301', 'step-4 by 28302', 'step-5 by 28302', 'step-6 by 28302']
+
+== 2. takeover=False: the same failure, a reader on B is following the task
+   task f3d210cf… started on A
+   A v1 task [] TASK_STATE_WORKING
+   A v2 artifactUpdate ['step-1 by 28311']
+   A v3 artifactUpdate ['step-2 by 28311']
+   A v4 artifactUpdate ['step-3 by 28311']
+   A killed (SIGKILL)
+A2A task producer lost; task marked failed
+   B v5 statusUpdate [] TASK_STATE_FAILED producer_lost: the agent stopped sending heartbeats
+   reader on B saw the end 12.1 s after the kill
+   POST B /resume on the failed task -> HTTP 409 {"resumed_on": 28312, "error": "UnsupportedOperationError: Task f3d210cf-1e8b-41c3-a730-442d82c8b9de is in terminal state: TASK_STATE_FAILED"}
+```
+
 ### What was observed
 
 - **Resume on another replica (SSE).** Replica A ran the producer. The client read steps 1–5 from A, was away 3 s, and reconnected to replica B with `Last-Event-ID`. B replayed steps 6–11 at once, then followed 12–20 live. All 20 steps arrived exactly once. The cursor is the Redis stream entry ID.
@@ -180,12 +217,14 @@ Captured 2026-11-07 on the free plan: **New Lens** is disabled.
 - **A2A keys.** The store keeps an `events` stream, a `snapshot` JSON document and a `meta` hash per task, a per-owner task index, and a process lease. The namespace and the owner appear only as the first 32 hex digits of their SHA-256, inside a hash tag, so one task's keys share a cluster slot. Terminal tasks live 86,400 s, the `terminal_ttl` default. The lease hash had no TTL after the processes stopped.
 - **Lens without Lens.** With `IRIS_LENS_ENDPOINT` unset, `lens.init()` returns `False` and every call is a no-op. Pointed at a loopback receiver, the SDK sent one OTLP/HTTP protobuf request with a bearer key to `/iris/data/v1beta1/lens/v1/traces`. One turn produced four spans: the turn, the Agent Memory search (recorded by the SDK with no extra code, as `iris.component.name = agent_memory`), the app's own retrieval, and a custom step.
 - **Content capture.** With it on, the retrieval carries query text and each document's text. With `IRIS_LENS_CAPTURE_CONTENT=false` both texts disappear and documents keep only ID, score and a SHA-256 hash.
+- **A2A hand-off with `takeover=True`.** A six-step task ran on A, which recorded each finished step as an artifact and was killed after step 3. Resuming on B was refused six times in the first 13 s ("A2A task is running in another process"), because A's heartbeat lease had not expired; a refused call still returns HTTP 200 with the unchanged Task, and only the missing resume message in the Task's history shows the refusal. At 15.1 s, the default `alive_ttl` of 15 s, B claimed the task, skipped steps 1–3 and ran 4–6. The finished Task lists steps 1–3 by A and 4–6 by B.
+- **Without takeover the task fails instead.** The same kill with the default `takeover=False`: a reader following the task on B received `TASK_STATE_FAILED` with "producer_lost: the agent stopped sending heartbeats" 12.1 s after the kill. A resume was then refused: "is in terminal state".
 
 ### Not run / caveats
 
 - **Lens itself was not created.** Its records database must be Essentials or Pro, and this account only has the free database, so the console's **New Lens** is disabled. Reading turns back (`redis-agent-lens`), the Lens UI and model-call tracing wait for the Essentials budget in [#8](https://github.com/litkhai/notes-on-redis/issues/8).
 - Agent Mesh ran on local Redis only. The quickstart's Redis Cloud path needs TLS, which the free plan does not offer, and the docs list Cloud as unqualified for the beta.
-- A2A hand-off of a running task to another process (`takeover=True`) was not run.
+- The A2A hand-off used the guide's in-process worker call behind a test endpoint; scheduling resumes for stopped processes is the application's job, and was not built.
 
 | | |
 |---|---|
@@ -210,6 +249,7 @@ python3 -m venv .venv      # Python 3.11+; the lab used 3.12 through uv
 .venv/bin/python mesh_lab.py      # Agent Mesh: local Redis 8.10.3 in Docker, four app processes, about 3 minutes
 .venv/bin/python lens_local.py    # Lens SDK against a loopback receiver; reads ../02-agent-memory/.env
 node ../../scripts/capture-console.mjs capture.json   # console screens, from the repository root
+.venv/bin/python mesh_takeover.py  # A2A hand-off: kill the running process, resume elsewhere (takeover=True), and the default
 ```
 
 출력은 영문 절과 같다(2026-11-07). 앱 `mesh_sse_app.py`와 `mesh_a2a_app.py`는 빠른 시작 데모 둘을 고친 것이다.
@@ -217,6 +257,8 @@ node ../../scripts/capture-console.mjs capture.json   # console screens, from th
 <img src="../../docs/assets/img/iris/29-lens-free-plan.webp" width="1440" height="1351" alt="Redis Cloud 콘솔의 Lens 페이지. 무료 플랜 계정이라 New Lens 버튼이 회색으로 비활성" loading="lazy" decoding="async">
 
 2026-11-07 무료 플랜에서 촬영: **New Lens**가 비활성이다.
+
+`mesh_takeover.py`의 출력도 영문 절과 같다(2026-11-07).
 
 ### 관찰한 것
 
@@ -229,12 +271,14 @@ node ../../scripts/capture-console.mjs capture.json   # console screens, from th
 - **A2A 키.** 태스크마다 `events` 스트림, `snapshot` JSON 문서, `meta` 해시를 두고, 소유자별 태스크 인덱스와 프로세스 임대 키가 있다. 네임스페이스와 소유자는 SHA-256 앞 32자로만 나타나고 해시 태그 안에 있어 한 태스크의 키가 같은 클러스터 슬롯에 모인다. 종료된 태스크는 86,400초 유지(`terminal_ttl` 기본값). 프로세스가 멈춘 뒤에도 임대 해시에는 TTL이 없었다.
 - **Lens 없이 본 Lens.** `IRIS_LENS_ENDPOINT`가 없으면 `lens.init()`은 `False`를 돌려주고 모든 호출이 아무 일도 하지 않는다. 루프백 수신기를 가리키게 하자 SDK는 bearer 키를 붙인 OTLP/HTTP protobuf 요청 하나를 `/iris/data/v1beta1/lens/v1/traces`로 보냈다. 턴 하나에 스팬 넷: 턴, Agent Memory 검색(코드를 더하지 않아도 SDK가 `iris.component.name = agent_memory`로 기록), 앱 자체 검색, 사용자 정의 단계.
 - **내용 캡처.** 켜면 검색 스팬에 질의 텍스트와 문서마다의 텍스트가 실린다. `IRIS_LENS_CAPTURE_CONTENT=false`면 두 텍스트가 사라지고 문서에는 ID, 점수, SHA-256 해시만 남는다.
+- **`takeover=True`로 A2A 넘기기.** 여섯 단계짜리 태스크가 A에서 돌며 끝난 단계마다 아티팩트를 남겼고, 3단계 뒤 A를 죽였다. B에서의 재개는 처음 13초 동안 여섯 번 거절됐다("A2A task is running in another process"). A의 하트비트 임대가 아직 만료되지 않았기 때문이다. 거절된 호출도 HTTP 200과 바뀌지 않은 Task를 돌려주므로, 거절은 Task 기록에 재개 메시지가 없다는 것으로만 알 수 있다. 기본 `alive_ttl` 15초인 15.1초에 B가 태스크를 가져와 1–3단계를 건너뛰고 4–6단계를 실행했다. 끝난 Task에는 1–3단계는 A, 4–6단계는 B가 한 것으로 남았다.
+- **takeover가 없으면 대신 실패로 끝난다.** 기본값 `takeover=False`로 같은 상황을 만들자, B에서 태스크를 따라가던 리더가 죽인 지 12.1초 뒤 "producer_lost: the agent stopped sending heartbeats"와 함께 `TASK_STATE_FAILED`를 받았다. 그 뒤 재개는 "is in terminal state"로 거절됐다.
 
 ### 미실행 / 주의
 
 - **Lens 자체는 만들지 않았다.** 기록용 DB가 Essentials나 Pro여야 하는데 이 계정에는 무료 DB뿐이라 콘솔의 **New Lens**가 비활성이다. 턴 읽기(`redis-agent-lens`), Lens UI, 모델 호출 추적은 [#8](https://github.com/litkhai/notes-on-redis/issues/8)의 Essentials 예산을 기다린다.
 - Agent Mesh는 로컬 Redis에서만 돌렸다. 빠른 시작의 Redis Cloud 경로는 TLS가 필요한데 무료 플랜에는 없고, 문서도 Cloud를 베타 검증 범위 밖으로 둔다.
-- 실행 중인 A2A 태스크를 다른 프로세스로 넘기기(`takeover=True`)는 실행하지 않았다.
+- A2A 넘기기는 가이드의 프로세스 내 작업자 호출을 시험용 엔드포인트 뒤에 두고 했다. 멈춘 프로세스의 태스크를 찾아 재개를 예약하는 것은 애플리케이션의 몫이고, 만들지 않았다.
 
 | | |
 |---|---|

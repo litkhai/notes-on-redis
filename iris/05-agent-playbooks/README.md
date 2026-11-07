@@ -22,6 +22,8 @@ set -a; . ./.env; set +a
 # edit faqs/free-plan-limits.json, then
 .venv/bin/iris agent-playbooks faqs sync faqs          # new version, not published
 .venv/bin/iris agent-playbooks faqs publish free-plan-limits --version 2
+.venv/bin/python more.py skill      # package skills/redis-free-plan-check, upload, publish, discover, load
+.venv/bin/python more.py proposal   # review, edit, accept and publish the open proposal
 ```
 
 Output as it appeared (2026-11-07; service ids and endpoints removed):
@@ -60,6 +62,31 @@ published free-plan-limits version 2
 free-plan-limits version 2 | rsistence or backups. TLS is not available on the free plan.
 ```
 
+`more.py` output as it appeared (2026-11-07):
+
+```text
+$ .venv/bin/python more.py skill
+package: 1595 bytes, files ['redis-free-plan-check/SKILL.md', 'redis-free-plan-check/references/limits.md']
+uploaded: skill version 2, state None
+published: 2
+discover 'Will my app with 50 MB of sessions and 40 clients fit the free tier?'
+   skills [('redis-free-plan-check', 0.75)] faqs [('free-plan-limits', 0.75)]
+discover '무료 플랜에 TLS 필요한 서비스 올려도 돼?'
+   skills [] faqs [('free-plan-tls', 0.73)]
+discover 'How much does Essentials cost in Seoul?'
+   skills [] faqs []
+instructions (first line): 1. Collect three facts from the user: data size, peak client connections, and whether traffic must be encrypted. Ask for any that is missing.
+resource references/limits.md (first line): Redis Cloud free plan, measured 2026-11-07 on this site (cloud/01-free-database):
+
+$ .venv/bin/python more.py proposal
+proposal ProposalState.OPEN, revision 1; draft answer: 'Draft: Active-Active needs Redis Cloud Pro; not run on this site yet.'
+edited: revision 2
+accepted: FAQ version 1 created (not yet live)
+discover before publish: []
+discover after publish:  [('active-active-seoul-tokyo', 0.91)]
+proposal now: ProposalState.PROMOTED
+```
+
 ### What was observed
 
 - **Discovery.** Paraphrased English questions found the right FAQ at 0.75–0.85; the Korean "무료 DB에서 TLS 켤 수 있어?" found the English TLS FAQ at 0.78. The Active-Active question, which no FAQ covers, returned nothing rather than a weak match.
@@ -67,11 +94,13 @@ free-plan-limits version 2 | rsistence or backups. TLS is not available on the f
 - **Versions.** Editing an FAQ and syncing without `--publish` appended version 2 as a draft; discovery kept serving version 1 until `faqs publish --version 2`, then served version 2. The key's actions follow the same split: read, write, propose, publish, full.
 - **Latency.** 580–1,220 ms per discovery from Korea; the agent endpoint is in us-east-1.
 - **LangCache.** The console on 2026-11-07 lists Agent Playbooks and no LangCache entry; this site keeps treating them as two products (see the research notes).
+- **A skill is a folder of instructions.** `skills/redis-free-plan-check` holds `SKILL.md` (name, description, steps) and `references/limits.md` with this site's measured limits, zipped to 1,595 bytes. `create_skill` stored version 1, `publish_skill` made it live, and a second upload became version 2. `discover` returned the skill (0.75) next to an FAQ (0.75) for an English sizing question, and nothing for a pricing question it should not answer. The Korean TLS question matched only the FAQ: the skill's description and intents are English.
+- **An agent loads the instructions when it needs them.** `playbook.skill(...)` returned the steps, and `skill_resource` the reference file, by path.
+- **Reviewing a proposal.** The open proposal from `lab.py propose` had the draft answer "Draft: Active-Active needs Redis Cloud Pro; not run on this site yet." `replace_proposal` rewrote it (revision 1 → 2), `accept_proposal` created FAQ version 1, which `discover` did not return until `publish_faq`; then it came first at 0.91. The proposal ended `PROMOTED`.
 
 ### Not run / caveats
 
-- Skills (packaged procedures) and automatic FAQ extraction from an Agent Memory store were not tried.
-- Accepting a proposal in the console was not done; it stays OPEN.
+- Automatic FAQ extraction from an Agent Memory store: see the issue tracker (it needs a console setting).
 
 | | |
 |---|---|
@@ -98,9 +127,13 @@ set -a; . ./.env; set +a
 # edit faqs/free-plan-limits.json, then
 .venv/bin/iris agent-playbooks faqs sync faqs          # new version, not published
 .venv/bin/iris agent-playbooks faqs publish free-plan-limits --version 2
+.venv/bin/python more.py skill      # package skills/redis-free-plan-check, upload, publish, discover, load
+.venv/bin/python more.py proposal   # review, edit, accept and publish the open proposal
 ```
 
 출력은 영문 절과 같다(2026-11-07).
+
+`more.py`의 출력도 영문 절과 같다(2026-11-07).
 
 ### 관찰한 것
 
@@ -109,11 +142,13 @@ set -a; . ./.env; set +a
 - **버전.** FAQ를 고쳐 `--publish` 없이 동기화하자 버전 2가 초안으로 붙었다. `faqs publish --version 2` 전까지 검색은 버전 1을 냈고, 그 뒤 버전 2를 냈다. 키의 동작도 같은 구분을 따른다: read, write, propose, publish, full.
 - **지연.** 한국에서 검색마다 580–1,220 ms. 에이전트 엔드포인트는 us-east-1이다.
 - **LangCache.** 2026-11-07 콘솔에는 Agent Playbooks가 있고 LangCache 항목은 없다. 이 사이트는 둘을 계속 별개 제품으로 다룬다(조사 노트 참고).
+- **Skill은 지시문 폴더다.** `skills/redis-free-plan-check`에는 `SKILL.md`(이름, 설명, 단계)와 이 사이트가 잰 한도를 담은 `references/limits.md`가 있고, 1,595바이트로 압축된다. `create_skill`이 버전 1을 저장했고, `publish_skill`로 공개했고, 두 번째 업로드는 버전 2가 됐다. 영어 용량 질문에는 `discover`가 FAQ(0.75)와 나란히 이 skill(0.75)을 돌려줬고, 답하면 안 되는 가격 질문에는 아무것도 돌려주지 않았다. 한국어 TLS 질문에는 FAQ만 매칭됐다. skill의 설명과 의도가 영어이기 때문이다.
+- **에이전트는 필요할 때 지시문을 불러온다.** `playbook.skill(...)`이 단계를, `skill_resource`가 참조 파일을 경로로 돌려줬다.
+- **제안 검토.** `lab.py propose`가 만든 열린 제안의 초안 답은 "Draft: Active-Active needs Redis Cloud Pro; not run on this site yet."였다. `replace_proposal`로 고쳐 쓰고(리비전 1 → 2), `accept_proposal`이 FAQ 버전 1을 만들었다. `publish_faq` 전에는 `discover`가 이것을 돌려주지 않았고, 게시 뒤 0.91로 1위가 됐다. 제안은 `PROMOTED`로 끝났다.
 
 ### 미실행 / 주의
 
-- 스킬(패키지된 절차)과 Agent Memory 스토어에서의 자동 FAQ 추출은 시험하지 않았다.
-- 콘솔에서 제안을 받아들이지 않았다. OPEN으로 남아 있다.
+- Agent Memory 스토어에서의 자동 FAQ 추출은 이슈를 참고한다(콘솔 설정이 필요하다).
 
 | | |
 |---|---|

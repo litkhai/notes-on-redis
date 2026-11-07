@@ -15,6 +15,7 @@ Official documentation: [Intent Router](https://redis.io/docs/latest/operate/iri
 ```bash
 .venv/bin/python lab.py            # health, define, match (default 0.70), threshold (0.5)
 .venv/bin/python lab.py korean     # add Korean phrasings, match at 0.5
+.venv/bin/python thresholds.py     # per-intent minScore against the Router default and a per-call min_score; restores the intents
 ```
 
 Output as it appeared (2026-11-07; service ids and endpoints removed):
@@ -68,17 +69,51 @@ billing examples: ['Why was I charged this month?', 'How do I download my invoic
 median 765 ms over 8 queries
 ```
 
+`thresholds.py` output as it appeared (2026-11-07):
+
+```text
+-- raw scores, every intent above 0.01
+   'is encryption available on the free tier'     -> tls_question 0.59, outage 0.26
+   'I was billed twice, can you check?'           -> billing 0.52, outage 0.23
+   'tell me something funny'                      -> off_topic 0.71, billing 0.13
+   'Can you recommend a good restaurant?'         -> off_topic 0.59, tls_question 0.18
+   '무료 플랜에서 TLS를 켤 수 있나요?'                        -> tls_question 0.61, outage 0.18
+-- Router default (0.70), no per-intent thresholds
+   'is encryption available on the free tier'     -> no match (fallback)
+   'I was billed twice, can you check?'           -> no match (fallback)
+   'tell me something funny'                      -> off_topic 0.71
+   'Can you recommend a good restaurant?'         -> no match (fallback)
+   '무료 플랜에서 TLS를 켤 수 있나요?'                        -> no match (fallback)
+-- per-intent thresholds: tls_question 0.60 (looser), off_topic 0.85 (stricter)
+   tls_question: min_score 0.6, revision ac3a207d01f28c7900c0ce032450f9a6
+   off_topic: min_score 0.85, revision 99a37c72ed66abb2920aef157a6d360d
+-- Router default plus per-intent thresholds
+   'is encryption available on the free tier'     -> no match (fallback)
+   'I was billed twice, can you check?'           -> no match (fallback)
+   'tell me something funny'                      -> no match (fallback)
+   'Can you recommend a good restaurant?'         -> no match (fallback)
+   '무료 플랜에서 TLS를 켤 수 있나요?'                        -> tls_question 0.61
+-- a per-call min_score 0.5 on top
+   'is encryption available on the free tier'     -> tls_question 0.59
+   'I was billed twice, can you check?'           -> billing 0.52
+   'tell me something funny'                      -> off_topic 0.71
+   'Can you recommend a good restaurant?'         -> off_topic 0.59
+   '무료 플랜에서 TLS를 켤 수 있나요?'                        -> tls_question 0.61
+restored: [('billing', None), ('tls_question', None), ('outage', None), ('off_topic', None)]
+```
+
 ### What was observed
 
 - **The default threshold is strict.** At the Router's 0.70 only one of eight queries matched ("tell me something funny", 0.71). At 0.5 the three English support questions and the Korean TLS question (0.61) went to the right targets; the shard-sizing question and the restaurant question fell through to the fallback.
 - **Examples cross languages, unevenly.** After adding "맛집 추천해 줘" to `off_topic`, the English restaurant question matched it (0.59). Two Korean billing examples did not make the Korean invoice question reach 0.5.
 - **What a match returns.** The intent, its score and the target you attached (`tool:billing_api.lookup`, `model:small-model` ...): routing happens before any generation; the query is embedded, not sent to a chat model.
 - **Latency.** 560–1,090 ms per match from Korea; the Router endpoint is in us-east-1. The Router created its own Search index in the free database.
+- **Three thresholds, one order.** The docs give the order "The `minScore` in the match request" first, then "The intent's own `minScore`", then "The Router's `minScore`, which is `0.7`". Measured: with `tls_question` at 0.60 and `off_topic` at 0.85, the Korean TLS question (0.61) now matched, `tell me something funny` (0.71) no longer did, and the English TLS question (0.59) still missed by 0.01. A per-call `min_score 0.5` overrode both intent thresholds and matched all five queries, `off_topic` included.
+- **Templates are labels.** The Router API describes `template` as "A label for people and tooling: `CUSTOM`, `MODEL`, `GUARDRAILS`, or `AGENT`. Every template serves the same way." So there is nothing to measure between them; this lab's Router stays `CUSTOM`.
 
 ### Not run / caveats
 
-- Templates other than Custom (Model selection, Guardrails, Agent routing) were not tried.
-- Per-intent thresholds were not set; only the Router default and a per-call `min_score`.
+- The Router's own default was left at 0.70; changing it needs the console or the control-plane API, which this lab does not use.
 
 | | |
 |---|---|
@@ -98,9 +133,12 @@ median 765 ms over 8 queries
 ```bash
 .venv/bin/python lab.py            # health, define, match (default 0.70), threshold (0.5)
 .venv/bin/python lab.py korean     # add Korean phrasings, match at 0.5
+.venv/bin/python thresholds.py     # per-intent minScore against the Router default and a per-call min_score; restores the intents
 ```
 
 출력은 영문 절과 같다(2026-11-07).
+
+`thresholds.py`의 출력도 영문 절과 같다(2026-11-07).
 
 ### 관찰한 것
 
@@ -108,11 +146,12 @@ median 765 ms over 8 queries
 - **예시는 언어를 넘지만 고르지 않다.** `off_topic`에 "맛집 추천해 줘"를 더하자 영어 식당 질문이 거기에 맞았다(0.59). 한국어 청구 예시 둘을 넣어도 한국어 청구서 질문은 0.5에 닿지 않았다.
 - **매칭이 돌려주는 것.** 의도, 점수, 붙여 둔 대상(`tool:billing_api.lookup`, `model:small-model` 등). 라우팅은 생성 전에 일어난다. 질의는 임베딩될 뿐 채팅 모델로 가지 않는다.
 - **지연.** 한국에서 매칭마다 560–1,090 ms. Router 엔드포인트는 us-east-1이다. Router는 무료 DB에 자체 Search 인덱스를 만들었다.
+- **임계값 셋, 순서 하나.** 문서는 순서를 "The `minScore` in the match request", "The intent's own `minScore`", "The Router's `minScore`, which is `0.7`"로 적는다. 측정 결과: `tls_question`을 0.60, `off_topic`을 0.85로 두자 한국어 TLS 질문(0.61)이 새로 매칭됐고, `tell me something funny`(0.71)는 더는 매칭되지 않았으며, 영어 TLS 질문(0.59)은 여전히 0.01 차이로 빗나갔다. 호출별 `min_score 0.5`는 두 의도의 임계값을 모두 덮어써 `off_topic`을 포함한 다섯 질의가 모두 매칭됐다.
+- **템플릿은 라벨이다.** Router API는 `template`을 "A label for people and tooling: `CUSTOM`, `MODEL`, `GUARDRAILS`, or `AGENT`. Every template serves the same way."라고 설명한다. 그러니 템플릿 사이에 잴 것이 없다. 이 실습의 Router는 `CUSTOM` 그대로다.
 
 ### 미실행 / 주의
 
-- Custom 외의 템플릿(Model selection, Guardrails, Agent routing)은 시험하지 않았다.
-- 의도별 임계값은 정하지 않았다. Router 기본값과 호출별 `min_score`만 썼다.
+- Router 자체의 기본값은 0.70 그대로 두었다. 바꾸려면 콘솔이나 컨트롤 플레인 API가 필요한데, 이 실습은 쓰지 않는다.
 
 | | |
 |---|---|
