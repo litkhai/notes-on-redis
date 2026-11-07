@@ -1,4 +1,4 @@
-# gitleaks configuration for redis-hols (layout follows runpod-hols / clickhouse-hols)
+# gitleaks configuration for notes-on-redis (layout follows runpod-hols / clickhouse-hols)
 #
 # This repository is public. The labs talk to Redis Cloud (REST API key +
 # secret key) and to databases whose connection string carries a password

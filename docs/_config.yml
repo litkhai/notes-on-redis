@@ -2,12 +2,12 @@ title: Redis Hands-On Labs
 description: Redis Open Source, Redis Cloud, Enterprise, Iris, comparisons and deep dives — hands-on labs (EN/KO/中文/日本語)
 lang: en
 
-# Served at https://redis.litkhai.dev (Vercel). litkhai.github.io/redis-hols
+# Served at https://redis.litkhai.dev (Vercel). litkhai.github.io/notes-on-redis
 # will publish redirect stubs built from the same pages once the host is live.
 baseurl: ""
 url: "https://redis.litkhai.dev"
 
-repo_url: https://github.com/litkhai/redis-hols
+repo_url: https://github.com/litkhai/notes-on-redis
 
 markdown: kramdown
 kramdown:

@@ -28,7 +28,7 @@ documentation without one.
 ### 📁 Repository Structure
 
 ```
-redis-hols/
+notes-on-redis/
 ├── setup/           # ← Start here
 ├── local/           # Redis Open Source in Docker
 ├── cloud/           # Redis Cloud console, plans, REST API, Active-Active
@@ -72,7 +72,7 @@ followed menu by menu with one masked screenshot per screen, and a first-week ch
 
 [`docs/`](./docs) is built by Jekyll and will be deployed to [redis.litkhai.dev](https://redis.litkhai.dev)
 by Vercel on every push to `main` (project root directory `docs/`, settings in
-[`docs/vercel.json`](./docs/vercel.json)). `litkhai.github.io/redis-hols` will publish a
+[`docs/vercel.json`](./docs/vercel.json)). `litkhai.github.io/notes-on-redis` will publish a
 redirect stub per page once the host is live.
 
 | Choice | Why |
@@ -162,7 +162,7 @@ Cloud 페이지는 **콘솔 안내**다 — *확인 조건* 문단, 메뉴 순�
 
 [`docs/`](./docs)는 Jekyll로 빌드되어 `main`에 푸시할 때마다 Vercel이
 [redis.litkhai.dev](https://redis.litkhai.dev)로 배포한다(프로젝트 루트 `docs/`, 설정은
-[`docs/vercel.json`](./docs/vercel.json)). 호스트가 살아나면 `litkhai.github.io/redis-hols`는
+[`docs/vercel.json`](./docs/vercel.json)). 호스트가 살아나면 `litkhai.github.io/notes-on-redis`는
 페이지마다 리다이렉트 스텁을 게시한다. 선택과 이유는 영문 절의 표와 같다.
 
 ### 참고한 Redis 공식 자료

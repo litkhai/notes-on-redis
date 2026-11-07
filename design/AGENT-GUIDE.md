@@ -1,4 +1,4 @@
-# Agent guide — how to pick up an issue in redis-hols
+# Agent guide — how to pick up an issue in notes-on-redis
 
 [English](#english) | [한국어](#한국어)
 
@@ -11,7 +11,7 @@ the two `research-*.md` files next to it.
 ### 1. Before anything
 
 ```bash
-git clone https://github.com/litkhai/redis-hols && cd redis-hols
+git clone https://github.com/litkhai/notes-on-redis && cd notes-on-redis
 git config core.hooksPath .githooks        # gitleaks + docs checks on commit
 python3 scripts/check-docs.py -v           # must pass before you start, and before you push
 ```
@@ -92,7 +92,7 @@ after a manual login; the state file is gitignored and never committed.
 ### 1. 시작 전
 
 ```bash
-git clone https://github.com/litkhai/redis-hols && cd redis-hols
+git clone https://github.com/litkhai/notes-on-redis && cd notes-on-redis
 git config core.hooksPath .githooks        # 커밋 시 gitleaks + 문서 검사
 python3 scripts/check-docs.py -v           # 시작 전과 푸시 전에 통과해야 함
 ```

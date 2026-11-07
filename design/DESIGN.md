@@ -1,4 +1,4 @@
-# redis-hols — site and repository design (v0)
+# notes-on-redis — site and repository design (v0)
 
 [English](#english) | [한국어](#한국어)
 
@@ -60,7 +60,7 @@ Every `docs/*.md` page carries `en / ko / zh / ja` blocks and `scripts/check-doc
 ### 3. Repository layout
 
 ```
-redis-hols/
+notes-on-redis/
 ├── setup/                      API-free start: Docker Redis 8, redis-cli, Insight, clients, Cloud free DB
 ├── local/                      Redis Open Source on this machine
 │   ├── 01-redis-8-docker/      run 8.x, redis-full.conf, io-threads, INFO
@@ -215,9 +215,9 @@ One page per mechanism; each has (a) the mechanism in plain words with the offic
   redis.io's own `#FF4438` / `#091A23` / `#F3F3F3` (read from the live page 2026-11-07); dark default.
 - `docs/vercel.json`: framework jekyll, root `docs/`, security headers; root `vercel.json`: `regions: ["icn1"]`.
 - `.github/workflows/checks.yml` (docs conventions, syntax, gitleaks, hygiene) on pull requests;
-  `pages.yml` publishes redirect stubs to `litkhai.github.io/redis-hols` once the Vercel host is live.
+  `pages.yml` publishes redirect stubs to `litkhai.github.io/notes-on-redis` once the Vercel host is live.
 - `.gitleaks.toml` adds `redis-url-password` and `redis-cloud-api-key` rules.
-- Deployment steps (not done): Vercel project `redis-hols` in team `litkhai` (root `docs/`),
+- Deployment steps (not done): Vercel project `notes-on-redis` in team `litkhai` (root `docs/`),
   domain `redis.litkhai.dev`, user adds the CNAME in Cloudflare (DNS only) as for runpod/quantum.
 
 ### 6. Budget
@@ -330,7 +330,7 @@ Jekyll + 자체 레이아웃, 팔레트는 redis.io 페이지의 `#FF4438` / `#0
 확인)로 교체, 다크 기본. `docs/vercel.json`(jekyll, 보안 헤더), 루트 `vercel.json`(`icn1`).
 CI `checks.yml`(문서 규칙·문법·gitleaks·위생), `pages.yml`은 Vercel 호스트가 살아난 뒤 스텁 게시.
 `.gitleaks.toml`에 `redis-url-password`, `redis-cloud-api-key` 규칙 추가. 배포 절차(미실행):
-litkhai 팀에 Vercel 프로젝트 `redis-hols`(루트 `docs/`), 도메인 `redis.litkhai.dev`, 사용자가
+litkhai 팀에 Vercel 프로젝트 `notes-on-redis`(루트 `docs/`), 도메인 `redis.litkhai.dev`, 사용자가
 Cloudflare에 CNAME(DNS only) 추가 — runpod/quantum과 같은 방식.
 
 ### 6. 예산
