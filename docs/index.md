@@ -4,7 +4,7 @@ title: Overview
 permalink: /
 ---
 
-# Redis Hands-On Labs
+# Notes on Redis
 
 <div class="lang" data-lang="en" markdown="1">
 
