@@ -11,7 +11,7 @@ permalink: /iris/
 ## English
 
 <div class="note" markdown="1">
-**Status: partly run.** Agent Memory was run on the Redis Cloud free plan on 2026-11-07 (below). The other services are still the plan in [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+**Status: partly run.** Agent Memory, Intent Router, Context Gateway and Agent Playbooks were run on the Redis Cloud free plan on 2026-11-07 (below). Lens and Agent Mesh are still the plan in [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
 </div>
 
 Redis Iris is, in Redis's words, "a production-ready context engine for AI agents" — a suite of services, not a database; Redis is the database underneath. Launched 2026-05-18; on 2026-11-04 it became six services: Intent Router, Agent Playbooks, Agent Memory and Context Gateway (GA), Lens and Agent Mesh (beta). Managed on Redis Cloud; self-managed via a Helm chart that needs a licence. One lab per service, all on the free database and the 5,000 free messages, with the messages consumed per lab recorded. The naming trap — Context Retriever → Context Gateway, LangCache vs Agent Playbooks — gets its own section. Read 2026-11-07 at [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/).
@@ -68,9 +68,98 @@ Configuration: TTLs, summarization after 20 messages keeping 10, custom memory t
 
 Memory Inspector browses sessions and long-term memories by owner or namespace. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
 
+### Agent Memory, further
+
+**Verified on redis-iris 1.0.1, 2026-11-07.** Lab: [`iris/02-agent-memory`](https://github.com/litkhai/notes-on-redis/tree/main/iris/02-agent-memory).
+
+| Experiment | Result |
+|---|---|
+| 24 messages in one session | 14 events kept plus a summary (summarise after 20, keep 10); all 24 still readable |
+| Long-term memories from that session | 25 for one owner, mostly one per assistant answer |
+| Memory in a `SHARED` namespace | returned to another owner only when the namespace is passed as `shared` |
+| Fake email and phone, detectors off | stored verbatim as memories |
+| Same with email, phone and card detectors on, "Redact match" | stored as `[REDACTED]`; the +82 number was caught too |
+| MemoryETL: custom type `plan_limit`, a 9-line document | 8 typed memories in 183 s, prices left out as the prompt asked |
+| `forget(owner)` | sessions and memories gone in one call (25, 3, 3) |
+
+Extraction took 4–5 minutes in these runs against about 15 s in the first lab: it runs in the background on its own schedule.
+
+<p class="shot"><img src="{{ '/assets/img/iris/09-agent-memory-detectors.webp' | relative_url }}" width="1440" height="765" alt="Sensitive-data exclusions with credit card, email and phone detectors set to Redact match" loading="lazy" decoding="async"></p>
+
+Built-in detectors: credit card, email, IP, phone (US, CA, UK, DE, IL, IN, BR) and US SSN; each one redacts the match or drops the memory. When detectors disagree, dropping wins. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/11-agent-memory-extractor.webp' | relative_url }}" width="1440" height="765" alt="MemoryETL new extractor form using the plan_limit memory type" loading="lazy" decoding="async"></p>
+
+MemoryETL (beta): an extractor copies a custom memory type's prompt and turns uploaded or API-submitted documents into memories of that type. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
+
+### Intent Router
+
+**Verified on redis-iris 1.0.1, 2026-11-07.** Four intents with three examples each, targets of four kinds; eight English and Korean queries. The embedder is the managed OpenAI `text-embedding-3-small`; no key of our own was asked for. Lab: [`iris/03-intent-router`](https://github.com/litkhai/notes-on-redis/tree/main/iris/03-intent-router).
+
+| Query | Router default (0.70) | `min_score` 0.5 |
+|---|---|---|
+| I was billed twice, can you check? | fallback | billing 0.52 → tool |
+| is encryption available on the free tier | fallback | tls_question 0.59 → model |
+| connections keep timing out on my prod database | fallback | outage 0.51 → agent |
+| tell me something funny | off_topic 0.71 → guardrail | off_topic 0.71 → guardrail |
+| 무료 플랜에서 TLS를 켤 수 있나요? | fallback | tls_question 0.61 → model |
+| 청구서를 어디서 받나요? | fallback | fallback, even after Korean billing examples |
+| Can you recommend a good restaurant? | fallback | fallback; off_topic 0.59 after adding "맛집 추천해 줘" |
+
+With three examples per intent the default threshold is too strict; more examples or a lower threshold is the first tuning step. Each match took 560–1,090 ms from Korea.
+
+<p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="Intent Router intents list with targets tool, model, agent and guardrail, and a Try a query box" loading="lazy" decoding="async"></p>
+
+Intents with their targets and example counts; Try a query matches from the console. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
+
+### Context Gateway
+
+**Verified on redis-iris 1.0.1, 2026-11-07.** One Gateway in search mode with two upstreams: a Context Surface over 30 made-up products in the free database, and the public DeepWiki MCP server. Lab: [`iris/04-context-gateway`](https://github.com/litkhai/notes-on-redis/tree/main/iris/04-context-gateway).
+
+| Step | Result |
+|---|---|
+| Tools the agent sees | `search_tools`, `run_tool` |
+| search "black lamps under 100 dollars" | `products__filter_product` |
+| Surface from one entity, six fields | ten generated tools (count, filter, text search, set operations, expand) |
+| Filter: lamp, black, price ≤ 100 | the same 3 products a direct scan found; 2.4 s |
+| Wrong argument shape | refused with `invalid_arguments`, tool not called |
+| `deepwiki__read_wiki_structure` redis/redis | page list through the Gateway; 1.5 s |
+
+`mcp-redis` was not used: an upstream has to be reachable from Redis Cloud, and this host does not serve one publicly. The Surface covers Redis data as tools.
+
+<p class="shot"><img src="{{ '/assets/img/iris/19-context-surface-fields.webp' | relative_url }}" width="1440" height="1284" alt="Context Surface fields: id as primary key, name text index, category and colour tag indexes, price and stock numeric" loading="lazy" decoding="async"></p>
+
+A Context Surface is a data model: entities mapped to key templates, fields typed and indexed. The Gateway builds the search tools from it. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/25-context-gateway-upstreams.webp' | relative_url }}" width="1440" height="765" alt="Gateway upstreams: products Context Surface with 10 tools and deepwiki MCP server with 3" loading="lazy" decoding="async"></p>
+
+Both upstreams behind one endpoint, each switchable on or off. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
+
+### Agent Playbooks
+
+**Verified on redis-iris 1.0.1, 2026-11-07.** Four FAQs written from this site's findings, authored as JSON and synced with the `iris` CLI. Lab: [`iris/05-agent-playbooks`](https://github.com/litkhai/notes-on-redis/tree/main/iris/05-agent-playbooks).
+
+| Question | Found |
+|---|---|
+| is encryption in transit available on the free tier? | free-plan-tls 0.75 |
+| how many clients can connect to the free database | free-plan-limits 0.76 |
+| MSET fails with a slot error on my cluster | crossslot-error 0.85 |
+| 무료 DB에서 TLS 켤 수 있어? | free-plan-tls 0.78 |
+| How do I configure Active-Active between Seoul and Tokyo? | nothing; proposed for review instead |
+
+A second version of an FAQ stayed a draft and discovery kept serving version 1 until `faqs publish --version 2`. Keys follow the same workflow: read, write, propose, publish, full. The console lists Agent Playbooks and no LangCache entry.
+
+<p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="Playbook registry with four published FAQs, one at version 2" loading="lazy" decoding="async"></p>
+
+The registry shows publication state and latest version per FAQ. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/28-playbook-proposals.webp' | relative_url }}" width="1440" height="765" alt="Proposals inbox with one open proposal about Active-Active" loading="lazy" decoding="async"></p>
+
+Proposals wait in an inbox until someone accepts and publishes them. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
+
 ### Not covered yet
 
-Agent Playbooks, Intent Router, Context Gateway, Lens and Agent Mesh have their own labs in the repository issues. Message consumption stays an open question until the console or the bill shows it.
+Lens and Agent Mesh (beta) have their own lab in the repository issues. Message consumption stays an open question until the console or the bill shows it.
 
 </div>
 
@@ -79,7 +168,7 @@ Agent Playbooks, Intent Router, Context Gateway, Lens and Agent Mesh have their 
 ## 한국어
 
 <div class="note" markdown="1">
-**상태: 일부 실행.** Agent Memory를 2026-11-07에 Redis Cloud 무료 플랜에서 실행했다(아래). 나머지 서비스는 아직 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)의 계획이다.
+**상태: 일부 실행.** Agent Memory, Intent Router, Context Gateway, Agent Playbooks를 2026-11-07에 Redis Cloud 무료 플랜에서 실행했다(아래). Lens와 Agent Mesh는 아직 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)의 계획이다.
 </div>
 
 Redis Iris는 Redis의 표현으로 "AI 에이전트를 위한 프로덕션 준비 컨텍스트 엔진" — 서비스 묶음이지 데이터베이스가 아니고, 밑에 있는 데이터베이스가 Redis다. 2026-05-18 출시, 2026-11-04에 서비스 여섯이 됨: Intent Router, Agent Playbooks, Agent Memory, Context Gateway(GA), Lens, Agent Mesh(베타). Redis Cloud 관리형, 자체 운영은 라이선스가 필요한 Helm 차트. 서비스마다 랩 하나, 모두 무료 DB와 무료 5,000 메시지로, 랩마다 소비한 메시지 수를 기록. 이름 함정 — Context Retriever → Context Gateway, LangCache vs Agent Playbooks — 은 별도 절. 2026-11-07 [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/)에서 읽음.
@@ -136,9 +225,98 @@ Redis Iris는 Redis의 표현으로 "AI 에이전트를 위한 프로덕션 준�
 
 Memory Inspector는 소유자나 네임스페이스로 세션과 장기 기억을 살펴본다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
 
+### Agent Memory 더 깊이
+
+**확인: redis-iris 1.0.1, 2026-11-07.** 실습: [`iris/02-agent-memory`](https://github.com/litkhai/notes-on-redis/tree/main/iris/02-agent-memory).
+
+| 실험 | 결과 |
+|---|---|
+| 한 세션에 메시지 24개 | 이벤트 14개와 요약(20개에서 요약, 10개 유지). 24개 모두 읽을 수 있음 |
+| 그 세션의 장기 기억 | 소유자 한 명에게 25개, 대부분 어시스턴트 답마다 하나 |
+| `SHARED` 네임스페이스의 기억 | 다른 소유자가 그 네임스페이스를 `shared`로 넘길 때만 돌아옴 |
+| 가짜 이메일·전화, 탐지기 끔 | 그대로 기억으로 저장 |
+| 이메일·전화·카드 탐지기 켬, "Redact match" | `[REDACTED]`로 저장. +82 번호도 잡힘 |
+| MemoryETL: 사용자 정의 유형 `plan_limit`, 9줄 문서 | 183초에 유형 있는 기억 8개, 프롬프트대로 가격 제외 |
+| `forget(owner)` | 세션과 기억이 한 번에 사라짐(25, 3, 3) |
+
+이번 실행의 추출은 첫 실습의 약 15초와 달리 4–5분이 걸렸다. 백그라운드에서 자체 일정으로 돈다.
+
+<p class="shot"><img src="{{ '/assets/img/iris/09-agent-memory-detectors.webp' | relative_url }}" width="1440" height="765" alt="신용카드·이메일·전화 탐지기를 Redact match로 둔 민감 데이터 제외 설정" loading="lazy" decoding="async"></p>
+
+내장 탐지기: 신용카드, 이메일, IP, 전화(US, CA, UK, DE, IL, IN, BR), 미국 SSN. 각각 일치 부분을 가리거나 기억을 버린다. 탐지기끼리 다르면 버리는 쪽이 이긴다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/11-agent-memory-extractor.webp' | relative_url }}" width="1440" height="765" alt="plan_limit 기억 유형을 쓰는 MemoryETL 새 extractor 양식" loading="lazy" decoding="async"></p>
+
+MemoryETL(베타): extractor는 사용자 정의 기억 유형의 프롬프트를 복사해, 올리거나 API로 보낸 문서를 그 유형의 기억으로 바꾼다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
+
+### Intent Router
+
+**확인: redis-iris 1.0.1, 2026-11-07.** 예시 셋씩인 의도 네 개, 대상 네 종류, 영어·한국어 질문 여덟 개. 임베딩은 관리형 OpenAI `text-embedding-3-small`이고 내 키는 요구하지 않았다. 실습: [`iris/03-intent-router`](https://github.com/litkhai/notes-on-redis/tree/main/iris/03-intent-router).
+
+| 질문 | Router 기본값(0.70) | `min_score` 0.5 |
+|---|---|---|
+| I was billed twice, can you check? | 대체 경로 | billing 0.52 → 도구 |
+| is encryption available on the free tier | 대체 경로 | tls_question 0.59 → 모델 |
+| connections keep timing out on my prod database | 대체 경로 | outage 0.51 → 에이전트 |
+| tell me something funny | off_topic 0.71 → 가드레일 | off_topic 0.71 → 가드레일 |
+| 무료 플랜에서 TLS를 켤 수 있나요? | 대체 경로 | tls_question 0.61 → 모델 |
+| 청구서를 어디서 받나요? | 대체 경로 | 한국어 청구 예시를 넣어도 대체 경로 |
+| Can you recommend a good restaurant? | 대체 경로 | 대체 경로, "맛집 추천해 줘" 추가 뒤 off_topic 0.59 |
+
+의도마다 예시 셋이면 기본 임계값이 너무 엄격하다. 예시를 늘리거나 임계값을 낮추는 것이 첫 조정이다. 매칭은 한국에서 건마다 560–1,090 ms였다.
+
+<p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="도구·모델·에이전트·가드레일 대상이 있는 Intent Router 의도 목록과 질의 시험 칸" loading="lazy" decoding="async"></p>
+
+의도와 대상, 예시 수. Try a query로 콘솔에서 바로 맞춰 볼 수 있다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
+
+### Context Gateway
+
+**확인: redis-iris 1.0.1, 2026-11-07.** 검색 모드 게이트웨이 하나에 업스트림 둘. 무료 DB의 가짜 상품 30개로 만든 Context Surface와 공개 DeepWiki MCP 서버. 실습: [`iris/04-context-gateway`](https://github.com/litkhai/notes-on-redis/tree/main/iris/04-context-gateway).
+
+| 단계 | 결과 |
+|---|---|
+| 에이전트에게 보이는 도구 | `search_tools`, `run_tool` |
+| "black lamps under 100 dollars" 검색 | `products__filter_product` |
+| 필드 여섯 개짜리 엔티티 하나로 만든 Surface | 도구 열 개 자동 생성(개수, 필터, 텍스트 검색, 집합 연산, 확장) |
+| 필터: lamp, black, 가격 ≤ 100 | DB를 직접 훑은 결과와 같은 상품 3개, 2.4초 |
+| 인자 형식이 틀림 | `invalid_arguments`로 거절, 도구 호출 안 됨 |
+| `deepwiki__read_wiki_structure` redis/redis | 게이트웨이를 거쳐 페이지 목록, 1.5초 |
+
+`mcp-redis`는 쓰지 않았다. 업스트림은 Redis Cloud에서 닿아야 하는데 이 호스트는 공개로 띄우지 않는다. Redis 데이터를 도구로 쓰는 것은 Surface가 맡는다.
+
+<p class="shot"><img src="{{ '/assets/img/iris/19-context-surface-fields.webp' | relative_url }}" width="1440" height="1284" alt="Context Surface 필드: 기본 키 id, 텍스트 색인 name, 태그 색인 category·colour, 숫자 price·stock" loading="lazy" decoding="async"></p>
+
+Context Surface는 데이터 모델이다. 엔티티를 키 템플릿에 대응시키고 필드에 유형과 색인을 준다. 게이트웨이가 여기서 검색 도구를 만든다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/25-context-gateway-upstreams.webp' | relative_url }}" width="1440" height="765" alt="게이트웨이 업스트림: 도구 10개인 products Context Surface와 도구 3개인 deepwiki MCP 서버" loading="lazy" decoding="async"></p>
+
+두 업스트림이 엔드포인트 하나 뒤에 있고, 각각 켜고 끌 수 있다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
+
+### Agent Playbooks
+
+**확인: redis-iris 1.0.1, 2026-11-07.** 이 사이트의 발견으로 쓴 FAQ 네 개를 JSON으로 작성해 `iris` CLI로 동기화했다. 실습: [`iris/05-agent-playbooks`](https://github.com/litkhai/notes-on-redis/tree/main/iris/05-agent-playbooks).
+
+| 질문 | 찾은 것 |
+|---|---|
+| is encryption in transit available on the free tier? | free-plan-tls 0.75 |
+| how many clients can connect to the free database | free-plan-limits 0.76 |
+| MSET fails with a slot error on my cluster | crossslot-error 0.85 |
+| 무료 DB에서 TLS 켤 수 있어? | free-plan-tls 0.78 |
+| How do I configure Active-Active between Seoul and Tokyo? | 없음. 대신 검토용으로 제안 |
+
+FAQ의 두 번째 버전은 초안으로 남았고, `faqs publish --version 2` 전까지 검색은 버전 1을 냈다. 키도 같은 흐름을 따른다: read, write, propose, publish, full. 콘솔에는 Agent Playbooks가 있고 LangCache 항목은 없다.
+
+<p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="FAQ 네 개가 공개됐고 하나는 버전 2인 Playbook 레지스트리" loading="lazy" decoding="async"></p>
+
+레지스트리는 FAQ마다 공개 상태와 최신 버전을 보여 준다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/28-playbook-proposals.webp' | relative_url }}" width="1440" height="765" alt="Active-Active에 관한 열린 제안 하나가 있는 제안함" loading="lazy" decoding="async"></p>
+
+제안은 누군가 받아들이고 공개할 때까지 제안함에서 기다린다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
+
 ### 아직 다루지 않은 것
 
-Agent Playbooks, Intent Router, Context Gateway, Lens, Agent Mesh는 저장소 이슈에 각자의 실습이 있다. 메시지 사용량은 콘솔이나 청구서에 나타날 때까지 열린 질문으로 둔다.
+Lens와 Agent Mesh(베타)는 저장소 이슈에 별도 실습이 있다. 메시지 사용량은 콘솔이나 청구서에 나타날 때까지 열린 질문으로 둔다.
 
 </div>
 
@@ -147,7 +325,7 @@ Agent Playbooks, Intent Router, Context Gateway, Lens, Agent Mesh는 저장소 �
 ## 简体中文
 
 <div class="note" markdown="1">
-**状态：部分已运行。** Agent Memory 于 2026-11-07 在 Redis Cloud 免费计划上运行过（见下文）。其他服务仍是 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) 中的计划。
+**状态：部分已运行。** Agent Memory、Intent Router、Context Gateway 和 Agent Playbooks 于 2026-11-07 在 Redis Cloud 免费计划上运行过（见下文）。Lens 和 Agent Mesh 仍是 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) 中的计划。
 </div>
 
 Redis Iris 按 Redis 的说法是"面向 AI 代理的生产级上下文引擎" — 一组服务而非数据库，底层数据库是 Redis。2026-05-18 发布，2026-11-04 扩展为六项服务：Intent Router、Agent Playbooks、Agent Memory、Context Gateway（GA），Lens、Agent Mesh（beta）。Redis Cloud 托管；自管理需带许可证的 Helm chart。每项服务一个实验，全部使用免费数据库和 5,000 条免费消息，并记录每个实验消耗的消息数。命名陷阱 — Context Retriever → Context Gateway、LangCache 与 Agent Playbooks — 单独成节。2026-11-07 读取自 [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/)。
@@ -204,9 +382,98 @@ Redis Iris 按 Redis 的说法是"面向 AI 代理的生产级上下文引擎" �
 
 Memory Inspector 可按所有者或命名空间浏览会话和长期记忆。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
+### Agent Memory 补充
+
+**已在 redis-iris 1.0.1 上验证，2026-11-07。** 实验： [`iris/02-agent-memory`](https://github.com/litkhai/notes-on-redis/tree/main/iris/02-agent-memory)。
+
+| 实验 | 结果 |
+|---|---|
+| 一个会话中的 24 条消息 | 保留 14 个事件加一份摘要（20 条后摘要，保留 10 条）；24 条仍可全部读取 |
+| 该会话产生的长期记忆 | 一个所有者 25 条，大多是每个助手回答一条 |
+| `SHARED` 命名空间中的记忆 | 只有把命名空间作为 `shared` 传入时，才返回给另一个所有者 |
+| 假邮箱和电话，检测器关闭 | 原样存为记忆 |
+| 同样内容，开启邮箱、电话和银行卡检测器，“Redact match” | 存为 `[REDACTED]`；+82 号码也被识别 |
+| MemoryETL：自定义类型 `plan_limit`，一份 9 行文档 | 183 秒内得到 8 条带类型的记忆，按提示要求略去了价格 |
+| `forget(owner)` | 一次调用清除会话和记忆（25、3、3） |
+
+在这些运行中，提取耗时 4–5 分钟，而第一个实验约为 15 秒：它在后台按自己的计划运行。
+
+<p class="shot"><img src="{{ '/assets/img/iris/09-agent-memory-detectors.webp' | relative_url }}" width="1440" height="765" alt="敏感数据排除设置：信用卡、邮箱和电话检测器均设为 Redact match" loading="lazy" decoding="async"></p>
+
+内置检测器：信用卡、邮箱、IP、电话（US、CA、UK、DE、IL、IN、BR）和美国 SSN；每个检测器要么遮蔽匹配内容，要么丢弃该记忆。检测器结论不一致时，丢弃优先。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/11-agent-memory-extractor.webp' | relative_url }}" width="1440" height="765" alt="使用 plan_limit 记忆类型的 MemoryETL 新建 extractor 表单" loading="lazy" decoding="async"></p>
+
+MemoryETL（beta）：extractor 复制自定义记忆类型的提示，把上传或通过 API 提交的文档转换成该类型的记忆。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
+
+### Intent Router
+
+**已在 redis-iris 1.0.1 上验证，2026-11-07。** 四个 intent，每个三条示例，目标共四类；八条英文和韩文查询。嵌入器是托管的 OpenAI `text-embedding-3-small`；没有要求提供我们自己的密钥。实验： [`iris/03-intent-router`](https://github.com/litkhai/notes-on-redis/tree/main/iris/03-intent-router)。
+
+| 查询 | Router 默认值 (0.70) | `min_score` 0.5 |
+|---|---|---|
+| I was billed twice, can you check? | fallback | billing 0.52 → tool |
+| is encryption available on the free tier | fallback | tls_question 0.59 → model |
+| connections keep timing out on my prod database | fallback | outage 0.51 → agent |
+| tell me something funny | off_topic 0.71 → guardrail | off_topic 0.71 → guardrail |
+| 무료 플랜에서 TLS를 켤 수 있나요? | fallback | tls_question 0.61 → model |
+| 청구서를 어디서 받나요? | fallback | fallback，即使加入韩文账单示例后也一样 |
+| Can you recommend a good restaurant? | fallback | fallback；加入“맛집 추천해 줘”后为 off_topic 0.59 |
+
+每个 intent 只有三条示例时，默认阈值过严；增加示例或降低阈值是调优的第一步。每次匹配在韩国耗时 560–1,090 ms。
+
+<p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="Intent Router 意图列表，目标有 tool、model、agent 和 guardrail，下方有 Try a query 输入框" loading="lazy" decoding="async"></p>
+
+各 intent 及其目标和示例数；用 Try a query 可直接在控制台中匹配。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
+
+### Context Gateway
+
+**已在 redis-iris 1.0.1 上验证，2026-11-07。** 一个搜索模式的 Gateway，带两个上游：基于免费数据库中 30 件虚构商品的 Context Surface，以及公共 DeepWiki MCP 服务器。实验： [`iris/04-context-gateway`](https://github.com/litkhai/notes-on-redis/tree/main/iris/04-context-gateway)。
+
+| 步骤 | 结果 |
+|---|---|
+| agent 看到的工具 | `search_tools`、`run_tool` |
+| 搜索 "black lamps under 100 dollars" | `products__filter_product` |
+| 由一个实体、六个字段生成 Surface | 生成十个工具（计数、过滤、文本搜索、集合运算、展开） |
+| 过滤：lamp、black、价格 ≤ 100 | 与直接扫描找到的相同的 3 件商品；2.4 秒 |
+| 参数形状错误 | 以 `invalid_arguments` 拒绝，未调用工具 |
+| `deepwiki__read_wiki_structure` redis/redis | 通过 Gateway 得到页面列表；1.5 秒 |
+
+未使用 `mcp-redis`：上游必须能从 Redis Cloud 访问，而这台主机没有公开提供。Surface 把 Redis 数据作为工具提供。
+
+<p class="shot"><img src="{{ '/assets/img/iris/19-context-surface-fields.webp' | relative_url }}" width="1440" height="1284" alt="Context Surface 字段：id 为主键，name 为文本索引，category 和 colour 为标签索引，price 和 stock 为数值" loading="lazy" decoding="async"></p>
+
+Context Surface 是一个数据模型：实体映射到键模板，字段有类型并建立索引。Gateway 据此生成搜索工具。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/25-context-gateway-upstreams.webp' | relative_url }}" width="1440" height="765" alt="Gateway 的上游：带 10 个工具的 products Context Surface，以及带 3 个工具的 deepwiki MCP 服务器" loading="lazy" decoding="async"></p>
+
+两个上游在同一个端点之后，每个都可单独开关。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
+
+### Agent Playbooks
+
+**已在 redis-iris 1.0.1 上验证，2026-11-07。** 根据本站的发现撰写了四条 FAQ，以 JSON 编写并用 `iris` CLI 同步。实验： [`iris/05-agent-playbooks`](https://github.com/litkhai/notes-on-redis/tree/main/iris/05-agent-playbooks)。
+
+| 问题 | 命中 |
+|---|---|
+| is encryption in transit available on the free tier? | free-plan-tls 0.75 |
+| how many clients can connect to the free database | free-plan-limits 0.76 |
+| MSET fails with a slot error on my cluster | crossslot-error 0.85 |
+| 무료 DB에서 TLS 켤 수 있어? | free-plan-tls 0.78 |
+| How do I configure Active-Active between Seoul and Tokyo? | 无；改为提交供审阅 |
+
+某条 FAQ 的第二个版本一直是草稿，发现服务持续返回版本 1，直到执行 `faqs publish --version 2`。密钥遵循同样的流程：read、write、propose、publish、full。控制台列出了 Agent Playbooks，没有 LangCache 条目。
+
+<p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="Playbook 注册表，四条 FAQ 已发布，其中一条为版本 2" loading="lazy" decoding="async"></p>
+
+注册表显示每条 FAQ 的发布状态和最新版本。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/28-playbook-proposals.webp' | relative_url }}" width="1440" height="765" alt="提案收件箱，有一条关于 Active-Active 的待处理提案" loading="lazy" decoding="async"></p>
+
+提案会留在收件箱中，直到有人接受并发布。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
+
 ### 尚未涵盖
 
-Agent Playbooks、Intent Router、Context Gateway、Lens 和 Agent Mesh 在仓库的 issue 中各有自己的实验。消息消耗量仍是未解问题，直到控制台或账单显示出来。
+Lens 和 Agent Mesh（beta）在仓库的 issue 中有各自的实验。消息消耗量仍是未决问题，要等控制台或账单给出数据。
 
 </div>
 
@@ -215,7 +482,7 @@ Agent Playbooks、Intent Router、Context Gateway、Lens 和 Agent Mesh 在仓�
 ## 日本語
 
 <div class="note" markdown="1">
-**状況：一部実行済み。** Agent Memory を 2026-11-07 に Redis Cloud の無料プランで実行した（下記）。ほかのサービスは引き続き [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) の計画である。
+**状況：一部実行済み。** Agent Memory、Intent Router、Context Gateway、Agent Playbooks を 2026-11-07 に Redis Cloud の無料プランで実行した（下記）。Lens と Agent Mesh は引き続き [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) の計画である。
 </div>
 
 Redis Iris は Redis の言葉では「AI エージェント向けの本番対応コンテキストエンジン」 — サービス群でありデータベースではなく、その下にあるデータベースが Redis。2026-05-18 公開、2026-11-04 に六つのサービスに: Intent Router、Agent Playbooks、Agent Memory、Context Gateway（GA）、Lens、Agent Mesh（ベータ）。Redis Cloud のマネージド、セルフマネージドはライセンスが必要な Helm チャート。サービスごとにラボ一つ、すべて無料 DB と無料 5,000 メッセージで行い、ラボごとの消費メッセージ数を記録。名前の罠 — Context Retriever → Context Gateway、LangCache と Agent Playbooks — は別の節。2026-11-07 に [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/) で読んだ。
@@ -272,9 +539,98 @@ Redis Iris は Redis の言葉では「AI エージェント向けの本番対�
 
 Memory Inspector は、所有者またはネームスペースごとにセッションと長期記憶を閲覧できる。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
 
-### まだ扱っていないもの
+### Agent Memory の補足
 
-Agent Playbooks、Intent Router、Context Gateway、Lens、Agent Mesh は、リポジトリの issue にそれぞれの実習がある。メッセージ消費量は、コンソールか請求書に表示されるまで未解決の問いとして残す。
+**確認：redis-iris 1.0.1、2026-11-07。** 実習： [`iris/02-agent-memory`](https://github.com/litkhai/notes-on-redis/tree/main/iris/02-agent-memory)。
+
+| 実験 | 結果 |
+|---|---|
+| 一つのセッションでの 24 メッセージ | 14 件のイベントと要約を保持（20 件で要約、10 件を保持）。24 件とも引き続き読める |
+| そのセッションから得た長期記憶 | 一人の所有者に 25 件、ほぼアシスタントの回答ごとに一件 |
+| `SHARED` ネームスペースの記憶 | ネームスペースを `shared` として渡したときだけ別の所有者に返る |
+| 偽のメールと電話、検出器オフ | そのまま記憶として保存 |
+| 同じ内容でメール・電話・カードの検出器をオン、「Redact match」 | `[REDACTED]` として保存。+82 の番号も検出された |
+| MemoryETL：カスタムタイプ `plan_limit`、9 行のドキュメント | 183 秒で型付き記憶 8 件、プロンプトの指示どおり価格は除外 |
+| `forget(owner)` | 一回の呼び出しでセッションと記憶が消えた（25、3、3） |
+
+これらの実行では抽出に 4〜5 分かかった。最初の実習では約 15 秒だった。抽出はバックグラウンドで独自のスケジュールで動く。
+
+<p class="shot"><img src="{{ '/assets/img/iris/09-agent-memory-detectors.webp' | relative_url }}" width="1440" height="765" alt="信用卡、メール、電話の検出器を Redact match にした機密データ除外の設定" loading="lazy" decoding="async"></p>
+
+内蔵の検出器：クレジットカード、メール、IP、電話（US、CA、UK、DE、IL、IN、BR）、米国 SSN。それぞれ一致部分を伏せるか、記憶を破棄する。検出器の判断が分かれたときは破棄が優先される。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/11-agent-memory-extractor.webp' | relative_url }}" width="1440" height="765" alt="plan_limit 記憶タイプを使う MemoryETL の新規 extractor フォーム" loading="lazy" decoding="async"></p>
+
+MemoryETL（beta）：extractor はカスタム記憶タイプのプロンプトをコピーし、アップロードまたは API で送られたドキュメントをそのタイプの記憶に変える。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
+
+### Intent Router
+
+**確認：redis-iris 1.0.1、2026-11-07。** 四つの intent、それぞれ例三つ、ターゲットは四種類。英語と韓国語のクエリ八件。埋め込みはマネージドの OpenAI `text-embedding-3-small` で、自前のキーは求められなかった。実習： [`iris/03-intent-router`](https://github.com/litkhai/notes-on-redis/tree/main/iris/03-intent-router)。
+
+| クエリ | Router の既定値 (0.70) | `min_score` 0.5 |
+|---|---|---|
+| I was billed twice, can you check? | fallback | billing 0.52 → tool |
+| is encryption available on the free tier | fallback | tls_question 0.59 → model |
+| connections keep timing out on my prod database | fallback | outage 0.51 → agent |
+| tell me something funny | off_topic 0.71 → guardrail | off_topic 0.71 → guardrail |
+| 무료 플랜에서 TLS를 켤 수 있나요? | fallback | tls_question 0.61 → model |
+| 청구서를 어디서 받나요? | fallback | fallback、韓国語の請求の例を足した後も同じ |
+| Can you recommend a good restaurant? | fallback | fallback。「맛집 추천해 줘」を足した後は off_topic 0.59 |
+
+intent ごとの例が三つだと既定のしきい値は厳しすぎる。例を増やすかしきい値を下げるのが最初の調整である。一回のマッチは韓国から 560〜1,090 ms かかった。
+
+<p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="ターゲットが tool、model、agent、guardrail の Intent Router の intent 一覧と Try a query 欄" loading="lazy" decoding="async"></p>
+
+intent とそのターゲット、例の数。Try a query でコンソールから直接マッチを試せる。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
+
+### Context Gateway
+
+**確認：redis-iris 1.0.1、2026-11-07。** 検索モードの Gateway 一つに上流が二つ。無料データベース上の架空の商品 30 件に対する Context Surface と、公開の DeepWiki MCP サーバー。実習： [`iris/04-context-gateway`](https://github.com/litkhai/notes-on-redis/tree/main/iris/04-context-gateway)。
+
+| 手順 | 結果 |
+|---|---|
+| agent に見えるツール | `search_tools`、`run_tool` |
+| 検索 "black lamps under 100 dollars" | `products__filter_product` |
+| 一つのエンティティ、六つのフィールドから作った Surface | 生成されたツール十個（カウント、フィルタ、テキスト検索、集合演算、展開） |
+| フィルタ：lamp、black、価格 ≤ 100 | 直接スキャンで見つかったのと同じ 3 商品、2.4 秒 |
+| 引数の形が誤り | `invalid_arguments` で拒否、ツールは呼ばれず |
+| `deepwiki__read_wiki_structure` redis/redis | Gateway 経由でページ一覧を取得、1.5 秒 |
+
+`mcp-redis` は使わなかった。上流は Redis Cloud から到達できる必要があるが、このホストは公開していない。Surface が Redis のデータをツールとして扱う。
+
+<p class="shot"><img src="{{ '/assets/img/iris/19-context-surface-fields.webp' | relative_url }}" width="1440" height="1284" alt="Context Surface のフィールド：主キーの id、テキストインデックスの name、タグインデックスの category と colour、数値の price と stock" loading="lazy" decoding="async"></p>
+
+Context Surface はデータモデルである。エンティティをキーのテンプレートに対応させ、フィールドに型とインデックスを付ける。Gateway はここから検索ツールを作る。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/25-context-gateway-upstreams.webp' | relative_url }}" width="1440" height="765" alt="Gateway の上流：ツール 10 個の products Context Surface と、ツール 3 個の deepwiki MCP サーバー" loading="lazy" decoding="async"></p>
+
+二つの上流が一つのエンドポイントの後ろにあり、それぞれオン・オフを切り替えられる。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
+
+### Agent Playbooks
+
+**確認：redis-iris 1.0.1、2026-11-07。** このサイトの知見から FAQ を四件書き、JSON で作成して `iris` CLI で同期した。実習： [`iris/05-agent-playbooks`](https://github.com/litkhai/notes-on-redis/tree/main/iris/05-agent-playbooks)。
+
+| 質問 | 見つかったもの |
+|---|---|
+| is encryption in transit available on the free tier? | free-plan-tls 0.75 |
+| how many clients can connect to the free database | free-plan-limits 0.76 |
+| MSET fails with a slot error on my cluster | crossslot-error 0.85 |
+| 무료 DB에서 TLS 켤 수 있어? | free-plan-tls 0.78 |
+| How do I configure Active-Active between Seoul and Tokyo? | なし。代わりにレビュー用に提案された |
+
+FAQ の二つ目のバージョンは下書きのままで、`faqs publish --version 2` を実行するまで discovery はバージョン 1 を返し続けた。キーも同じ流れで、read、write、propose、publish、full の順になる。コンソールには Agent Playbooks が並び、LangCache の項目はない。
+
+<p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="公開済みの FAQ 四件を並べた Playbook レジストリ。うち一件はバージョン 2" loading="lazy" decoding="async"></p>
+
+レジストリは FAQ ごとに公開状態と最新バージョンを示す。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/28-playbook-proposals.webp' | relative_url }}" width="1440" height="765" alt="Active-Active に関する未処理の提案が一件ある提案トレイ" loading="lazy" decoding="async"></p>
+
+提案は、誰かが受け入れて公開するまでトレイで待つ。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
+
+### まだ扱っていないこと
+
+Lens と Agent Mesh（beta）の実習は、リポジトリの issue にある。メッセージの消費量は、コンソールか請求に表示されるまで未解決のままである。
 
 </div>
 
@@ -283,7 +639,7 @@ Agent Playbooks、Intent Router、Context Gateway、Lens、Agent Mesh は、リ�
 ## ภาษาไทย
 
 <div class="note" markdown="1">
-**สถานะ: รันแล้วบางส่วน** Agent Memory ถูกรันบนแผนฟรีของ Redis Cloud เมื่อ 2026-11-07 (ด้านล่าง) บริการอื่นยังเป็นแผนใน [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)
+**สถานะ: รันแล้วบางส่วน** Agent Memory, Intent Router, Context Gateway และ Agent Playbooks ถูกรันบนแผนฟรีของ Redis Cloud เมื่อ 2026-11-07 (ด้านล่าง) ส่วน Lens และ Agent Mesh ยังเป็นแผนใน [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)
 </div>
 
 Redis Iris ตามคำของ Redis คือ "a production-ready context engine for AI agents" เป็นชุดบริการ ไม่ใช่ฐานข้อมูล โดยมี Redis เป็นฐานข้อมูลอยู่ข้างใต้ เปิดตัวเมื่อ 2026-05-18 และเมื่อ 2026-11-04 กลายเป็นหกบริการ ได้แก่ Intent Router, Agent Playbooks, Agent Memory และ Context Gateway (GA) รวมถึง Lens และ Agent Mesh (beta) ให้บริการแบบจัดการให้บน Redis Cloud ส่วนแบบดูแลเองใช้ Helm chart ซึ่งต้องมีใบอนุญาต มีหนึ่งแล็บต่อหนึ่งบริการ ทั้งหมดใช้ฐานข้อมูลฟรีและข้อความฟรี 5,000 ข้อความ โดยบันทึกจำนวนข้อความที่แต่ละแล็บใช้ไป กับดักเรื่องชื่อ คือ Context Retriever → Context Gateway และ LangCache เทียบกับ Agent Playbooks มีหัวข้อแยกต่างหาก อ่านเมื่อ 2026-11-07 ที่ [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/)
@@ -340,9 +696,98 @@ key อยู่ใน Access & Identity ครอบคลุมทุกผล
 
 Memory Inspector เรียกดูเซสชันและหน่วยความจำระยะยาวตามเจ้าของหรือเนมสเปซ <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
+### Agent Memory เพิ่มเติม
+
+**ตรวจสอบบน redis-iris 1.0.1, 2026-11-07** แล็บ: [`iris/02-agent-memory`](https://github.com/litkhai/notes-on-redis/tree/main/iris/02-agent-memory)
+
+| การทดลอง | ผลลัพธ์ |
+|---|---|
+| 24 ข้อความในเซสชันเดียว | เก็บ 14 เหตุการณ์พร้อมสรุปหนึ่งรายการ (สรุปหลัง 20 เก็บ 10) และยังอ่านได้ครบทั้ง 24 |
+| หน่วยความจำระยะยาวจากเซสชันนั้น | 25 รายการสำหรับเจ้าของหนึ่งราย ส่วนใหญ่หนึ่งรายการต่อหนึ่งคำตอบของผู้ช่วย |
+| หน่วยความจำใน namespace แบบ `SHARED` | ส่งกลับให้เจ้าของรายอื่นเฉพาะเมื่อส่ง namespace เป็น `shared` |
+| อีเมลและเบอร์โทรปลอม ปิดตัวตรวจจับ | จัดเก็บเป็นหน่วยความจำตามต้นฉบับ |
+| เหมือนกัน แต่เปิดตัวตรวจจับอีเมล เบอร์โทร และบัตร "Redact match" | จัดเก็บเป็น `[REDACTED]` เบอร์ +82 ก็ถูกจับได้เช่นกัน |
+| MemoryETL: ประเภทกำหนดเอง `plan_limit`, เอกสาร 9 บรรทัด | 8 หน่วยความจำที่มีประเภทใน 183 วินาที ไม่รวมราคาตามที่ prompt สั่ง |
+| `forget(owner)` | เซสชันและหน่วยความจำหายไปในการเรียกครั้งเดียว (25, 3, 3) |
+
+ในการรันเหล่านี้การสกัดใช้เวลา 4–5 นาที เทียบกับประมาณ 15 วินาทีในแล็บแรก เพราะทำงานเบื้องหลังตามกำหนดเวลาของตัวเอง
+
+<p class="shot"><img src="{{ '/assets/img/iris/09-agent-memory-detectors.webp' | relative_url }}" width="1440" height="765" alt="การยกเว้นข้อมูลอ่อนไหวที่ตั้งตัวตรวจจับบัตรเครดิต อีเมล และเบอร์โทรเป็น Redact match" loading="lazy" decoding="async"></p>
+
+ตัวตรวจจับในตัว: บัตรเครดิต, อีเมล, IP, เบอร์โทร (US, CA, UK, DE, IL, IN, BR) และ SSN ของสหรัฐฯ แต่ละตัวจะปกปิดส่วนที่ตรงหรือทิ้งหน่วยความจำนั้น เมื่อตัวตรวจจับขัดแย้งกัน การทิ้งจะมีผลเหนือกว่า <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/11-agent-memory-extractor.webp' | relative_url }}" width="1440" height="765" alt="ฟอร์ม extractor ใหม่ของ MemoryETL ที่ใช้หน่วยความจำประเภท plan_limit" loading="lazy" decoding="async"></p>
+
+MemoryETL (beta): extractor คัดลอก prompt ของประเภทหน่วยความจำที่กำหนดเอง แล้วแปลงเอกสารที่อัปโหลดหรือส่งผ่าน API เป็นหน่วยความจำประเภทนั้น <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+### Intent Router
+
+**ตรวจสอบบน redis-iris 1.0.1, 2026-11-07** intent สี่รายการ รายการละสามตัวอย่าง เป้าหมายสี่ชนิด และคิวรีภาษาอังกฤษกับเกาหลีแปดรายการ ตัวฝังข้อความคือ OpenAI `text-embedding-3-small` แบบมีผู้ให้บริการจัดการให้ ไม่มีการขอ key ของเราเอง แล็บ: [`iris/03-intent-router`](https://github.com/litkhai/notes-on-redis/tree/main/iris/03-intent-router)
+
+| คิวรี | ค่าเริ่มต้นของ Router (0.70) | `min_score` 0.5 |
+|---|---|---|
+| I was billed twice, can you check? | fallback | billing 0.52 → tool |
+| is encryption available on the free tier | fallback | tls_question 0.59 → model |
+| connections keep timing out on my prod database | fallback | outage 0.51 → agent |
+| tell me something funny | off_topic 0.71 → guardrail | off_topic 0.71 → guardrail |
+| 무료 플랜에서 TLS를 켤 수 있나요? | fallback | tls_question 0.61 → model |
+| 청구서를 어디서 받나요? | fallback | fallback แม้หลังเพิ่มตัวอย่างเรื่องบิลภาษาเกาหลี |
+| Can you recommend a good restaurant? | fallback | fallback; หลังเพิ่ม "맛집 추천해 줘" ได้ off_topic 0.59 |
+
+เมื่อมีสามตัวอย่างต่อ intent เกณฑ์เริ่มต้นเข้มงวดเกินไป การเพิ่มตัวอย่างหรือลดเกณฑ์คือขั้นแรกของการปรับจูน การจับคู่แต่ละครั้งใช้เวลา 560–1,090 ms จากเกาหลี
+
+<p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="รายการ intent ของ Intent Router ที่มีเป้าหมาย tool, model, agent และ guardrail พร้อมช่อง Try a query" loading="lazy" decoding="async"></p>
+
+intent พร้อมเป้าหมายและจำนวนตัวอย่าง; Try a query ใช้จับคู่จากคอนโซลได้ทันที <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+### Context Gateway
+
+**ตรวจสอบบน redis-iris 1.0.1, 2026-11-07** Gateway หนึ่งตัวในโหมดค้นหา มี upstream สองตัว: Context Surface บนสินค้าสมมติ 30 รายการในฐานข้อมูลฟรี และเซิร์ฟเวอร์ DeepWiki MCP สาธารณะ แล็บ: [`iris/04-context-gateway`](https://github.com/litkhai/notes-on-redis/tree/main/iris/04-context-gateway)
+
+| ขั้นตอน | ผลลัพธ์ |
+|---|---|
+| เครื่องมือที่ agent มองเห็น | `search_tools`, `run_tool` |
+| ค้นหา "black lamps under 100 dollars" | `products__filter_product` |
+| Surface จากหนึ่งเอนทิตี หกฟิลด์ | สร้างเครื่องมือสิบตัว (นับ, กรอง, ค้นหาข้อความ, การดำเนินการเซต, ขยาย) |
+| กรอง: lamp, black, ราคา ≤ 100 | ได้สินค้า 3 รายการเดียวกับที่สแกนตรง ๆ พบ; 2.4 วินาที |
+| รูปแบบอาร์กิวเมนต์ผิด | ถูกปฏิเสธด้วย `invalid_arguments` ไม่ได้เรียกเครื่องมือ |
+| `deepwiki__read_wiki_structure` redis/redis | รายการหน้าผ่าน Gateway; 1.5 วินาที |
+
+ไม่ได้ใช้ `mcp-redis`: upstream ต้องเข้าถึงได้จาก Redis Cloud แต่โฮสต์นี้ไม่ได้เปิดให้บริการสาธารณะ ส่วน Surface ครอบคลุมข้อมูล Redis ในรูปแบบเครื่องมือ
+
+<p class="shot"><img src="{{ '/assets/img/iris/19-context-surface-fields.webp' | relative_url }}" width="1440" height="1284" alt="ฟิลด์ของ Context Surface: id เป็นคีย์หลัก, name เป็นดัชนีข้อความ, category และ colour เป็นดัชนีแท็ก, price และ stock เป็นตัวเลข" loading="lazy" decoding="async"></p>
+
+Context Surface คือโมเดลข้อมูล: เอนทิตีถูกแมปกับเทมเพลตคีย์ ฟิลด์มีชนิดและดัชนี Gateway สร้างเครื่องมือค้นหาจากโมเดลนี้ <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/25-context-gateway-upstreams.webp' | relative_url }}" width="1440" height="765" alt="upstream ของ Gateway: products Context Surface ที่มี 10 เครื่องมือ และเซิร์ฟเวอร์ deepwiki MCP ที่มี 3 เครื่องมือ" loading="lazy" decoding="async"></p>
+
+upstream ทั้งสองอยู่หลัง endpoint เดียว และเปิดหรือปิดได้แยกกัน <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+### Agent Playbooks
+
+**ตรวจสอบบน redis-iris 1.0.1, 2026-11-07** เขียน FAQ สี่รายการจากข้อค้นพบของไซต์นี้ เขียนเป็น JSON และซิงก์ด้วย `iris` CLI แล็บ: [`iris/05-agent-playbooks`](https://github.com/litkhai/notes-on-redis/tree/main/iris/05-agent-playbooks)
+
+| คำถาม | ที่พบ |
+|---|---|
+| is encryption in transit available on the free tier? | free-plan-tls 0.75 |
+| how many clients can connect to the free database | free-plan-limits 0.76 |
+| MSET fails with a slot error on my cluster | crossslot-error 0.85 |
+| 무료 DB에서 TLS 켤 수 있어? | free-plan-tls 0.78 |
+| How do I configure Active-Active between Seoul and Tokyo? | ไม่พบ; ส่งเป็นข้อเสนอให้ตรวจสอบแทน |
+
+FAQ เวอร์ชันที่สองยังเป็นฉบับร่าง และ discovery ยังคงให้บริการเวอร์ชัน 1 จนกว่าจะรัน `faqs publish --version 2` key ก็ใช้ลำดับเดียวกัน: read, write, propose, publish, full คอนโซลแสดง Agent Playbooks และไม่มีรายการ LangCache
+
+<p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="ทะเบียน Playbook ที่มี FAQ ที่เผยแพร่แล้วสี่รายการ หนึ่งในนั้นเป็นเวอร์ชัน 2" loading="lazy" decoding="async"></p>
+
+ทะเบียนแสดงสถานะการเผยแพร่และเวอร์ชันล่าสุดของแต่ละ FAQ <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/28-playbook-proposals.webp' | relative_url }}" width="1440" height="765" alt="กล่องข้อเสนอที่มีข้อเสนอเกี่ยวกับ Active-Active ค้างอยู่หนึ่งรายการ" loading="lazy" decoding="async"></p>
+
+ข้อเสนอจะรออยู่ในกล่องจนกว่าจะมีคนรับและเผยแพร่ <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
 ### ยังไม่ครอบคลุม
 
-Agent Playbooks, Intent Router, Context Gateway, Lens และ Agent Mesh มีแล็บของตนเองใน issue ของรีโพสิทอรี การใช้ข้อความยังเป็นคำถามที่เปิดอยู่ จนกว่าคอนโซลหรือใบแจ้งหนี้จะแสดงให้เห็น
+Lens และ Agent Mesh (beta) มีแล็บของตัวเองใน issue ของรีโพซิทอรี การใช้ข้อความยังเป็นคำถามที่เปิดอยู่จนกว่าคอนโซลหรือบิลจะแสดงตัวเลข
 
 </div>
 
@@ -351,7 +796,7 @@ Agent Playbooks, Intent Router, Context Gateway, Lens และ Agent Mesh ม�
 ## Bahasa Indonesia
 
 <div class="note" markdown="1">
-**Status: sebagian dijalankan.** Agent Memory dijalankan pada paket gratis Redis Cloud pada 2026-11-07 (di bawah). Layanan lainnya masih berupa rencana di [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+**Status: sebagian dijalankan.** Agent Memory, Intent Router, Context Gateway, dan Agent Playbooks dijalankan pada paket gratis Redis Cloud pada 2026-11-07 (di bawah). Lens dan Agent Mesh masih berupa rencana di [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
 </div>
 
 Redis Iris, menurut Redis, adalah "a production-ready context engine for AI agents", yaitu kumpulan layanan, bukan basis data; Redis adalah basis data di bawahnya. Diluncurkan 2026-05-18; pada 2026-11-04 menjadi enam layanan: Intent Router, Agent Playbooks, Agent Memory dan Context Gateway (GA), Lens dan Agent Mesh (beta). Dikelola di Redis Cloud; untuk dikelola sendiri tersedia Helm chart yang memerlukan lisensi. Satu lab per layanan, semuanya memakai basis data gratis dan 5.000 pesan gratis, dengan jumlah pesan yang terpakai per lab dicatat. Jebakan penamaan, yaitu Context Retriever → Context Gateway serta LangCache vs Agent Playbooks, dibahas di bagian tersendiri. Dibaca 2026-11-07 di [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/).
@@ -408,9 +853,98 @@ Konfigurasi: TTL, perangkuman setelah 20 pesan dengan mempertahankan 10, tipe me
 
 Memory Inspector menelusuri sesi dan memori jangka panjang berdasarkan pemilik atau namespace. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
 
-### Belum dibahas
+### Agent Memory, lanjutan
 
-Agent Playbooks, Intent Router, Context Gateway, Lens, dan Agent Mesh memiliki lab masing-masing di issue repositori. Konsumsi pesan tetap menjadi pertanyaan terbuka sampai konsol atau tagihan menunjukkannya.
+**Diverifikasi pada redis-iris 1.0.1, 2026-11-07.** Lab: [`iris/02-agent-memory`](https://github.com/litkhai/notes-on-redis/tree/main/iris/02-agent-memory).
+
+| Eksperimen | Hasil |
+|---|---|
+| 24 pesan dalam satu sesi | 14 peristiwa disimpan beserta satu ringkasan (meringkas setelah 20, menyimpan 10); ke-24 pesan masih dapat dibaca |
+| Memori jangka panjang dari sesi itu | 25 untuk satu pemilik, sebagian besar satu per jawaban asisten |
+| Memori di namespace `SHARED` | dikembalikan ke pemilik lain hanya jika namespace diberikan sebagai `shared` |
+| Email dan telepon palsu, detektor nonaktif | tersimpan apa adanya sebagai memori |
+| Sama, dengan detektor email, telepon, dan kartu aktif, "Redact match" | tersimpan sebagai `[REDACTED]`; nomor +82 juga terdeteksi |
+| MemoryETL: tipe kustom `plan_limit`, dokumen 9 baris | 8 memori bertipe dalam 183 detik, harga dikecualikan sesuai perintah prompt |
+| `forget(owner)` | sesi dan memori hilang dalam satu panggilan (25, 3, 3) |
+
+Ekstraksi memakan waktu 4–5 menit pada proses ini, dibandingkan sekitar 15 detik pada lab pertama: ekstraksi berjalan di latar belakang sesuai jadwalnya sendiri.
+
+<p class="shot"><img src="{{ '/assets/img/iris/09-agent-memory-detectors.webp' | relative_url }}" width="1440" height="765" alt="Pengecualian data sensitif dengan detektor kartu kredit, email, dan telepon diatur ke Redact match" loading="lazy" decoding="async"></p>
+
+Detektor bawaan: kartu kredit, email, IP, telepon (US, CA, UK, DE, IL, IN, BR), dan SSN AS; masing-masing menyamarkan bagian yang cocok atau membuang memori. Jika detektor berbeda hasil, pembuangan yang menang. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/11-agent-memory-extractor.webp' | relative_url }}" width="1440" height="765" alt="Formulir extractor baru MemoryETL yang memakai tipe memori plan_limit" loading="lazy" decoding="async"></p>
+
+MemoryETL (beta): extractor menyalin prompt tipe memori kustom dan mengubah dokumen yang diunggah atau dikirim lewat API menjadi memori bertipe itu. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
+
+### Intent Router
+
+**Diverifikasi pada redis-iris 1.0.1, 2026-11-07.** Empat intent dengan masing-masing tiga contoh, target dari empat jenis; delapan kueri berbahasa Inggris dan Korea. Embedder-nya adalah OpenAI `text-embedding-3-small` terkelola; tidak diminta kunci milik sendiri. Lab: [`iris/03-intent-router`](https://github.com/litkhai/notes-on-redis/tree/main/iris/03-intent-router).
+
+| Kueri | Bawaan Router (0.70) | `min_score` 0.5 |
+|---|---|---|
+| I was billed twice, can you check? | fallback | billing 0.52 → tool |
+| is encryption available on the free tier | fallback | tls_question 0.59 → model |
+| connections keep timing out on my prod database | fallback | outage 0.51 → agent |
+| tell me something funny | off_topic 0.71 → guardrail | off_topic 0.71 → guardrail |
+| 무료 플랜에서 TLS를 켤 수 있나요? | fallback | tls_question 0.61 → model |
+| 청구서를 어디서 받나요? | fallback | fallback, bahkan setelah contoh tagihan berbahasa Korea ditambahkan |
+| Can you recommend a good restaurant? | fallback | fallback; off_topic 0.59 setelah menambahkan "맛집 추천해 줘" |
+
+Dengan tiga contoh per intent, ambang bawaan terlalu ketat; menambah contoh atau menurunkan ambang adalah langkah penyetelan pertama. Setiap pencocokan memakan waktu 560–1,090 ms dari Korea.
+
+<p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="Daftar intent Intent Router dengan target tool, model, agent, dan guardrail, serta kotak Try a query" loading="lazy" decoding="async"></p>
+
+Intent beserta target dan jumlah contohnya; Try a query mencocokkan langsung dari konsol. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
+
+### Context Gateway
+
+**Diverifikasi pada redis-iris 1.0.1, 2026-11-07.** Satu Gateway dalam mode pencarian dengan dua upstream: Context Surface atas 30 produk rekaan di basis data gratis, dan server DeepWiki MCP publik. Lab: [`iris/04-context-gateway`](https://github.com/litkhai/notes-on-redis/tree/main/iris/04-context-gateway).
+
+| Langkah | Hasil |
+|---|---|
+| Alat yang terlihat oleh agent | `search_tools`, `run_tool` |
+| pencarian "black lamps under 100 dollars" | `products__filter_product` |
+| Surface dari satu entitas, enam bidang | sepuluh alat yang dihasilkan (hitung, filter, pencarian teks, operasi himpunan, perluas) |
+| Filter: lamp, black, harga ≤ 100 | 3 produk yang sama dengan hasil pemindaian langsung; 2.4 detik |
+| Bentuk argumen salah | ditolak dengan `invalid_arguments`, alat tidak dipanggil |
+| `deepwiki__read_wiki_structure` redis/redis | daftar halaman lewat Gateway; 1.5 detik |
+
+`mcp-redis` tidak dipakai: upstream harus dapat dijangkau dari Redis Cloud, dan host ini tidak menyediakannya secara publik. Surface mencakup data Redis sebagai alat.
+
+<p class="shot"><img src="{{ '/assets/img/iris/19-context-surface-fields.webp' | relative_url }}" width="1440" height="1284" alt="Bidang Context Surface: id sebagai kunci primer, name indeks teks, category dan colour indeks tag, price dan stock numerik" loading="lazy" decoding="async"></p>
+
+Context Surface adalah model data: entitas dipetakan ke templat kunci, bidang diberi tipe dan indeks. Gateway membangun alat pencarian dari model ini. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/25-context-gateway-upstreams.webp' | relative_url }}" width="1440" height="765" alt="Upstream Gateway: products Context Surface dengan 10 alat dan server deepwiki MCP dengan 3 alat" loading="lazy" decoding="async"></p>
+
+Kedua upstream berada di balik satu endpoint, masing-masing dapat diaktifkan atau dinonaktifkan. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
+
+### Agent Playbooks
+
+**Diverifikasi pada redis-iris 1.0.1, 2026-11-07.** Empat FAQ ditulis dari temuan situs ini, disusun sebagai JSON dan disinkronkan dengan CLI `iris`. Lab: [`iris/05-agent-playbooks`](https://github.com/litkhai/notes-on-redis/tree/main/iris/05-agent-playbooks).
+
+| Pertanyaan | Ditemukan |
+|---|---|
+| is encryption in transit available on the free tier? | free-plan-tls 0.75 |
+| how many clients can connect to the free database | free-plan-limits 0.76 |
+| MSET fails with a slot error on my cluster | crossslot-error 0.85 |
+| 무료 DB에서 TLS 켤 수 있어? | free-plan-tls 0.78 |
+| How do I configure Active-Active between Seoul and Tokyo? | tidak ada; diusulkan untuk ditinjau |
+
+Versi kedua sebuah FAQ tetap berstatus draf dan discovery terus menyajikan versi 1 sampai `faqs publish --version 2` dijalankan. Kunci mengikuti alur yang sama: read, write, propose, publish, full. Konsol menampilkan Agent Playbooks dan tidak ada entri LangCache.
+
+<p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="Registri Playbook dengan empat FAQ yang diterbitkan, satu di antaranya versi 2" loading="lazy" decoding="async"></p>
+
+Registri menampilkan status penerbitan dan versi terbaru setiap FAQ. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/28-playbook-proposals.webp' | relative_url }}" width="1440" height="765" alt="Kotak masuk usulan dengan satu usulan terbuka tentang Active-Active" loading="lazy" decoding="async"></p>
+
+Usulan menunggu di kotak masuk sampai seseorang menerima dan menerbitkannya. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
+
+### Belum tercakup
+
+Lens dan Agent Mesh (beta) memiliki lab sendiri di issue repositori. Konsumsi pesan tetap menjadi pertanyaan terbuka sampai konsol atau tagihan menunjukkannya.
 
 </div>
 
@@ -419,7 +953,7 @@ Agent Playbooks, Intent Router, Context Gateway, Lens, dan Agent Mesh memiliki l
 ## Bahasa Melayu
 
 <div class="note" markdown="1">
-**Status: sebahagian dijalankan.** Agent Memory dijalankan pada pelan percuma Redis Cloud pada 2026-11-07 (di bawah). Perkhidmatan lain masih berupa rancangan dalam [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+**Status: sebahagian dijalankan.** Agent Memory, Intent Router, Context Gateway dan Agent Playbooks dijalankan pada pelan percuma Redis Cloud pada 2026-11-07 (di bawah). Lens dan Agent Mesh masih berupa rancangan dalam [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
 </div>
 
 Redis Iris, menurut Redis, ialah "a production-ready context engine for AI agents", iaitu suite perkhidmatan, bukan pangkalan data; Redis ialah pangkalan data di bawahnya. Dilancarkan 2026-05-18; pada 2026-11-04 ia menjadi enam perkhidmatan: Intent Router, Agent Playbooks, Agent Memory dan Context Gateway (GA), Lens dan Agent Mesh (beta). Diurus di Redis Cloud; untuk diurus sendiri tersedia Helm chart yang memerlukan lesen. Satu makmal bagi setiap perkhidmatan, kesemuanya menggunakan pangkalan data percuma dan 5,000 mesej percuma, dengan bilangan mesej yang digunakan setiap makmal direkodkan. Perangkap penamaan, iaitu Context Retriever → Context Gateway serta LangCache vs Agent Playbooks, diberi bahagian tersendiri. Dibaca 2026-11-07 di [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/).
@@ -476,8 +1010,97 @@ Konfigurasi: TTL, ringkasan selepas 20 mesej dengan mengekalkan 10, jenis memori
 
 Memory Inspector menyemak imbas sesi dan memori jangka panjang mengikut pemilik atau namespace. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
 
+### Agent Memory, lanjutan
+
+**Disahkan pada redis-iris 1.0.1, 2026-11-07.** Makmal: [`iris/02-agent-memory`](https://github.com/litkhai/notes-on-redis/tree/main/iris/02-agent-memory).
+
+| Eksperimen | Keputusan |
+|---|---|
+| 24 mesej dalam satu sesi | 14 peristiwa disimpan beserta satu ringkasan (meringkaskan selepas 20, simpan 10); kesemua 24 masih boleh dibaca |
+| Memori jangka panjang daripada sesi itu | 25 untuk satu pemilik, kebanyakannya satu bagi setiap jawapan pembantu |
+| Memori dalam ruang nama `SHARED` | dikembalikan kepada pemilik lain hanya apabila ruang nama diberikan sebagai `shared` |
+| E-mel dan telefon palsu, pengesan dimatikan | disimpan seadanya sebagai memori |
+| Sama, dengan pengesan e-mel, telefon dan kad dihidupkan, "Redact match" | disimpan sebagai `[REDACTED]`; nombor +82 turut dikesan |
+| MemoryETL: jenis tersuai `plan_limit`, dokumen 9 baris | 8 memori bertaip dalam 183 saat, harga ditinggalkan seperti yang diminta prompt |
+| `forget(owner)` | sesi dan memori hilang dalam satu panggilan (25, 3, 3) |
+
+Pengekstrakan mengambil masa 4–5 minit dalam larian ini berbanding kira-kira 15 saat dalam makmal pertama: ia berjalan di latar belakang mengikut jadualnya sendiri.
+
+<p class="shot"><img src="{{ '/assets/img/iris/09-agent-memory-detectors.webp' | relative_url }}" width="1440" height="765" alt="Pengecualian data sensitif dengan pengesan kad kredit, e-mel dan telefon ditetapkan kepada Redact match" loading="lazy" decoding="async"></p>
+
+Pengesan terbina dalam: kad kredit, e-mel, IP, telefon (US, CA, UK, DE, IL, IN, BR) dan SSN AS; setiap satu menyamarkan padanan atau membuang memori. Apabila pengesan tidak sepakat, pembuangan diutamakan. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/11-agent-memory-extractor.webp' | relative_url }}" width="1440" height="765" alt="Borang extractor baharu MemoryETL yang menggunakan jenis memori plan_limit" loading="lazy" decoding="async"></p>
+
+MemoryETL (beta): extractor menyalin prompt jenis memori tersuai dan menukar dokumen yang dimuat naik atau dihantar melalui API kepada memori berjenis itu. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
+
+### Intent Router
+
+**Disahkan pada redis-iris 1.0.1, 2026-11-07.** Empat intent dengan tiga contoh setiap satu, sasaran daripada empat jenis; lapan pertanyaan dalam bahasa Inggeris dan Korea. Embedder ialah OpenAI `text-embedding-3-small` terurus; tiada kunci sendiri diminta. Makmal: [`iris/03-intent-router`](https://github.com/litkhai/notes-on-redis/tree/main/iris/03-intent-router).
+
+| Pertanyaan | Lalai Router (0.70) | `min_score` 0.5 |
+|---|---|---|
+| I was billed twice, can you check? | fallback | billing 0.52 → tool |
+| is encryption available on the free tier | fallback | tls_question 0.59 → model |
+| connections keep timing out on my prod database | fallback | outage 0.51 → agent |
+| tell me something funny | off_topic 0.71 → guardrail | off_topic 0.71 → guardrail |
+| 무료 플랜에서 TLS를 켤 수 있나요? | fallback | tls_question 0.61 → model |
+| 청구서를 어디서 받나요? | fallback | fallback, walaupun selepas contoh bil dalam bahasa Korea ditambah |
+| Can you recommend a good restaurant? | fallback | fallback; off_topic 0.59 selepas menambah "맛집 추천해 줘" |
+
+Dengan tiga contoh bagi setiap intent, ambang lalai terlalu ketat; menambah contoh atau menurunkan ambang ialah langkah penalaan pertama. Setiap padanan mengambil masa 560–1,090 ms dari Korea.
+
+<p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="Senarai intent Intent Router dengan sasaran tool, model, agent dan guardrail, serta kotak Try a query" loading="lazy" decoding="async"></p>
+
+Intent beserta sasaran dan bilangan contohnya; Try a query memadankan terus dari konsol. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
+
+### Context Gateway
+
+**Disahkan pada redis-iris 1.0.1, 2026-11-07.** Satu Gateway dalam mod carian dengan dua upstream: Context Surface ke atas 30 produk rekaan dalam pangkalan data percuma, dan pelayan DeepWiki MCP awam. Makmal: [`iris/04-context-gateway`](https://github.com/litkhai/notes-on-redis/tree/main/iris/04-context-gateway).
+
+| Langkah | Keputusan |
+|---|---|
+| Alat yang dilihat oleh agent | `search_tools`, `run_tool` |
+| carian "black lamps under 100 dollars" | `products__filter_product` |
+| Surface daripada satu entiti, enam medan | sepuluh alat dijana (kira, tapis, carian teks, operasi set, kembangkan) |
+| Tapis: lamp, black, harga ≤ 100 | 3 produk yang sama seperti hasil imbasan terus; 2.4 saat |
+| Bentuk argumen salah | ditolak dengan `invalid_arguments`, alat tidak dipanggil |
+| `deepwiki__read_wiki_structure` redis/redis | senarai halaman melalui Gateway; 1.5 saat |
+
+`mcp-redis` tidak digunakan: upstream mesti boleh dicapai dari Redis Cloud, dan hos ini tidak menyediakannya secara awam. Surface merangkumi data Redis sebagai alat.
+
+<p class="shot"><img src="{{ '/assets/img/iris/19-context-surface-fields.webp' | relative_url }}" width="1440" height="1284" alt="Medan Context Surface: id sebagai kunci utama, name indeks teks, category dan colour indeks tag, price dan stock berangka" loading="lazy" decoding="async"></p>
+
+Context Surface ialah model data: entiti dipetakan kepada templat kunci, medan diberi jenis dan indeks. Gateway membina alat carian daripadanya. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/25-context-gateway-upstreams.webp' | relative_url }}" width="1440" height="765" alt="Upstream Gateway: products Context Surface dengan 10 alat dan pelayan deepwiki MCP dengan 3 alat" loading="lazy" decoding="async"></p>
+
+Kedua-dua upstream berada di sebalik satu endpoint, masing-masing boleh dihidupkan atau dimatikan. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
+
+### Agent Playbooks
+
+**Disahkan pada redis-iris 1.0.1, 2026-11-07.** Empat FAQ ditulis daripada penemuan tapak ini, disusun sebagai JSON dan diselaraskan dengan CLI `iris`. Makmal: [`iris/05-agent-playbooks`](https://github.com/litkhai/notes-on-redis/tree/main/iris/05-agent-playbooks).
+
+| Soalan | Dijumpai |
+|---|---|
+| is encryption in transit available on the free tier? | free-plan-tls 0.75 |
+| how many clients can connect to the free database | free-plan-limits 0.76 |
+| MSET fails with a slot error on my cluster | crossslot-error 0.85 |
+| 무료 DB에서 TLS 켤 수 있어? | free-plan-tls 0.78 |
+| How do I configure Active-Active between Seoul and Tokyo? | tiada; dicadangkan untuk semakan sebaliknya |
+
+Versi kedua sesuatu FAQ kekal sebagai draf dan discovery terus menyajikan versi 1 sehingga `faqs publish --version 2` dijalankan. Kunci mengikuti aliran kerja yang sama: read, write, propose, publish, full. Konsol menyenaraikan Agent Playbooks dan tiada entri LangCache.
+
+<p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="Daftar Playbook dengan empat FAQ yang diterbitkan, satu daripadanya versi 2" loading="lazy" decoding="async"></p>
+
+Daftar ini memaparkan status penerbitan dan versi terkini bagi setiap FAQ. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/28-playbook-proposals.webp' | relative_url }}" width="1440" height="765" alt="Peti masuk cadangan dengan satu cadangan terbuka tentang Active-Active" loading="lazy" decoding="async"></p>
+
+Cadangan menunggu dalam peti masuk sehingga seseorang menerima dan menerbitkannya. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
+
 ### Belum diliputi
 
-Agent Playbooks, Intent Router, Context Gateway, Lens dan Agent Mesh mempunyai makmal masing-masing dalam isu repositori. Penggunaan mesej kekal sebagai soalan terbuka sehingga konsol atau bil menunjukkannya.
+Lens dan Agent Mesh (beta) mempunyai makmal tersendiri dalam isu repositori. Penggunaan mesej kekal sebagai persoalan terbuka sehingga konsol atau bil menunjukkannya.
 
 </div>

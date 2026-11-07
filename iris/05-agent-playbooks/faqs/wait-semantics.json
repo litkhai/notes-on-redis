@@ -1,0 +1,8 @@
+{
+ "entryKey": "wait-semantics",
+ "question": "Does WAIT make a write durable on replicas?",
+ "answer": "WAIT returns how many replicas acknowledged the calling connection's own earlier writes. It does not make Redis strongly consistent, and a WAIT sent on a new connection returns at once.",
+ "intents": [
+  "replication"
+ ]
+}

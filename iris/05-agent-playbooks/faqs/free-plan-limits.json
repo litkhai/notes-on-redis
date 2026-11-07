@@ -1,0 +1,9 @@
+{
+ "entryKey": "free-plan-limits",
+ "question": "What are the limits of the Redis Cloud free database?",
+ "answer": "30 MB of data and 30 connections; the 31st connection is refused. The advertised 100 operations per second was not enforced in a 60-second test on 2026-11-07. No replication, persistence or backups. TLS is not available on the free plan.",
+ "intents": [
+  "free-plan",
+  "limits"
+ ]
+}

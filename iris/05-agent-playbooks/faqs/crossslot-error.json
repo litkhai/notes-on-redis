@@ -1,0 +1,8 @@
+{
+ "entryKey": "crossslot-error",
+ "question": "Why do I get CROSSSLOT on MGET or MSET?",
+ "answer": "The keys hash to different slots in a cluster (Redis Cluster or ElastiCache Serverless). Give keys that are used together a shared hash tag, for example {user:1}:cart and {user:1}:orders.",
+ "intents": [
+  "cluster"
+ ]
+}

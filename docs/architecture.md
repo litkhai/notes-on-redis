@@ -18,7 +18,7 @@ permalink: /architecture/
 | Hot state with high availability | the system of record for sessions, counters, queues | yes: persistence, replicas, Sentinel |
 | Scale-out with Redis Cluster | data split across shards by hash slot | yes: six-node cluster, slot migration |
 | Managed on Redis Cloud | a service, from one database to Active-Active | free plan only; Active-Active is a design |
-| Context layer for AI agents (Iris) | memory, routing, approved answers and tools around an LLM | Agent Memory yes; other services not yet |
+| Context layer for AI agents (Iris) | memory, routing, approved answers and tools around an LLM | yes: Agent Memory, Intent Router, Context Gateway, Agent Playbooks |
 | Search and vectors next to the data | the index and the records in one place | probes only |
 
 ### 1. Cache in front of a database
@@ -95,9 +95,11 @@ Iris puts services around an agent so it does not rebuild context on every turn.
 | Memory that builds itself | a fact from a two-turn conversation was extracted about 15 s later ([Iris]({{ '/iris/' | relative_url }})) |
 | Your data stays in your database | Agent Memory wrote JSON documents and four Search indexes into the free database ([Iris]({{ '/iris/' | relative_url }})) |
 | Scoped keys per product and resource | a read key could recall but got 403 on writes ([Iris]({{ '/iris/' | relative_url }})) |
-| Cheaper turns | Intent Router and Agent Playbooks answer or route before a model call: design only here |
+| Cheaper turns | Intent Router sent English and Korean queries to tool, model, agent and guardrail targets without a generation call; Agent Playbooks answered from published FAQs at 0.75–0.85 ([Iris]({{ '/iris/' | relative_url }})) |
+| One endpoint for tools | Context Gateway put a Context Surface over Redis data and a public MCP server behind one MCP URL; the agent sees two tools and searches for the rest ([Iris]({{ '/iris/' | relative_url }})) |
+| Personal data kept out | with built-in detectors on, email and phone numbers were stored as `[REDACTED]` ([Iris]({{ '/iris/' | relative_url }})) |
 
-**Watch:** where the service runs: the Agent Memory endpoint was in us-east-1 while the database was in Seoul, and recall from Korea took a median 611 ms. Message metering was not visible anywhere in the console. Intent Router, Playbooks, Context Gateway and Lens have not been run yet.
+**Watch:** where the service runs: the Agent Memory endpoint was in us-east-1 while the database was in Seoul, and recall from Korea took a median 611 ms. Message metering was not visible anywhere in the console. Intent Router's default threshold (0.70) matched one query in eight with three examples per intent, and background extraction took from 15 s to 5 minutes. Lens and Agent Mesh have not been run yet.
 
 Docs: [Redis Iris](https://redis.io/docs/latest/develop/ai/context-engine/), [Agent Memory](https://redis.io/docs/latest/operate/iris/agent-memory/), [Agent Playbooks](https://redis.io/docs/latest/operate/iris/agent-playbook/), [Context Gateway](https://redis.io/docs/latest/operate/iris/context-gateway/), [Intent Router](https://redis.io/docs/latest/operate/iris/intent-router/), [Lens](https://redis.io/docs/latest/operate/iris/lens/).
 
@@ -131,7 +133,7 @@ Docs: [Search and query](https://redis.io/docs/latest/develop/ai/search-and-quer
 | 고가용성을 갖춘 핫 상태 | 세션·카운터·큐의 원본 저장소 | 예: 영속성, 복제본, Sentinel |
 | Redis Cluster로 확장 | 해시 슬롯으로 샤드에 나뉜 데이터 | 예: 노드 6개 클러스터, 슬롯 이전 |
 | Redis Cloud 관리형 | DB 하나부터 Active-Active까지의 서비스 | 무료 플랜만. Active-Active는 설계 |
-| AI 에이전트 컨텍스트 계층(Iris) | LLM 주위의 기억, 라우팅, 승인된 답, 도구 | Agent Memory는 예, 나머지는 아직 |
+| AI 에이전트 컨텍스트 계층(Iris) | LLM 주위의 기억, 라우팅, 승인된 답, 도구 | 예: Agent Memory, Intent Router, Context Gateway, Agent Playbooks |
 | 데이터 옆의 검색과 벡터 | 인덱스와 레코드를 한곳에 | 기능 확인만 |
 
 ### 1. 데이터베이스 앞의 캐시
@@ -208,9 +210,11 @@ Iris는 에이전트 주위에 서비스를 두어 매 턴 컨텍스트를 다�
 | 스스로 쌓이는 기억 | 두 턴 대화의 사실이 약 15초 뒤 추출됐다([Iris]({{ '/iris/' | relative_url }})) |
 | 데이터가 내 DB에 남는다 | Agent Memory가 무료 DB에 JSON 문서와 Search 인덱스 4개를 썼다([Iris]({{ '/iris/' | relative_url }})) |
 | 제품·리소스별 키 범위 | read 키는 회상은 되고 쓰기는 403([Iris]({{ '/iris/' | relative_url }})) |
-| 더 싼 턴 | Intent Router와 Agent Playbooks가 모델 호출 전에 답하거나 라우팅: 여기서는 설계만 |
+| 더 싼 턴 | Intent Router가 영어·한국어 질문을 생성 호출 없이 도구·모델·에이전트·가드레일 대상으로 보냈다. Agent Playbooks는 공개된 FAQ로 0.75–0.85에 답했다([Iris]({{ '/iris/' | relative_url }})) |
+| 도구를 위한 엔드포인트 하나 | Context Gateway가 Redis 데이터 위의 Context Surface와 공개 MCP 서버를 MCP 주소 하나 뒤에 두었다. 에이전트는 도구 둘만 보고 나머지는 검색한다([Iris]({{ '/iris/' | relative_url }})) |
+| 개인 정보 차단 | 내장 탐지기를 켜자 이메일과 전화번호가 `[REDACTED]`로 저장됐다([Iris]({{ '/iris/' | relative_url }})) |
 
-**주의:** 서비스가 도는 곳. Agent Memory 엔드포인트는 us-east-1, DB는 서울이었고, 한국에서 회상은 중앙값 611 ms였다. 메시지 사용량은 콘솔 어디에도 보이지 않았다. Intent Router, Playbooks, Context Gateway, Lens는 아직 실행하지 않았다.
+**주의:** 서비스가 도는 곳. Agent Memory 엔드포인트는 us-east-1, DB는 서울이었고, 한국에서 회상은 중앙값 611 ms였다. 메시지 사용량은 콘솔 어디에도 보이지 않았다. Intent Router의 기본 임계값(0.70)은 의도마다 예시 셋일 때 질문 여덟 개 중 하나만 맞췄고, 백그라운드 추출은 15초에서 5분까지 걸렸다. Lens와 Agent Mesh는 아직 실행하지 않았다.
 
 문서: [Redis Iris](https://redis.io/docs/latest/develop/ai/context-engine/), [Agent Memory](https://redis.io/docs/latest/operate/iris/agent-memory/), [Agent Playbooks](https://redis.io/docs/latest/operate/iris/agent-playbook/), [Context Gateway](https://redis.io/docs/latest/operate/iris/context-gateway/), [Intent Router](https://redis.io/docs/latest/operate/iris/intent-router/), [Lens](https://redis.io/docs/latest/operate/iris/lens/).
 
@@ -244,7 +248,7 @@ Iris는 에이전트 주위에 서비스를 두어 매 턴 컨텍스트를 다�
 | 具备高可用的热状态 | 会话、计数器、队列的系统记录 | 是：持久化、副本、Sentinel |
 | 用 Redis Cluster 横向扩展 | 按哈希槽把数据分到各分片 | 是：六节点集群、槽迁移 |
 | 托管于 Redis Cloud | 一项服务，从单个数据库到 Active-Active | 仅免费方案；Active-Active 为设计 |
-| AI agent 的上下文层 (Iris) | 围绕 LLM 的记忆、路由、已批准的答案和工具 | Agent Memory 已运行；其他服务尚未 |
+| AI agent 的上下文层 (Iris) | 围绕 LLM 的记忆、路由、已批准的答案和工具 | 是：Agent Memory、Intent Router、Context Gateway、Agent Playbooks |
 | 数据旁边的搜索与向量 | 索引和记录在同一处 | 仅做过探测 |
 
 ### 1. 数据库前面的缓存
@@ -321,9 +325,11 @@ Iris 在 agent 周围提供一组服务，使它不必每一轮都重建上下�
 | 自行构建的记忆 | 一段两轮对话中的事实在约 15 s 后被提取出来 ([Iris]({{ '/iris/' | relative_url }})) |
 | 数据留在你自己的数据库中 | Agent Memory 向免费数据库写入了 JSON 文档和四个 Search 索引 ([Iris]({{ '/iris/' | relative_url }})) |
 | 按产品和资源划分范围的密钥 | 读取密钥可以召回，但写入时收到 403 ([Iris]({{ '/iris/' | relative_url }})) |
-| 更省的对话轮次 | Intent Router 和 Agent Playbooks 在调用模型之前先回答或路由：此处仅为设计 |
+| 更省的对话轮次 | Intent Router 在不调用生成模型的情况下，把英文和韩文查询分流到工具、模型、agent 和护栏目标；Agent Playbooks 依据已发布的 FAQ 以 0.75–0.85 作答 ([Iris]({{ '/iris/' | relative_url }})) |
+| 工具只需一个端点 | Context Gateway 把 Redis 数据之上的 Context Surface 和一个公共 MCP 服务器置于同一个 MCP URL 之后；agent 只看到两个工具，其余的通过搜索获得 ([Iris]({{ '/iris/' | relative_url }})) |
+| 个人数据不外泄 | 开启内置检测器后，电子邮件和电话号码被存储为 `[REDACTED]` ([Iris]({{ '/iris/' | relative_url }})) |
 
-**注意：** 服务运行的位置：Agent Memory 端点在 us-east-1，而数据库在首尔，从韩国召回的中位数为 611 ms。控制台中任何地方都看不到消息计量。Intent Router、Playbooks、Context Gateway 和 Lens 尚未运行过。
+**注意：** 服务运行的位置：Agent Memory 端点在 us-east-1，而数据库在首尔，从韩国召回的中位数为 611 ms。控制台中任何地方都看不到消息计量。Intent Router 的默认阈值 (0.70) 在每个意图有三个示例时，八个查询只匹配了一个，后台提取耗时 15 s 到 5 分钟。Lens 和 Agent Mesh 尚未运行过。
 
 文档：[Redis Iris](https://redis.io/docs/latest/develop/ai/context-engine/)、[Agent Memory](https://redis.io/docs/latest/operate/iris/agent-memory/)、[Agent Playbooks](https://redis.io/docs/latest/operate/iris/agent-playbook/)、[Context Gateway](https://redis.io/docs/latest/operate/iris/context-gateway/)、[Intent Router](https://redis.io/docs/latest/operate/iris/intent-router/)、[Lens](https://redis.io/docs/latest/operate/iris/lens/)。
 
@@ -357,7 +363,7 @@ Iris 在 agent 周围提供一组服务，使它不必每一轮都重建上下�
 | 高可用性を備えたホットステート | セッション、カウンター、キューの正本 | 実施済み：永続化、レプリカ、Sentinel |
 | Redis Cluster でスケールアウト | ハッシュスロットでシャードに分割したデータ | 実施済み：6 ノードクラスター、スロット移行 |
 | Redis Cloud でのマネージド運用 | 1 つのデータベースから Active-Active までのサービス | 無料プランのみ。Active-Active は設計 |
-| AI エージェントのコンテキスト層 (Iris) | LLM を取り巻くメモリ、ルーティング、承認済みの回答とツール | Agent Memory は実施済み。他のサービスは未実施 |
+| AI エージェントのコンテキスト層 (Iris) | LLM を取り巻くメモリ、ルーティング、承認済みの回答とツール | 実施済み：Agent Memory、Intent Router、Context Gateway、Agent Playbooks |
 | データの隣での検索とベクトル | インデックスとレコードを同じ場所に置く | 簡易検証のみ |
 
 ### 1. データベース前段のキャッシュ
@@ -434,9 +440,11 @@ Iris はエージェントの周りにサービスを置き、毎ターンでコ
 | 自動で育つメモリ | 2 ターンの会話に含まれる事実が約 15 s 後に抽出された ([Iris]({{ '/iris/' | relative_url }})) |
 | データは自分のデータベースに残る | Agent Memory が無料データベースに JSON ドキュメントと 4 つの Search インデックスを書き込んだ ([Iris]({{ '/iris/' | relative_url }})) |
 | プロダクトとリソースごとのスコープ付きキー | 読み取りキーでは想起できたが、書き込みは 403 だった ([Iris]({{ '/iris/' | relative_url }})) |
-| ターンのコストを抑える | Intent Router と Agent Playbooks がモデル呼び出しの前に回答またはルーティングする：ここでは設計のみ |
+| ターンのコストを抑える | Intent Router は英語と韓国語のクエリを、生成呼び出しなしでツール、モデル、エージェント、ガードレールの各ターゲットに振り分けた。Agent Playbooks は公開済みの FAQ から 0.75–0.85 で回答した ([Iris]({{ '/iris/' | relative_url }})) |
+| ツール用のエンドポイントは 1 つ | Context Gateway は Redis データ上の Context Surface と公開 MCP サーバーを 1 つの MCP URL の背後にまとめた。エージェントに見えるツールは 2 つで、残りは検索で見つける ([Iris]({{ '/iris/' | relative_url }})) |
+| 個人データを保存しない | 組み込みの検出器を有効にすると、メールアドレスと電話番号は `[REDACTED]` として保存された ([Iris]({{ '/iris/' | relative_url }})) |
 
-**注意点:** サービスが動く場所です。Agent Memory のエンドポイントは us-east-1 にあり、データベースはソウルにあったため、韓国からの想起は中央値 611 ms でした。メッセージの従量計測はコンソールのどこにも表示されませんでした。Intent Router、Playbooks、Context Gateway、Lens はまだ実行していません。
+**注意点:** サービスが動く場所です。Agent Memory のエンドポイントは us-east-1 にあり、データベースはソウルにあったため、韓国からの想起は中央値 611 ms でした。メッセージの従量計測はコンソールのどこにも表示されませんでした。Intent Router の既定のしきい値 (0.70) は、意図ごとに例が 3 つの場合、8 件のクエリのうち 1 件しか一致せず、バックグラウンドの抽出には 15 s から 5 分かかりました。Lens と Agent Mesh はまだ実行していません。
 
 ドキュメント: [Redis Iris](https://redis.io/docs/latest/develop/ai/context-engine/)、[Agent Memory](https://redis.io/docs/latest/operate/iris/agent-memory/)、[Agent Playbooks](https://redis.io/docs/latest/operate/iris/agent-playbook/)、[Context Gateway](https://redis.io/docs/latest/operate/iris/context-gateway/)、[Intent Router](https://redis.io/docs/latest/operate/iris/intent-router/)、[Lens](https://redis.io/docs/latest/operate/iris/lens/)。
 
@@ -470,7 +478,7 @@ Iris はエージェントの周りにサービスを置き、毎ターンでコ
 | สถานะที่ใช้งานบ่อยพร้อม high availability | ระบบบันทึกหลักของเซสชัน ตัวนับ และคิว | ครบ: persistence, replica, Sentinel |
 | ขยายแนวนอนด้วย Redis Cluster | ข้อมูลที่แบ่งไปยังแต่ละชาร์ดตาม hash slot | ครบ: คลัสเตอร์หกโหนด, การย้าย slot |
 | ใช้แบบมีผู้ดูแลบน Redis Cloud | บริการ ตั้งแต่ฐานข้อมูลเดียวไปจนถึง Active-Active | เฉพาะแผนฟรี; Active-Active เป็นดีไซน์ |
-| ชั้นบริบทสำหรับ AI agent (Iris) | หน่วยความจำ การกำหนดเส้นทาง คำตอบที่อนุมัติแล้ว และเครื่องมือรอบ LLM | Agent Memory รันแล้ว; บริการอื่นยังไม่ได้รัน |
+| ชั้นบริบทสำหรับ AI agent (Iris) | หน่วยความจำ การกำหนดเส้นทาง คำตอบที่อนุมัติแล้ว และเครื่องมือรอบ LLM | รันแล้ว: Agent Memory, Intent Router, Context Gateway, Agent Playbooks |
 | การค้นหาและเวกเตอร์ข้างข้อมูล | ดัชนีและเรกคอร์ดอยู่ที่เดียวกัน | ทดสอบเบื้องต้นเท่านั้น |
 
 ### 1. แคชหน้าฐานข้อมูล
@@ -547,9 +555,11 @@ Iris วางบริการไว้รอบ agent เพื่อไม�
 | หน่วยความจำที่สร้างตัวเอง | ข้อเท็จจริงจากบทสนทนาสองเทิร์นถูกสกัดออกมาประมาณ 15 s ต่อมา ([Iris]({{ '/iris/' | relative_url }})) |
 | ข้อมูลอยู่ในฐานข้อมูลของคุณ | Agent Memory เขียนเอกสาร JSON และดัชนี Search สี่ตัวลงในฐานข้อมูลฟรี ([Iris]({{ '/iris/' | relative_url }})) |
 | คีย์ที่จำกัดขอบเขตตามผลิตภัณฑ์และทรัพยากร | คีย์แบบอ่านเรียกคืนข้อมูลได้ แต่เขียนแล้วได้ 403 ([Iris]({{ '/iris/' | relative_url }})) |
-| แต่ละเทิร์นถูกลง | Intent Router และ Agent Playbooks ตอบหรือกำหนดเส้นทางก่อนเรียกโมเดล: เป็นดีไซน์เท่านั้นในที่นี้ |
+| แต่ละเทิร์นถูกลง | Intent Router ส่งคิวรีภาษาอังกฤษและภาษาเกาหลีไปยังเป้าหมายประเภทเครื่องมือ โมเดล agent และ guardrail โดยไม่ต้องเรียก generation; Agent Playbooks ตอบจาก FAQ ที่เผยแพร่แล้วที่ 0.75–0.85 ([Iris]({{ '/iris/' | relative_url }})) |
+| endpoint เดียวสำหรับเครื่องมือ | Context Gateway วาง Context Surface บนข้อมูล Redis และ MCP server สาธารณะไว้หลัง MCP URL เดียว; agent เห็นเครื่องมือสองตัวและค้นหาส่วนที่เหลือเอา ([Iris]({{ '/iris/' | relative_url }})) |
+| ข้อมูลส่วนบุคคลไม่ถูกเก็บ | เมื่อเปิดตัวตรวจจับในตัว อีเมลและหมายเลขโทรศัพท์ถูกจัดเก็บเป็น `[REDACTED]` ([Iris]({{ '/iris/' | relative_url }})) |
 
-**ข้อควรระวัง:** บริการรันอยู่ที่ไหน: endpoint ของ Agent Memory อยู่ที่ us-east-1 ขณะที่ฐานข้อมูลอยู่ที่โซล และการเรียกคืนจากเกาหลีใช้เวลามัธยฐาน 611 ms ไม่พบการวัดจำนวนข้อความ (metering) ที่ใดในคอนโซล Intent Router, Playbooks, Context Gateway และ Lens ยังไม่ได้รัน
+**ข้อควรระวัง:** บริการรันอยู่ที่ไหน: endpoint ของ Agent Memory อยู่ที่ us-east-1 ขณะที่ฐานข้อมูลอยู่ที่โซล และการเรียกคืนจากเกาหลีใช้เวลามัธยฐาน 611 ms ไม่พบการวัดจำนวนข้อความ (metering) ที่ใดในคอนโซล ค่าเกณฑ์เริ่มต้นของ Intent Router (0.70) ตรงกับคิวรีเพียงหนึ่งในแปดเมื่อมีตัวอย่างสามรายการต่อ intent และการสกัดข้อมูลเบื้องหลังใช้เวลาตั้งแต่ 15 s ถึง 5 นาที Lens และ Agent Mesh ยังไม่ได้รัน
 
 เอกสาร: [Redis Iris](https://redis.io/docs/latest/develop/ai/context-engine/), [Agent Memory](https://redis.io/docs/latest/operate/iris/agent-memory/), [Agent Playbooks](https://redis.io/docs/latest/operate/iris/agent-playbook/), [Context Gateway](https://redis.io/docs/latest/operate/iris/context-gateway/), [Intent Router](https://redis.io/docs/latest/operate/iris/intent-router/), [Lens](https://redis.io/docs/latest/operate/iris/lens/)
 
@@ -583,7 +593,7 @@ Iris วางบริการไว้รอบ agent เพื่อไม�
 | Hot state dengan high availability | sistem pencatatan utama untuk sesi, penghitung, antrean | ya: persistensi, replika, Sentinel |
 | Scale-out dengan Redis Cluster | data yang dibagi ke beberapa shard menurut hash slot | ya: klaster enam node, migrasi slot |
 | Terkelola di Redis Cloud | sebuah layanan, dari satu basis data hingga Active-Active | hanya paket gratis; Active-Active adalah desain |
-| Lapisan konteks untuk agen AI (Iris) | memori, perutean, jawaban yang disetujui, dan alat di sekitar LLM | Agent Memory ya; layanan lain belum |
+| Lapisan konteks untuk agen AI (Iris) | memori, perutean, jawaban yang disetujui, dan alat di sekitar LLM | ya: Agent Memory, Intent Router, Context Gateway, Agent Playbooks |
 | Pencarian dan vektor di samping data | indeks dan rekaman di satu tempat | hanya uji coba awal |
 
 ### 1. Cache di depan basis data
@@ -660,9 +670,11 @@ Iris menempatkan layanan di sekitar agen agar tidak perlu membangun ulang kontek
 | Memori yang membangun dirinya sendiri | sebuah fakta dari percakapan dua giliran diekstrak sekitar 15 s kemudian ([Iris]({{ '/iris/' | relative_url }})) |
 | Data tetap di basis data Anda | Agent Memory menulis dokumen JSON dan empat indeks Search ke basis data gratis ([Iris]({{ '/iris/' | relative_url }})) |
 | Key dengan cakupan per produk dan sumber daya | key baca dapat melakukan recall tetapi mendapat 403 saat menulis ([Iris]({{ '/iris/' | relative_url }})) |
-| Giliran yang lebih murah | Intent Router dan Agent Playbooks menjawab atau merutekan sebelum pemanggilan model: hanya desain di sini |
+| Giliran yang lebih murah | Intent Router mengarahkan kueri bahasa Inggris dan Korea ke target alat, model, agen, dan guardrail tanpa pemanggilan generasi; Agent Playbooks menjawab dari FAQ yang dipublikasikan pada 0.75–0.85 ([Iris]({{ '/iris/' | relative_url }})) |
+| Satu endpoint untuk alat | Context Gateway menempatkan Context Surface di atas data Redis dan sebuah server MCP publik di balik satu URL MCP; agen melihat dua alat dan mencari sisanya ([Iris]({{ '/iris/' | relative_url }})) |
+| Data pribadi tidak tersimpan | dengan detektor bawaan aktif, email dan nomor telepon disimpan sebagai `[REDACTED]` ([Iris]({{ '/iris/' | relative_url }})) |
 
-**Perhatikan:** tempat layanan berjalan: endpoint Agent Memory berada di us-east-1 sementara basis data di Seoul, dan recall dari Korea memakan median 611 ms. Pengukuran pesan (metering) tidak terlihat di mana pun di konsol. Intent Router, Playbooks, Context Gateway, dan Lens belum dijalankan.
+**Perhatikan:** tempat layanan berjalan: endpoint Agent Memory berada di us-east-1 sementara basis data di Seoul, dan recall dari Korea memakan median 611 ms. Pengukuran pesan (metering) tidak terlihat di mana pun di konsol. Ambang batas bawaan Intent Router (0.70) hanya cocok dengan satu dari delapan kueri dengan tiga contoh per intent, dan ekstraksi di latar belakang memakan waktu 15 s hingga 5 menit. Lens dan Agent Mesh belum dijalankan.
 
 Dokumentasi: [Redis Iris](https://redis.io/docs/latest/develop/ai/context-engine/), [Agent Memory](https://redis.io/docs/latest/operate/iris/agent-memory/), [Agent Playbooks](https://redis.io/docs/latest/operate/iris/agent-playbook/), [Context Gateway](https://redis.io/docs/latest/operate/iris/context-gateway/), [Intent Router](https://redis.io/docs/latest/operate/iris/intent-router/), [Lens](https://redis.io/docs/latest/operate/iris/lens/).
 
@@ -696,7 +708,7 @@ Dokumentasi: [Search and query](https://redis.io/docs/latest/develop/ai/search-a
 | Hot state dengan high availability | sistem rekod untuk sesi, pembilang, baris gilir | ya: ketekunan, replika, Sentinel |
 | Scale-out dengan Redis Cluster | data dipecahkan merentas shard mengikut hash slot | ya: kluster enam nod, migrasi slot |
 | Terurus di Redis Cloud | satu perkhidmatan, daripada satu pangkalan data hingga Active-Active | pelan percuma sahaja; Active-Active ialah reka bentuk |
-| Lapisan konteks untuk ejen AI (Iris) | memori, penghalaan, jawapan yang diluluskan dan alat di sekeliling LLM | Agent Memory ya; perkhidmatan lain belum |
+| Lapisan konteks untuk ejen AI (Iris) | memori, penghalaan, jawapan yang diluluskan dan alat di sekeliling LLM | ya: Agent Memory, Intent Router, Context Gateway, Agent Playbooks |
 | Carian dan vektor di sebelah data | indeks dan rekod di satu tempat | hanya ujian awal |
 
 ### 1. Cache di hadapan pangkalan data
@@ -773,9 +785,11 @@ Iris meletakkan perkhidmatan di sekeliling ejen supaya ia tidak perlu membina se
 | Memori yang membina dirinya sendiri | satu fakta daripada perbualan dua giliran diekstrak kira-kira 15 s kemudian ([Iris]({{ '/iris/' | relative_url }})) |
 | Data kekal dalam pangkalan data anda | Agent Memory menulis dokumen JSON dan empat indeks Search ke dalam pangkalan data percuma ([Iris]({{ '/iris/' | relative_url }})) |
 | Kunci berskop bagi setiap produk dan sumber | kunci baca boleh membuat recall tetapi mendapat 403 semasa menulis ([Iris]({{ '/iris/' | relative_url }})) |
-| Giliran yang lebih murah | Intent Router dan Agent Playbooks menjawab atau menghalakan sebelum panggilan model: reka bentuk sahaja di sini |
+| Giliran yang lebih murah | Intent Router menghalakan pertanyaan bahasa Inggeris dan Korea ke sasaran alat, model, ejen dan guardrail tanpa panggilan penjanaan; Agent Playbooks menjawab daripada FAQ yang diterbitkan pada 0.75–0.85 ([Iris]({{ '/iris/' | relative_url }})) |
+| Satu titik akhir untuk alat | Context Gateway meletakkan Context Surface di atas data Redis dan pelayan MCP awam di belakang satu URL MCP; ejen melihat dua alat dan mencari yang selebihnya ([Iris]({{ '/iris/' | relative_url }})) |
+| Data peribadi tidak disimpan | dengan pengesan terbina dalam dihidupkan, e-mel dan nombor telefon disimpan sebagai `[REDACTED]` ([Iris]({{ '/iris/' | relative_url }})) |
 
-**Perhatikan:** tempat perkhidmatan berjalan: titik akhir Agent Memory berada di us-east-1 manakala pangkalan data di Seoul, dan recall dari Korea mengambil median 611 ms. Pengukuran mesej (metering) tidak kelihatan di mana-mana dalam konsol. Intent Router, Playbooks, Context Gateway dan Lens belum dijalankan.
+**Perhatikan:** tempat perkhidmatan berjalan: titik akhir Agent Memory berada di us-east-1 manakala pangkalan data di Seoul, dan recall dari Korea mengambil median 611 ms. Pengukuran mesej (metering) tidak kelihatan di mana-mana dalam konsol. Ambang lalai Intent Router (0.70) hanya sepadan dengan satu daripada lapan pertanyaan dengan tiga contoh bagi setiap intent, dan pengekstrakan di latar belakang mengambil masa 15 s hingga 5 minit. Lens dan Agent Mesh belum dijalankan.
 
 Dokumentasi: [Redis Iris](https://redis.io/docs/latest/develop/ai/context-engine/), [Agent Memory](https://redis.io/docs/latest/operate/iris/agent-memory/), [Agent Playbooks](https://redis.io/docs/latest/operate/iris/agent-playbook/), [Context Gateway](https://redis.io/docs/latest/operate/iris/context-gateway/), [Intent Router](https://redis.io/docs/latest/operate/iris/intent-router/), [Lens](https://redis.io/docs/latest/operate/iris/lens/).
 
