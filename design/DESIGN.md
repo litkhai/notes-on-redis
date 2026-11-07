@@ -1,4 +1,4 @@
-# redis-hols — site and repository design (v0, 2026-11-07)
+# redis-hols — site and repository design (v0)
 
 [English](#english) | [한국어](#한국어)
 

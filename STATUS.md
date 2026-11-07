@@ -1,7 +1,5 @@
 # STATUS.md
 
-Updated 2026-11-07.
-
 ## Tracks
 
 | Track | Run against a real account or container? |

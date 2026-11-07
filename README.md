@@ -43,7 +43,7 @@ redis-hols/
 
 | Track | Status | Contents |
 |---|---|---|
-| [`design/`](./design) | ✅ v0 written 2026-11-07 | Site map, page designs, budget, order of work |
+| [`design/`](./design) | ✅ v0 | Site map, page designs, budget, order of work |
 | everything else | ⬜ Not started | Directories are created with their first lab — see the design |
 
 ### How This Repository Works
@@ -138,7 +138,7 @@ Software, 그리고 AI 에이전트용 컨텍스트 엔진 **Redis Iris**.
 
 | 트랙 | 상태 | 내용 |
 |---|---|---|
-| [`design/`](./design) | ✅ v0 작성 2026-11-07 | 사이트 맵, 페이지 설계, 예산, 작업 순서 |
+| [`design/`](./design) | ✅ v0 | 사이트 맵, 페이지 설계, 예산, 작업 순서 |
 | 나머지 | ⬜ 미착수 | 설계 §7의 순서대로 |
 
 ### 이 저장소의 규칙

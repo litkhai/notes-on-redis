@@ -11,7 +11,7 @@ permalink: /
 ## English
 
 <div class="note" markdown="1">
-**Status: design only (2026-11-07).** Nothing on this page has been run yet. The plan is in [`design/DESIGN.md`](https://github.com/litkhai/redis-hols/blob/main/design/DESIGN.md).
+**Status: design only.** Nothing on this page has been run yet. The plan is in [`design/DESIGN.md`](https://github.com/litkhai/redis-hols/blob/main/design/DESIGN.md).
 </div>
 
 Practical labs for [Redis](https://redis.io) — Redis Open Source, Redis Cloud, Redis Software, and **Redis Iris**, the context engine for AI agents. Everything that reaches this site is verified by running it; every price, limit and version carries the date it was read.
@@ -49,7 +49,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 ## 한국어
 
 <div class="note" markdown="1">
-**상태: 설계만 (2026-11-07).** 이 페이지의 내용은 아직 아무것도 실행하지 않았다. 계획은 [`design/DESIGN.md`](https://github.com/litkhai/redis-hols/blob/main/design/DESIGN.md)에 있다.
+**상태: 설계만.** 이 페이지의 내용은 아직 아무것도 실행하지 않았다. 계획은 [`design/DESIGN.md`](https://github.com/litkhai/redis-hols/blob/main/design/DESIGN.md)에 있다.
 </div>
 
 [Redis](https://redis.io)를 손으로 익히는 실습 — Redis Open Source, Redis Cloud, Redis Software, 그리고 AI 에이전트용 컨텍스트 엔진 **Redis Iris**. 이 사이트에 올라오는 것은 모두 실행해 확인한 것이고, 가격·한도·버전에는 읽은 날짜가 붙는다.
@@ -87,7 +87,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 ## 简体中文
 
 <div class="note" markdown="1">
-**状态：仅有设计（2026-11-07）。** 本页内容尚未实际运行。计划见 [`design/DESIGN.md`](https://github.com/litkhai/redis-hols/blob/main/design/DESIGN.md)。
+**状态：仅有设计。** 本页内容尚未实际运行。计划见 [`design/DESIGN.md`](https://github.com/litkhai/redis-hols/blob/main/design/DESIGN.md)。
 </div>
 
 [Redis](https://redis.io) 动手实验 — Redis Open Source、Redis Cloud、Redis Software，以及面向 AI 代理的上下文引擎 **Redis Iris**。本站内容均经实际运行验证；每个价格、限制和版本都标注读取日期。
@@ -118,7 +118,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 ## 日本語
 
 <div class="note" markdown="1">
-**状態: 設計のみ (2026-11-07)。** このページの内容はまだ何も実行していない。計画は [`design/DESIGN.md`](https://github.com/litkhai/redis-hols/blob/main/design/DESIGN.md) にある。
+**状態: 設計のみ。** このページの内容はまだ何も実行していない。計画は [`design/DESIGN.md`](https://github.com/litkhai/redis-hols/blob/main/design/DESIGN.md) にある。
 </div>
 
 [Redis](https://redis.io) のハンズオンラボ — Redis Open Source、Redis Cloud、Redis Software、そして AI エージェント向けコンテキストエンジン **Redis Iris**。このサイトの内容はすべて実行して確認したもので、価格・上限・バージョンには読んだ日付が付く。
