@@ -4,22 +4,138 @@
 
 ## English
 
-**Status: not run.** Planned in [`design/DESIGN.md`](../../design/DESIGN.md) · tracked in the repository issues.
+**Verified on Redis 8.10.3 (`redis:8.10.3`), Valkey 9.1.3 (`valkey/valkey:9.1.3`) and the Valkey bundle (`valkey/valkey-bundle:9.1`, Valkey 9.1.3), 2026-11-07.**
 
-Redis 8.10 and Valkey 9.1 side by side in Docker: `COMMAND LIST` diff, modules present, hash field expiration, memory for 1 M small strings, `redis-benchmark` with identical arguments — reported as measured on this host.
+The three servers side by side in Docker with defaults and no persistence: what they report,
+which commands each has, which data types work, memory for one million small strings, and the
+same `redis-benchmark` run against each. Measurements on one 24-core host, not a verdict.
+
+### Run
+
+```bash
+docker compose up -d                                   # ports 16381 Redis, 16382 Valkey, 16383 bundle
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/python compare.py                            # versions, commands, probes, memory
+for c in nor-cmp-redis nor-cmp-valkey nor-cmp-bundle; do   # client in each server's network namespace
+  docker run --rm --network container:$c redis:8.10.3 \
+    redis-benchmark -q -t set,get -n 2000000 -c 200 -P 1 -d 64 --threads 8
+done
+```
+
+Full output, including every command name that differs: [`results/`](./results).
+
+```text
+redis-8.10.3: redis_version=8.10.3 valkey_version=- modules=ReJSON,bf,search,timeseries,vectorset
+valkey-9.1.3: redis_version=7.2.4 valkey_version=9.1.3 modules=lua
+valkey-bundle-9.1: redis_version=7.2.4 valkey_version=9.1.3 modules=bf,json,ldap,lua,search
+
+probe                   redis-8.10.3                valkey-9.1.3                valkey-bundle-9.1         
+hash field TTL          ok [60, -1]                 ok [60, -1]                 ok [60, -1]               
+HSETEX / HGETEX         ok ['v']                    ok ['v']                    ok ['v']                  
+JSON                    ok [[1,2,3]]                ERR unknown command 'JSON   ok [[1,2,3]]              
+Bloom                   ok 0                        ERR unknown command 'BF.A   ok 0                      
+Top-k                   ok OK                       ERR unknown command 'TOPK   ERR unknown command 'TOPK 
+Time series             ok 1                        ERR unknown command 'TS.C   ERR unknown command 'TS.C 
+Search: text + numeric  ok [1, 'it:1', ['name', '   ERR unknown command 'FT.C   ok [0]                    
+Search: vector          ok OK                       ERR unknown command 'FT.C   ok OK                     
+Vector set              ok 1                        ERR unknown command 'VADD   ERR unknown command 'VADD 
+Array (8.8)             ok 1                        ERR unknown command 'ARSE   ERR unknown command 'ARSE 
+Lua EVAL                ok 1                        ok 1                        ok 1                      
+Functions               ok []                       ok []                       ok []
+
+redis-8.10.3: 1000000 keys, used_memory +62.1 MB = 62.1 B/key (dataset 22.3 MB, allocator jemalloc-5.3.0)
+valkey-9.1.3: 1000000 keys, used_memory +57.5 MB = 57.5 B/key (dataset 24.3 MB, allocator jemalloc-5.3.0)
+valkey-bundle-9.1: 1000000 keys, used_memory +57.5 MB = 57.5 B/key (dataset 24.5 MB, allocator jemalloc-5.3.0)
+```
+
+### What was observed
+
+- **Identity.** Valkey reports `redis_version:7.2.4` (the fork point) next to `valkey_version:9.1.3`.
+  Neither image ships a config file. The Valkey core image loads only `lua` (Lua is a module in
+  9.1); the bundle adds `json`, `bf`, `search` and `ldap`.
+- **Commands** (top-level plus subcommands, from `COMMAND LIST`): Redis 669, Valkey 399, bundle 450.
+  Only in Redis: the module families Search (`FT.*`), JSON, Bloom/cuckoo/count-min/top-k/t-digest,
+  Time series; vector sets (`V*`) and Array (`AR*`); `BACKUP`, `HOTKEYS`, `HIMPORT`, `DIGEST`,
+  `DELEX`, `INCREX`, `LMOVEM`/`BLMOVEM`, `SDIFFCARD`/`SUNIONCARD`, stream additions (`XACKDEL`,
+  `XDELEX`, `XNACK`, `XCFGSET`, `XIDMPRECORD`), `TRIMSLOTS`. Only in Valkey: `CLUSTERSCAN`,
+  atomic slot migration (`CLUSTER MIGRATESLOTS` and friends), `COMMANDLOG`, `DELIFEQ`,
+  `CLIENT CAPA`, `CLIENT IMPORT-SOURCE`, `SCRIPT SHOW`. The bundle brings back JSON (without
+  `JSON.MERGE` and `JSON.NUMPOWBY`), Bloom filters (not cuckoo, count-min, top-k or t-digest) and
+  part of Search (no `FT.HYBRID`, `FT.ALTER`, aliases, cursors, spellcheck, suggestions or synonyms).
+- **Data types.** Hash field expiration (`HEXPIRE`, `HSETEX`, `HGETEX`) behaved the same on all
+  three. Time series, top-k, vector sets and Array exist only on Redis.
+- **Search indexing.** On the bundle an `FT.SEARCH` right after `FT.CREATE` found nothing; one
+  second later it found the documents (`backfill_in_progress` back to 0). Existing keys are
+  indexed in the background. Redis returned the match immediately in this small case.
+- **Memory.** One million `key:NNNNNNN` → `val:NNNNNNN` strings: Redis +62.1 MB (62.1 B/key),
+  Valkey and bundle +57.5 MB (57.5 B/key), both jemalloc 5.3.0.
+- **Throughput** (SET/GET, 64-byte values, 200 clients, 8 benchmark threads, client inside each
+  server's network namespace): Redis 119,197–124,797, Valkey 120,992–122,978, bundle
+  124,766–126,783 requests/s. With `--io-threads 4` on both and 400 clients: Redis
+  342,427–352,568, Valkey 315,391–342,349. Through the published host ports all three stopped at
+  about 78,000–84,000, which is the port-forwarding path, not the servers.
+
+### Not run / caveats
+
+- One host, client and servers sharing CPUs; small differences here are within run-to-run noise.
+- No persistence, replication or cluster mode; those belong to the deep-dive labs.
+- Search was probed with one text field, one numeric field and one vector index, not for relevance or speed.
 
 | | |
 |---|---|
-| Plan needed | Free |
-| Verified on | — |
+| Plan needed | Free (local Docker) |
+| Verified on | Redis 8.10.3, Valkey 9.1.3, valkey-bundle 9.1 (Valkey 9.1.3), 2026-11-07 |
 
 ## 한국어
 
-**상태: 미실행.** [`design/DESIGN.md`](../../design/DESIGN.md)에 계획 · 저장소 이슈로 추적.
+**확인: Redis 8.10.3(`redis:8.10.3`), Valkey 9.1.3(`valkey/valkey:9.1.3`), Valkey 번들(`valkey/valkey-bundle:9.1`, Valkey 9.1.3), 2026-11-07.**
 
-Docker에서 Redis 8.10과 Valkey 9.1 나란히: `COMMAND LIST` 차이, 모듈 유무, hash field expiration, 작은 문자열 1 M의 메모리, 같은 인자의 `redis-benchmark` — 이 호스트의 측정값으로 보고.
+세 서버를 기본 설정·영속성 없이 Docker로 나란히 띄웠다. 각자 보고하는 것, 가진 명령, 동작하는 자료형,
+작은 문자열 100만 개의 메모리, 같은 `redis-benchmark` 결과를 본다. 24코어 호스트 하나에서 잰 값이지 판정이 아니다.
+
+### 실행
+
+```bash
+docker compose up -d                                   # 포트 16381 Redis, 16382 Valkey, 16383 번들
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/python compare.py                            # versions, commands, probes, memory
+for c in nor-cmp-redis nor-cmp-valkey nor-cmp-bundle; do   # 클라이언트를 각 서버의 네트워크 네임스페이스에서
+  docker run --rm --network container:$c redis:8.10.3 \
+    redis-benchmark -q -t set,get -n 2000000 -c 200 -P 1 -d 64 --threads 8
+done
+```
+
+출력은 영문 절과 같다. 서로 다른 명령 이름 전체는 [`results/`](./results)에 있다.
+
+### 관찰한 것
+
+- **정체.** Valkey는 `valkey_version:9.1.3`과 함께 `redis_version:7.2.4`(포크 시점)를 보고한다. 두 이미지 모두
+  설정 파일이 없다. Valkey 기본 이미지는 `lua`만 싣고(9.1에서 Lua는 모듈), 번들은 `json`, `bf`, `search`, `ldap`을 더한다.
+- **명령**(`COMMAND LIST`의 최상위와 하위 명령): Redis 669, Valkey 399, 번들 450. Redis에만 있는 것: 모듈 계열
+  Search(`FT.*`), JSON, Bloom/cuckoo/count-min/top-k/t-digest, Time series, 벡터 셋(`V*`)과 Array(`AR*`), `BACKUP`,
+  `HOTKEYS`, `HIMPORT`, `DIGEST`, `DELEX`, `INCREX`, `LMOVEM`/`BLMOVEM`, `SDIFFCARD`/`SUNIONCARD`, 스트림 추가 명령
+  (`XACKDEL`, `XDELEX`, `XNACK`, `XCFGSET`, `XIDMPRECORD`), `TRIMSLOTS`. Valkey에만 있는 것: `CLUSTERSCAN`,
+  원자적 슬롯 이전(`CLUSTER MIGRATESLOTS` 등), `COMMANDLOG`, `DELIFEQ`, `CLIENT CAPA`, `CLIENT IMPORT-SOURCE`,
+  `SCRIPT SHOW`. 번들은 JSON(`JSON.MERGE`, `JSON.NUMPOWBY` 제외), Bloom 필터(cuckoo, count-min, top-k, t-digest 없음),
+  Search 일부(`FT.HYBRID`, `FT.ALTER`, 별칭, 커서, 맞춤법, 자동 완성, 동의어 없음)를 되돌려 준다.
+- **자료형.** 해시 필드 만료(`HEXPIRE`, `HSETEX`, `HGETEX`)는 셋 모두 같게 동작했다. Time series, top-k, 벡터 셋,
+  Array는 Redis에만 있다.
+- **Search 색인.** 번들에서는 `FT.CREATE` 직후의 `FT.SEARCH`가 아무것도 찾지 못했고 1초 뒤에는 찾았다
+  (`backfill_in_progress`가 0으로 돌아옴). 기존 키는 백그라운드로 색인된다. 이 작은 경우 Redis는 바로 찾았다.
+- **메모리.** `key:NNNNNNN` → `val:NNNNNNN` 문자열 100만 개: Redis +62.1 MB(키당 62.1 B), Valkey와 번들
+  +57.5 MB(키당 57.5 B). 둘 다 jemalloc 5.3.0.
+- **처리량**(SET/GET, 64바이트 값, 클라이언트 200, 벤치마크 스레드 8, 각 서버의 네트워크 네임스페이스 안):
+  Redis 초당 119,197–124,797, Valkey 120,992–122,978, 번들 124,766–126,783. 양쪽 모두 `--io-threads 4`, 클라이언트 400:
+  Redis 342,427–352,568, Valkey 315,391–342,349. 호스트 포트를 거치면 셋 모두 약 78,000–84,000에서 멈췄다.
+  서버가 아니라 포트 포워딩 경로의 한계다.
+
+### 미실행 / 주의
+
+- 호스트 하나에서 클라이언트와 서버가 CPU를 나눠 썼다. 작은 차이는 실행마다의 흔들림 안에 있다.
+- 영속성, 복제, 클러스터 모드는 없다. 딥다이브 실습에서 다룬다.
+- Search는 텍스트 필드 하나, 숫자 필드 하나, 벡터 인덱스 하나로만 시험했다. 정확도나 속도는 보지 않았다.
 
 | | |
 |---|---|
-| 필요한 플랜 | Free |
-| 확인한 버전 | — |
+| 필요한 플랜 | Free(로컬 Docker) |
+| 확인한 버전 | Redis 8.10.3, Valkey 9.1.3, valkey-bundle 9.1(Valkey 9.1.3), 2026-11-07 |

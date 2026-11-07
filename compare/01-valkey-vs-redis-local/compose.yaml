@@ -1,0 +1,21 @@
+# Redis 8.10.3, Valkey 9.1.3 and the Valkey bundle (valkey-json, valkey-bloom, valkey-search)
+# side by side, defaults only, no persistence. Host ports 16381-16383 (shared Docker hosts).
+# Redis 8.10.3, Valkey 9.1.3, Valkey 번들을 기본 설정·영속성 없이 나란히 띄운다.
+name: nor-compare
+services:
+  redis:
+    image: redis:8.10.3
+    container_name: nor-cmp-redis
+    ports: ["127.0.0.1:16381:6379"]
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+  valkey:
+    image: valkey/valkey:9.1.3
+    container_name: nor-cmp-valkey
+    ports: ["127.0.0.1:16382:6379"]
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+  valkey-bundle:
+    image: valkey/valkey-bundle:9.1
+    container_name: nor-cmp-bundle
+    ports: ["127.0.0.1:16383:6379"]
+    # Arguments that start with "-" go to valkey-server and the entrypoint still adds the modules.
+    command: ["--save", "", "--appendonly", "no"]
