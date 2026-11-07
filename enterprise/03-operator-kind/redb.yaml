@@ -1,0 +1,24 @@
+# Two databases on the cluster. rdi-state is what RDI (enterprise/02) requires for its own state:
+# not clustered, noeviction, AOF every second. target receives the CDC data: one shard plus a replica.
+apiVersion: app.redislabs.com/v1alpha1
+kind: RedisEnterpriseDatabase
+metadata:
+  name: rdi-state
+spec:
+  memorySize: 125MB
+  shardCount: 1
+  replication: false
+  persistence: aofEverySecond
+  evictionPolicy: noeviction
+---
+apiVersion: app.redislabs.com/v1alpha1
+kind: RedisEnterpriseDatabase
+metadata:
+  name: target
+spec:
+  memorySize: 256MB
+  shardCount: 1
+  replication: true
+  modulesList:
+    - name: ReJSON
+    - name: search

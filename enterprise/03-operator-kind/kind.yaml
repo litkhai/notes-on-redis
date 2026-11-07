@@ -1,0 +1,15 @@
+# One control plane and three workers: the Redis Enterprise cluster wants three nodes on three workers.
+# Node image v1.34.11: from Kubernetes 1.35 the kubelet refuses cgroup v1 hosts by default (failCgroupV1),
+# and the host this ran on (Ubuntu 20.04) is cgroup v1. Image list: kind v0.33.0 release notes.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: nor-rec
+nodes:
+  - role: control-plane
+    image: kindest/node:v1.34.11@sha256:44e222ee2132dab25ff87301682f89eb82c7880ea3a1bf543bfe9708fd08d67d
+  - role: worker
+    image: kindest/node:v1.34.11@sha256:44e222ee2132dab25ff87301682f89eb82c7880ea3a1bf543bfe9708fd08d67d
+  - role: worker
+    image: kindest/node:v1.34.11@sha256:44e222ee2132dab25ff87301682f89eb82c7880ea3a1bf543bfe9708fd08d67d
+  - role: worker
+    image: kindest/node:v1.34.11@sha256:44e222ee2132dab25ff87301682f89eb82c7880ea3a1bf543bfe9708fd08d67d

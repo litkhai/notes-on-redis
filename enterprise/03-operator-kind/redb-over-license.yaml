@@ -1,0 +1,8 @@
+# Two more shards: with rdi-state (1) and target (1 + replica) this asks for five, one over the trial licence.
+apiVersion: app.redislabs.com/v1alpha1
+kind: RedisEnterpriseDatabase
+metadata:
+  name: over-license
+spec:
+  memorySize: 128MB
+  shardCount: 2

@@ -1,0 +1,13 @@
+# redis-enterprise-operator chart 8.2.6-21: install the operator and create the cluster in one release.
+cluster:
+  create: true
+  name: rec
+  spec:
+    nodes: 3
+    # Smaller than the default (2 CPU / 4 GB per node) so three nodes fit a workstation; not a sizing advice.
+    redisEnterpriseNodeResources:
+      limits: {cpu: "2", memory: 4Gi}
+      requests: {cpu: "1", memory: 3Gi}
+    persistentSpec:
+      enabled: true
+      volumeSize: 10Gi

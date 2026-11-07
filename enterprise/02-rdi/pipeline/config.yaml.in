@@ -1,0 +1,25 @@
+# RDI pipeline: Postgres (namespace source) -> the target database on the operator's cluster (namespace rec).
+# Secrets are set with redis-di set-secret; nothing secret is in this file.
+sources:
+  postgresql:
+    type: cdc
+    logging:
+      level: info
+    connection:
+      type: postgresql
+      host: postgres.source.svc.cluster.local
+      port: 5432
+      database: shop
+      user: ${POSTGRESQL_DB_USERNAME}
+      password: ${POSTGRESQL_DB_PASSWORD}
+    tables:
+      public.customer: {}
+targets:
+  target:
+    connection:
+      type: redis
+      host: target.rec.svc.cluster.local
+      port: __TARGET_PORT__
+      password: ${TARGET_DB_PASSWORD}
+processors:
+  target_data_type: json
