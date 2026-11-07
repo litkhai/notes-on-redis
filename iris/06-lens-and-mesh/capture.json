@@ -1,0 +1,11 @@
+{
+ "_note": "Console captures for the Lens and Agent Mesh section. Run: node scripts/capture-console.mjs iris/06-lens-and-mesh/capture.json (mask terms in a gitignored .env next to this file).",
+ "out": "docs/assets/img/iris",
+ "base": "https://cloud.redis.io/#/",
+ "theme": "dark",
+ "viewport": [1440, 765],
+ "shots": [
+  { "name": "29-lens-free-plan", "path": "iris/lens", "tall": true, "waitMs": 9000 },
+  { "name": "30-agent-mesh", "path": "iris/agent-mesh", "tall": true, "waitMs": 9000 }
+ ]
+}
