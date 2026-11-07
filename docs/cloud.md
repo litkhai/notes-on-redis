@@ -46,7 +46,7 @@ Create database lands on the database page after a few seconds. The page has fou
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/06-database-configuration.webp' | relative_url }}" width="1440" height="1977" alt="Configuration tab of the free database: usage cards, plan slider, availability and backup, access, data, security and database info panels" loading="lazy" decoding="async"></p>
 
-Free database defaults as shown: no replication, no persistence, remote backup off, eviction policy volatile-lru, default user on, CIDR allow list off, TLS off, RESP3, Redis 8.6. The Logs page records the allow list as 0.0.0.0/0. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
+Free database defaults as shown: no replication, no persistence, remote backup off, eviction policy volatile-lru, default user on, CIDR allow list off, TLS off (the free plan cannot turn it on), RESP3, Redis 8.6. The Logs page records the allow list as 0.0.0.0/0. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/07-connect-dialog.webp' | relative_url }}" width="1440" height="765" alt="Connect drawer with Redis CLI, Redis Insight and Redis SDK clients sections" loading="lazy" decoding="async"></p>
 
@@ -162,7 +162,7 @@ The account menu switches between accounts and opens the user profile. <small>Ca
 
 ### Lab: the free database and its limits
 
-**Verified on Redis 8.6.2 (Redis Cloud free plan, AWS ap-northeast-2), 2026-11-07.** Client: redis-py 6.1.1 from a host in Korea, round trip about 2.6 ms, plain TCP (TLS off by default). Source and full output: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database).
+**Verified on Redis 8.6.2 (Redis Cloud free plan, AWS ap-northeast-2), 2026-11-07.** Client: redis-py 6.1.1 from a host in Korea, round trip about 2.6 ms, plain TCP (the free plan has no TLS). Source and full output: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database).
 
 | Advertised limit | What the client saw |
 |---|---|
@@ -174,7 +174,7 @@ One connection without pipelining reached 249 ops/s, which is the round trip, no
 
 ### First-week checklist
 
-- Turn on **TLS** and set a **CIDR allow list**: the free database starts with TLS off and 0.0.0.0/0.
+- Set a **CIDR allow list**: the free database starts at 0.0.0.0/0. **TLS** cannot be turned on on the free plan (the API refuses with `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`), so keep test data only, or move to a paid plan and turn TLS on there.
 - Replace the default user with **Data Access** users and roles, or at least rotate its password.
 - Decide the **eviction policy**: volatile-lru refuses writes when no key has a TTL.
 - Keep the **alerts** at 80% or lower; the free plan has no replication, persistence or backups to fall back on.
@@ -227,7 +227,7 @@ Create database를 누르면 몇 초 뒤 DB 페이지로 넘어간다. 탭은 Co
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/06-database-configuration.webp' | relative_url }}" width="1440" height="1977" alt="무료 DB의 Configuration 탭: 사용량 카드, 플랜 슬라이더, 가용성과 백업, 접속, 데이터, 보안, DB 정보 패널" loading="lazy" decoding="async"></p>
 
-화면에 보이는 무료 DB 기본값: 복제 없음, 영속성 없음, 원격 백업 꺼짐, 축출 정책 volatile-lru, 기본 사용자 켬, CIDR 허용 목록 꺼짐, TLS 꺼짐, RESP3, Redis 8.6. Logs 화면에는 허용 목록이 0.0.0.0/0으로 기록된다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
+화면에 보이는 무료 DB 기본값: 복제 없음, 영속성 없음, 원격 백업 꺼짐, 축출 정책 volatile-lru, 기본 사용자 켬, CIDR 허용 목록 꺼짐, TLS 꺼짐(무료 플랜에서는 켤 수 없음), RESP3, Redis 8.6. Logs 화면에는 허용 목록이 0.0.0.0/0으로 기록된다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/07-connect-dialog.webp' | relative_url }}" width="1440" height="765" alt="Redis CLI, Redis Insight, Redis SDK clients 항목이 있는 Connect 패널" loading="lazy" decoding="async"></p>
 
@@ -343,7 +343,7 @@ Settings: 계정 정보, 사업자 연락처, MFA 강제(기본 꺼짐), TLS 클
 
 ### 실습: 무료 DB와 그 한도
 
-**확인: Redis 8.6.2(Redis Cloud 무료 플랜, AWS ap-northeast-2), 2026-11-07.** 클라이언트: 한국의 호스트에서 redis-py 6.1.1, 왕복 약 2.6 ms, 평문 TCP(TLS 기본 꺼짐). 소스와 전체 출력: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database).
+**확인: Redis 8.6.2(Redis Cloud 무료 플랜, AWS ap-northeast-2), 2026-11-07.** 클라이언트: 한국의 호스트에서 redis-py 6.1.1, 왕복 약 2.6 ms, 평문 TCP(무료 플랜에는 TLS가 없음). 소스와 전체 출력: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database).
 
 | 안내된 한도 | 클라이언트가 본 것 |
 |---|---|
@@ -355,7 +355,7 @@ Settings: 계정 정보, 사업자 연락처, MFA 강제(기본 꺼짐), TLS 클
 
 ### 첫 주 체크리스트
 
-- **TLS**를 켜고 **CIDR 허용 목록**을 정한다. 무료 DB는 TLS 꺼짐, 0.0.0.0/0으로 시작한다.
+- **CIDR 허용 목록**을 정한다. 무료 DB는 0.0.0.0/0으로 시작한다. 무료 플랜에서는 **TLS**를 켤 수 없으므로(API가 `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`으로 거절) 시험 데이터만 두거나, 유료 플랜으로 옮겨 거기서 TLS를 켠다.
 - 기본 사용자 대신 **Data Access**의 사용자와 역할을 쓰거나, 최소한 비밀번호를 바꾼다.
 - **축출 정책**을 정한다. volatile-lru는 TTL 있는 키가 없으면 쓰기를 거절한다.
 - **알림**은 80% 이하로 둔다. 무료 플랜은 복제, 영속성, 백업이 없다.
@@ -408,7 +408,7 @@ Pro 首先要选择设置方式：Easy create 或 Custom settings。Easy create 
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/06-database-configuration.webp' | relative_url }}" width="1440" height="1977" alt="免费数据库的 Configuration 标签页：用量卡片、计划滑块、可用性与备份、访问、数据、安全和数据库信息面板" loading="lazy" decoding="async"></p>
 
-画面所示的免费数据库默认值：无复制、无持久化、远程备份关闭、淘汰策略 volatile-lru、默认用户开启、CIDR allow list 关闭、TLS 关闭、RESP3、Redis 8.6。Logs 页面将 allow list 记录为 0.0.0.0/0。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
+画面所示的免费数据库默认值：无复制、无持久化、远程备份关闭、淘汰策略 volatile-lru、默认用户开启、CIDR allow list 关闭、TLS 关闭（免费计划无法开启）、RESP3、Redis 8.6。Logs 页面将 allow list 记录为 0.0.0.0/0。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/07-connect-dialog.webp' | relative_url }}" width="1440" height="765" alt="Connect 抽屉，包含 Redis CLI、Redis Insight 和 Redis SDK clients 三个部分" loading="lazy" decoding="async"></p>
 
@@ -524,7 +524,7 @@ Settings：账户信息、业务联系人、MFA enforcement（默认关闭）、
 
 ### 实验：免费数据库及其限制
 
-**已在 Redis 8.6.2 上验证（Redis Cloud 免费计划，AWS ap-northeast-2），2026-11-07。** 客户端：来自韩国主机的 redis-py 6.1.1，往返约 2.6 ms，明文 TCP（TLS 默认关闭）。源码和完整输出：[`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database)。
+**已在 Redis 8.6.2 上验证（Redis Cloud 免费计划，AWS ap-northeast-2），2026-11-07。** 客户端：来自韩国主机的 redis-py 6.1.1，往返约 2.6 ms，明文 TCP（免费计划没有 TLS）。源码和完整输出：[`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database)。
 
 | 标称限制 | 客户端实际看到的 |
 |---|---|
@@ -536,7 +536,7 @@ Settings：账户信息、业务联系人、MFA enforcement（默认关闭）、
 
 ### 第一周检查清单
 
-- 开启 **TLS** 并设置 **CIDR allow list**：免费数据库默认 TLS 关闭，且允许 0.0.0.0/0。
+- 设置 **CIDR allow list**：免费数据库默认为 0.0.0.0/0。免费计划无法开启 **TLS**（API 会以 `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN` 拒绝），所以只放测试数据，或者升级到付费计划并在那里开启 TLS。
 - 用 **Data Access** 的用户和角色替换默认用户，或者至少轮换它的密码。
 - 确定 **eviction policy**：当没有键带 TTL 时，volatile-lru 会拒绝写入。
 - 将 **alerts** 保持在 80% 或更低；免费计划没有复制、持久化或备份可作后备。
@@ -589,7 +589,7 @@ Create database を押すと、数秒でデータベースのページに移り�
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/06-database-configuration.webp' | relative_url }}" width="1440" height="1977" alt="無料データベースの Configuration タブ：使用量カード、プランのスライダー、可用性とバックアップ、アクセス、データ、セキュリティ、データベース情報のパネル" loading="lazy" decoding="async"></p>
 
-画面に表示される無料データベースのデフォルト：レプリケーションなし、永続化なし、リモートバックアップオフ、eviction policy は volatile-lru、デフォルトユーザーはオン、CIDR allow list はオフ、TLS オフ、RESP3、Redis 8.6。Logs 画面では allow list が 0.0.0.0/0 と記録されています。 <small>2026-11-07 キャプチャ、Redis Cloud 無料プラン。</small>
+画面に表示される無料データベースのデフォルト：レプリケーションなし、永続化なし、リモートバックアップオフ、eviction policy は volatile-lru、デフォルトユーザーはオン、CIDR allow list はオフ、TLS オフ（無料プランでは有効にできません）、RESP3、Redis 8.6。Logs 画面では allow list が 0.0.0.0/0 と記録されています。 <small>2026-11-07 キャプチャ、Redis Cloud 無料プラン。</small>
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/07-connect-dialog.webp' | relative_url }}" width="1440" height="765" alt="Redis CLI、Redis Insight、Redis SDK clients の各セクションがある Connect ドロワー" loading="lazy" decoding="async"></p>
 
@@ -705,7 +705,7 @@ Settings：アカウント情報、ビジネス連絡先、MFA enforcement（デ
 
 ### ラボ：無料データベースとその制限
 
-**Redis 8.6.2（Redis Cloud 無料プラン、AWS ap-northeast-2）で検証、2026-11-07。** クライアント：韓国のホストから redis-py 6.1.1、往復約 2.6 ms、平文 TCP（TLS はデフォルトでオフ）。ソースと全出力：[`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database)。
+**Redis 8.6.2（Redis Cloud 無料プラン、AWS ap-northeast-2）で検証、2026-11-07。** クライアント：韓国のホストから redis-py 6.1.1、往復約 2.6 ms、平文 TCP（無料プランには TLS がありません）。ソースと全出力：[`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database)。
 
 | 公称の制限 | クライアントで確認した結果 |
 |---|---|
@@ -717,7 +717,7 @@ pipeline を使わない 1 接続では 249 ops/s で、これは往復時間に
 
 ### 最初の 1 週間のチェックリスト
 
-- **TLS** をオンにして **CIDR allow list** を設定する：無料データベースは TLS オフ、0.0.0.0/0 の状態で始まります。
+- **CIDR allow list** を設定する：無料データベースは 0.0.0.0/0 で始まります。無料プランでは **TLS** をオンにできない（API は `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN` で拒否します）ため、テストデータだけを置くか、有料プランに移ってそこで TLS をオンにします。
 - デフォルトユーザーを **Data Access** のユーザーとロールに置き換えるか、少なくともそのパスワードをローテーションする。
 - **eviction policy** を決める：TTL を持つキーがないと、volatile-lru は書き込みを拒否します。
 - **alerts** は 80% 以下に保つ：無料プランには、頼れるレプリケーション、永続化、バックアップがありません。
@@ -770,7 +770,7 @@ Pro เริ่มต้นด้วยการเลือกวิธีต�
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/06-database-configuration.webp' | relative_url }}" width="1440" height="1977" alt="แท็บ Configuration ของฐานข้อมูลฟรี: การ์ดการใช้งาน, แถบเลื่อนแผน, แผงความพร้อมใช้งานและการสำรองข้อมูล, การเข้าถึง, ข้อมูล, ความปลอดภัย และข้อมูลฐานข้อมูล" loading="lazy" decoding="async"></p>
 
-ค่าเริ่มต้นของฐานข้อมูลฟรีตามที่แสดง: ไม่มี replication, ไม่มี persistence, ปิด remote backup, eviction policy เป็น volatile-lru, เปิด default user, ปิด CIDR allow list, ปิด TLS, RESP3, Redis 8.6 หน้า Logs บันทึก allow list เป็น 0.0.0.0/0 <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+ค่าเริ่มต้นของฐานข้อมูลฟรีตามที่แสดง: ไม่มี replication, ไม่มี persistence, ปิด remote backup, eviction policy เป็น volatile-lru, เปิด default user, ปิด CIDR allow list, ปิด TLS (แผนฟรีเปิดไม่ได้), RESP3, Redis 8.6 หน้า Logs บันทึก allow list เป็น 0.0.0.0/0 <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/07-connect-dialog.webp' | relative_url }}" width="1440" height="765" alt="ลิ้นชัก Connect ที่มีส่วนไคลเอนต์ Redis CLI, Redis Insight และ Redis SDK" loading="lazy" decoding="async"></p>
 
@@ -886,7 +886,7 @@ Settings: ข้อมูลบัญชี ผู้ติดต่อทาง
 
 ### Lab: ฐานข้อมูลฟรีและขีดจำกัด
 
-**ตรวจสอบบน Redis 8.6.2 (แผนฟรีของ Redis Cloud, AWS ap-northeast-2) เมื่อ 2026-11-07** ไคลเอนต์: redis-py 6.1.1 จากโฮสต์ในเกาหลี ใช้เวลาไป-กลับประมาณ 2.6 ms, TCP ธรรมดา (TLS ปิดเป็นค่าเริ่มต้น) ซอร์สและผลลัพธ์ฉบับเต็ม: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database)
+**ตรวจสอบบน Redis 8.6.2 (แผนฟรีของ Redis Cloud, AWS ap-northeast-2) เมื่อ 2026-11-07** ไคลเอนต์: redis-py 6.1.1 จากโฮสต์ในเกาหลี ใช้เวลาไป-กลับประมาณ 2.6 ms, TCP ธรรมดา (แผนฟรีไม่มี TLS) ซอร์สและผลลัพธ์ฉบับเต็ม: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database)
 
 | Advertised limit | What the client saw |
 |---|---|
@@ -898,7 +898,7 @@ Settings: ข้อมูลบัญชี ผู้ติดต่อทาง
 
 ### รายการตรวจสอบสัปดาห์แรก
 
-- เปิด **TLS** และตั้ง **CIDR allow list**: ฐานข้อมูลฟรีเริ่มต้นโดยปิด TLS และใช้ 0.0.0.0/0
+- ตั้ง **CIDR allow list**: ฐานข้อมูลฟรีเริ่มต้นที่ 0.0.0.0/0 แผนฟรีเปิด **TLS** ไม่ได้ (API ปฏิเสธด้วย `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`) จึงควรเก็บเฉพาะข้อมูลทดสอบ หรือย้ายไปใช้แผนแบบชำระเงินแล้วเปิด TLS ที่นั่น
 - แทนที่ default user ด้วยผู้ใช้และบทบาทของ **Data Access** หรืออย่างน้อยก็เปลี่ยนรหัสผ่านของมัน
 - กำหนด **eviction policy**: volatile-lru จะปฏิเสธการเขียนเมื่อไม่มี key ใดมี TTL
 - ตั้ง **alerts** ไว้ที่ 80% หรือต่ำกว่า: แผนฟรีไม่มีการทำ replication, persistence หรือ backup ไว้รองรับ
@@ -951,7 +951,7 @@ Create database membawa Anda ke halaman database setelah beberapa detik. Halaman
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/06-database-configuration.webp' | relative_url }}" width="1440" height="1977" alt="Tab Configuration dari database gratis: kartu penggunaan, slider paket, panel ketersediaan dan backup, akses, data, keamanan, dan info database" loading="lazy" decoding="async"></p>
 
-Default database gratis seperti yang ditampilkan: tanpa replikasi, tanpa persistence, remote backup nonaktif, eviction policy volatile-lru, default user aktif, CIDR allow list nonaktif, TLS nonaktif, RESP3, Redis 8.6. Halaman Logs mencatat allow list sebagai 0.0.0.0/0. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+Default database gratis seperti yang ditampilkan: tanpa replikasi, tanpa persistence, remote backup nonaktif, eviction policy volatile-lru, default user aktif, CIDR allow list nonaktif, TLS nonaktif (paket gratis tidak dapat mengaktifkannya), RESP3, Redis 8.6. Halaman Logs mencatat allow list sebagai 0.0.0.0/0. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/07-connect-dialog.webp' | relative_url }}" width="1440" height="765" alt="Drawer Connect dengan bagian klien Redis CLI, Redis Insight, dan Redis SDK" loading="lazy" decoding="async"></p>
 
@@ -1067,7 +1067,7 @@ Menu akun beralih antar akun dan membuka profil pengguna. <small>Diambil pada 20
 
 ### Lab: database gratis dan batasnya
 
-**Diverifikasi pada Redis 8.6.2 (paket gratis Redis Cloud, AWS ap-northeast-2), 2026-11-07.** Klien: redis-py 6.1.1 dari host di Korea, round trip sekitar 2.6 ms, TCP biasa (TLS nonaktif secara default). Sumber dan keluaran lengkap: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database).
+**Diverifikasi pada Redis 8.6.2 (paket gratis Redis Cloud, AWS ap-northeast-2), 2026-11-07.** Klien: redis-py 6.1.1 dari host di Korea, round trip sekitar 2.6 ms, TCP biasa (paket gratis tidak memiliki TLS). Sumber dan keluaran lengkap: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database).
 
 | Advertised limit | What the client saw |
 |---|---|
@@ -1079,7 +1079,7 @@ Satu koneksi tanpa pipeline mencapai 249 ops/s, yang ditentukan oleh round trip,
 
 ### Daftar periksa minggu pertama
 
-- Aktifkan **TLS** dan atur **CIDR allow list**: database gratis dimulai dengan TLS nonaktif dan 0.0.0.0/0.
+- Atur **CIDR allow list**: database gratis dimulai dengan 0.0.0.0/0. **TLS** tidak dapat diaktifkan pada paket gratis (API menolaknya dengan `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`), jadi simpan hanya data uji, atau pindah ke paket berbayar dan aktifkan TLS di sana.
 - Ganti default user dengan pengguna dan peran **Data Access**, atau setidaknya ganti kata sandinya.
 - Tentukan **eviction policy**: volatile-lru menolak penulisan ketika tidak ada key yang memiliki TTL.
 - Jaga **alerts** pada 80% atau lebih rendah; paket gratis tidak memiliki replikasi, persistence, atau backup sebagai cadangan.
@@ -1132,7 +1132,7 @@ Create database membawa anda ke halaman pangkalan data selepas beberapa saat. Ha
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/06-database-configuration.webp' | relative_url }}" width="1440" height="1977" alt="Tab Configuration pangkalan data percuma: kad penggunaan, peluncur pelan, panel ketersediaan dan sandaran, akses, data, keselamatan dan maklumat pangkalan data" loading="lazy" decoding="async"></p>
 
-Lalai pangkalan data percuma seperti yang dipaparkan: tiada replikasi, tiada persistence, remote backup dimatikan, eviction policy volatile-lru, default user dihidupkan, CIDR allow list dimatikan, TLS dimatikan, RESP3, Redis 8.6. Halaman Logs merekodkan allow list sebagai 0.0.0.0/0. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+Lalai pangkalan data percuma seperti yang dipaparkan: tiada replikasi, tiada persistence, remote backup dimatikan, eviction policy volatile-lru, default user dihidupkan, CIDR allow list dimatikan, TLS dimatikan (pelan percuma tidak boleh menghidupkannya), RESP3, Redis 8.6. Halaman Logs merekodkan allow list sebagai 0.0.0.0/0. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/07-connect-dialog.webp' | relative_url }}" width="1440" height="765" alt="Laci Connect dengan bahagian klien Redis CLI, Redis Insight dan Redis SDK" loading="lazy" decoding="async"></p>
 
@@ -1248,7 +1248,7 @@ Menu akaun bertukar antara akaun dan membuka profil pengguna. <small>Ditangkap p
 
 ### Makmal: pangkalan data percuma dan hadnya
 
-**Disahkan pada Redis 8.6.2 (pelan percuma Redis Cloud, AWS ap-northeast-2), 2026-11-07.** Klien: redis-py 6.1.1 dari hos di Korea, round trip kira-kira 2.6 ms, TCP biasa (TLS dimatikan secara lalai). Sumber dan output penuh: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database).
+**Disahkan pada Redis 8.6.2 (pelan percuma Redis Cloud, AWS ap-northeast-2), 2026-11-07.** Klien: redis-py 6.1.1 dari hos di Korea, round trip kira-kira 2.6 ms, TCP biasa (pelan percuma tidak mempunyai TLS). Sumber dan output penuh: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database).
 
 | Advertised limit | What the client saw |
 |---|---|
@@ -1260,7 +1260,7 @@ Satu sambungan tanpa pipeline mencapai 249 ops/s, iaitu round trip, bukan pelan.
 
 ### Senarai semak minggu pertama
 
-- Hidupkan **TLS** dan tetapkan **CIDR allow list**: pangkalan data percuma bermula dengan TLS dimatikan dan 0.0.0.0/0.
+- Tetapkan **CIDR allow list**: pangkalan data percuma bermula dengan 0.0.0.0/0. **TLS** tidak boleh dihidupkan pada pelan percuma (API menolaknya dengan `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`), jadi simpan data ujian sahaja, atau beralih ke pelan berbayar dan hidupkan TLS di sana.
 - Gantikan default user dengan pengguna dan peranan **Data Access**, atau sekurang-kurangnya tukar kata laluannya.
 - Tentukan **eviction policy**: volatile-lru menolak penulisan apabila tiada key yang mempunyai TTL.
 - Kekalkan **alerts** pada 80% atau lebih rendah; pelan percuma tidak mempunyai replikasi, persistence atau sandaran sebagai pilihan terakhir.

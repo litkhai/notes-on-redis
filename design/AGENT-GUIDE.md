@@ -60,7 +60,7 @@ versions and prices always with the date they were read; Redis Ltd., not "Redis 
 A lab's site page is `docs/<track>.md` (one page per nav item; labs are sections on it).
 Seven `.lang` blocks (`en`, `ko`, `zh`, `ja`, `th`, `id`, `ms`; #22) — edit all of them or the
 checker fails; everything but `ko` is translated from `en`. Pages with a `page.json` source
-(`cloud/02-console-tour`, `compare/02-elasticache-valkey`) are edited there and rebuilt with
+(`setup`, `cloud/02-console-tour`, `compare/02-elasticache-valkey`) are edited there and rebuilt with
 `scripts/build-lang-page.py`. Status badges and tables on `docs/index.md` change when a lab runs.
 
 Screenshots: `docs/assets/img/<slug>/NN-<name>.webp`, 2x, WebP quality 82, masked
@@ -124,7 +124,7 @@ python3 scripts/check-docs.py -v           # 시작 전과 푸시 전에 통과�
 
 랩의 사이트 페이지는 `docs/<track>.md`(네비 항목당 한 페이지, 랩은 그 안의 절). `.lang` 블록
 일곱 개(`en`, `ko`, `zh`, `ja`, `th`, `id`, `ms`; #22) — 다 고치지 않으면 검사 실패; `ko` 외에는 `en`에서 번역.
-`page.json` 원천이 있는 페이지(`cloud/02-console-tour`, `compare/02-elasticache-valkey`)는 거기서 고치고
+`page.json` 원천이 있는 페이지(`setup`, `cloud/02-console-tour`, `compare/02-elasticache-valkey`)는 거기서 고치고
 `scripts/build-lang-page.py`로 다시 만든다. `docs/index.md`의 배지와 표는 랩이 실행되면 바꾼다.
 
 캡처: `docs/assets/img/<slug>/NN-<이름>.webp`, 2x, WebP 품질 82, 커밋 전에 가림(계정 ID,
