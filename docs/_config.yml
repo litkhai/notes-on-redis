@@ -50,4 +50,3 @@ nav:
   - { title: Deep Dive, url: /deep-dive/, group: readings }
 
   # The repository itself / 저장소 자체
-  - { title: About, url: /about/, group: about }
