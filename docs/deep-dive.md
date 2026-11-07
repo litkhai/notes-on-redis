@@ -11,10 +11,10 @@ permalink: /deep-dive/
 ## English
 
 <div class="note" markdown="1">
-**Status: partly run.** Threading, persistence, replication with Sentinel, and cluster were run on 2026-11-07 (below). Eviction, client-side caching, Streams, and Functions with ACL are still the plan in [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+**Status: run.** All eight mechanisms were run on Redis 8.10.3 in local Docker on 2026-11-07 (below).
 </div>
 
-One page per mechanism, each with the mechanism in plain words, the official doc link, a script that produces a number or an observable, and the output as run: threading and the event loop (`io-threads`), persistence (RDB, AOF, `BACKUP` since 8.10), replication / Sentinel / Cluster (`PSYNC`, failover, 16384 slots, `CLUSTER MIGRATION`), eviction and memory (LRU / LFU / LRM, `HOTKEYS`), client-side caching (`CLIENT TRACKING`), Streams (consumer groups, `IDMP`, `XNACK`), Functions and ACL.
+One section per mechanism, each with the mechanism in plain words, the official doc link, a script that produces a number or an observable, and the output as run: threading and the event loop (`io-threads`), persistence (RDB, AOF, `BACKUP` since 8.10), replication / Sentinel / Cluster (`PSYNC`, failover, 16384 slots, `CLUSTER MIGRATION`), eviction and memory (LRU / LFU / LRM, `HOTKEYS`), client-side caching (`CLIENT TRACKING`), Streams (consumer groups, `IDMP`, `XNACK`), Functions and ACL.
 
 ### Threading and the event loop
 
@@ -78,6 +78,62 @@ The last row is the trap: with a hostname, the stopped container's name no longe
 
 The same `CROSSSLOT` refusal is what ElastiCache Serverless returned on the [Compare page]({{ '/compare/' | relative_url }}): plan keys that are used together with a shared hash tag. Docs: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/). Lab: [`deep-dive/04-cluster`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/04-cluster).
 
+### Eviction and memory
+
+**Verified on Redis 8.10.3, 2026-11-07.** `maxmemory 16mb`, three groups of 5,000 keys, then 30,000 new keys. *Read-hot* keys were read five times and never rewritten; *write-hot* keys were rewritten five times and never read. From the docs: "allkeys-lrm : Evict the least recently modified (LRM) keys", and "Use allkeys-lrm when you want to preserve frequently read data but evict data that hasn't been modified recently."
+
+| Policy | Read-hot left | Write-hot left | Cold left | What it means |
+|---|---|---|---|---|
+| `noeviction` | 5,000 | 5,000 | 5,000 | writes refused: `command not allowed when used memory > 'maxmemory'` |
+| `allkeys-lru` | 621 | 614 | 356 | last access, read or write; the newest keys win |
+| `allkeys-lfu` | 5,000 | 5,000 | 2,117 | frequency of reads and writes protects both hot groups |
+| `allkeys-lrm` (8.6) | 368 | 3,318 | 431 | only writes protect a key; reads do not |
+| `allkeys-random` | 2,595 | 2,568 | 2,636 | about half of each |
+
+LRU and LRM sample keys, so their counts move between runs; an earlier run kept about 3,200 of each hot group under LRU. `HOTKEYS START METRICS 1 CPU` (8.6) ranked the two keys the script read most in first and second place. `INFO keysizes` gives a power-of-two size histogram per type. Docs: [Key eviction](https://redis.io/docs/latest/develop/reference/eviction/), [HOTKEYS](https://redis.io/docs/latest/commands/hotkeys/). Lab: [`deep-dive/05-eviction`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/05-eviction).
+
+### Client-side caching
+
+**Verified on Redis 8.10.3 with redis-py 6.1.1, 2026-11-07.** From the docs: "In the default mode, the server remembers what keys a given client accessed, and sends invalidation messages when the same keys are modified." In broadcasting mode, "the server does not attempt to remember what keys a given client accessed, so this mode costs no memory at all in the server side."
+
+| Experiment | Result |
+|---|---|
+| redis-py `protocol=3`, `CacheConfig()`, 1,001 reads of one key | 1 GET reached the server; the other 1,000 took 33.83 ms in total |
+| Another client's `SET` on that key | cache dropped it; the next read fetched the new value once |
+| `CLIENT LIST` | flag `t` on the caching connection |
+| `CLIENT TRACKING ON BCAST PREFIX user:`, then `SET` on `user:2:name`, `order:9`, `user:3:cart` | `invalidate` pushes for the two `user:` keys, nothing for `order:9` |
+
+No application code handles invalidation: turning on the cache in the client is the whole change. Docs: [Client-side caching reference](https://redis.io/docs/latest/develop/reference/client-side-caching/). Lab: [`deep-dive/06-client-side-caching`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/06-client-side-caching).
+
+### Streams
+
+**Verified on Redis 8.10.3, 2026-11-07.** A stream `orders`, a consumer group `shipping`, and a consumer `c1` that reads three entries and dies. From the command pages: XACKDEL acts "to both acknowledge entry processing and clean up the stream in a single atomic operation"; IDMP "Enables idempotent message processing (at-most-once production) to prevent duplicate entries"; NACKed messages "become immediately available for re-delivery to other consumers in the group, eliminating the idle-timeout delay normally required for message recovery."
+
+| Command | What it solves | Result |
+|---|---|---|
+| `XAUTOCLAIM orders shipping c2 100 0-0` (6.2) | entries stuck with a dead consumer | `c2` took all three of `c1`'s entries; delivery count 1 → 2 |
+| `XACKDEL orders shipping IDS 2 0-1 0-2` (8.2) | `XACK` then `XDEL`, two calls with a gap | replies `1, 1`; `XLEN` 5 → 3 |
+| `XADD payments IDMP svc-a req-42 * …` twice (8.6) | a producer retry writing a duplicate | same ID both times; `XLEN` stays 1 |
+| `XNACK orders shipping FAIL IDS 1 0-4` (8.8) | a consumer giving a message back before its idle timeout | entry left unowned, count kept at 1 |
+
+After `XNACK`, a new `XREADGROUP … >` did not return the entry: `>` only reads new entries. `XAUTOCLAIM` with a 60-second minimum idle time claimed it at once and left the other pending entries with their owners. So XNACK speeds up recovery, and recovery still goes through `XAUTOCLAIM` or `XCLAIM`. Docs: [Streams](https://redis.io/docs/latest/develop/data-types/streams/), [XAUTOCLAIM](https://redis.io/docs/latest/commands/xautoclaim/), [XACKDEL](https://redis.io/docs/latest/commands/xackdel/), [XADD](https://redis.io/docs/latest/commands/xadd/), [XNACK](https://redis.io/docs/latest/commands/xnack/). Lab: [`deep-dive/07-streams`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/07-streams).
+
+### Functions and ACL
+
+**Verified on Redis 8.10.3, 2026-11-07.** From the functions page: "Functions provide the same core functionality as scripts but are first-class software artifacts of the database." From the ACL page on selectors: "If a command matches either the user permissions or any selector, it is allowed."
+
+| Experiment | Result |
+|---|---|
+| `FCALL_RO stock` (registered with `no-writes`) | runs |
+| `FCALL_RO sell` (writes) | `Can not execute a script with write flag using *_ro command` |
+| `%R~catalog:* %W~events:*`: `GET` / `SET catalog:1` | allowed / `NOPERM` |
+| same user: `XADD` / `XRANGE events:clicks` | allowed / `NOPERM` |
+| `~report:* +@read (~audit:* +xadd)`: `XADD audit:log` / `XADD report:log` | allowed / `NOPERM` |
+| `+@all -@write`: `JSON.GET` / `JSON.SET` / `TS.ADD` | allowed / `NOPERM` / `NOPERM` |
+| `+@read` only: `JSON.GET` | allowed |
+
+The ACL page still says "command categories, with the exception of +@all, never include module commands." On Redis 8.10.3 that is no longer so: `ACL CAT write` lists 47 JSON, time series and probabilistic commands. An ACL written for Redis 7 can grant or block more after an upgrade. Docs: [Redis functions](https://redis.io/docs/latest/develop/programmability/functions-intro/), [FCALL_RO](https://redis.io/docs/latest/commands/fcall_ro/), [ACL](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/). Lab: [`deep-dive/08-functions-acl`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/08-functions-acl).
+
 </div>
 
 <div class="lang" data-lang="ko" markdown="1">
@@ -85,10 +141,10 @@ The same `CROSSSLOT` refusal is what ElastiCache Serverless returned on the [Com
 ## 한국어
 
 <div class="note" markdown="1">
-**상태: 일부 실행.** 스레딩, 영속성, Sentinel을 곁들인 복제, 클러스터를 2026-11-07에 실행했다(아래). 축출, 클라이언트 측 캐시, Streams, Functions와 ACL은 아직 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)의 계획이다.
+**상태: 실행함.** 메커니즘 여덟 가지를 모두 2026-11-07에 로컬 Docker의 Redis 8.10.3에서 실행했다(아래).
 </div>
 
-메커니즘당 한 페이지 — 평이한 설명, 공식 문서 링크, 숫자나 관찰을 만드는 스크립트, 실행한 출력: 스레딩과 이벤트 루프(`io-threads`), 영속성(RDB, AOF, 8.10의 `BACKUP`), 복제 / Sentinel / Cluster(`PSYNC`, 페일오버, 16384 슬롯, `CLUSTER MIGRATION`), 축출과 메모리(LRU / LFU / LRM, `HOTKEYS`), 클라이언트 캐시(`CLIENT TRACKING`), Streams(컨슈머 그룹, `IDMP`, `XNACK`), Functions와 ACL.
+메커니즘마다 절 하나 — 평이한 설명, 공식 문서 링크, 숫자나 관찰을 만드는 스크립트, 실행한 출력: 스레딩과 이벤트 루프(`io-threads`), 영속성(RDB, AOF, 8.10의 `BACKUP`), 복제 / Sentinel / Cluster(`PSYNC`, 페일오버, 16384 슬롯, `CLUSTER MIGRATION`), 축출과 메모리(LRU / LFU / LRM, `HOTKEYS`), 클라이언트 캐시(`CLIENT TRACKING`), Streams(컨슈머 그룹, `IDMP`, `XNACK`), Functions와 ACL.
 
 ### 스레딩과 이벤트 루프
 
@@ -152,6 +208,62 @@ The same `CROSSSLOT` refusal is what ElastiCache Serverless returned on the [Com
 
 [Compare 페이지]({{ '/compare/' | relative_url }})의 ElastiCache Serverless가 돌려준 것도 같은 `CROSSSLOT` 거절이다. 함께 쓰는 키는 해시 태그를 공유하도록 설계한다. 문서: [Redis Cluster로 확장](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [클러스터 명세](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/). 실습: [`deep-dive/04-cluster`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/04-cluster).
 
+### 축출과 메모리
+
+**확인: Redis 8.10.3, 2026-11-07.** `maxmemory 16mb`에 키 5,000개짜리 그룹 셋, 그다음 새 키 30,000개. *read-hot*은 다섯 번 읽고 다시 쓰지 않았고, *write-hot*은 다섯 번 다시 쓰고 읽지 않았다. 문서의 표현: "allkeys-lrm : Evict the least recently modified (LRM) keys", "Use allkeys-lrm when you want to preserve frequently read data but evict data that hasn't been modified recently."
+
+| 정책 | 남은 read-hot | 남은 write-hot | 남은 cold | 뜻 |
+|---|---|---|---|---|
+| `noeviction` | 5,000 | 5,000 | 5,000 | 쓰기 거절: `command not allowed when used memory > 'maxmemory'` |
+| `allkeys-lru` | 621 | 614 | 356 | 읽기든 쓰기든 마지막 접근. 가장 새 키가 이긴다 |
+| `allkeys-lfu` | 5,000 | 5,000 | 2,117 | 읽기·쓰기 빈도가 두 hot 그룹을 모두 보호 |
+| `allkeys-lrm`(8.6) | 368 | 3,318 | 431 | 쓰기만 키를 보호하고 읽기는 보호하지 않음 |
+| `allkeys-random` | 2,595 | 2,568 | 2,636 | 그룹마다 절반 정도 |
+
+LRU와 LRM은 키를 샘플링하므로 실행마다 수가 달라진다. 이전 실행에서 LRU는 hot 그룹마다 약 3,200개를 남겼다. `HOTKEYS START METRICS 1 CPU`(8.6)는 스크립트가 가장 많이 읽은 두 키를 1위와 2위로 꼽았다. `INFO keysizes`는 자료형별 2의 거듭제곱 크기 히스토그램을 준다. 문서: [Key eviction](https://redis.io/docs/latest/develop/reference/eviction/), [HOTKEYS](https://redis.io/docs/latest/commands/hotkeys/). 실습: [`deep-dive/05-eviction`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/05-eviction).
+
+### 클라이언트 측 캐시
+
+**확인: Redis 8.10.3, redis-py 6.1.1, 2026-11-07.** 문서의 표현: "In the default mode, the server remembers what keys a given client accessed, and sends invalidation messages when the same keys are modified." 브로드캐스트 모드에서는 "the server does not attempt to remember what keys a given client accessed, so this mode costs no memory at all in the server side."
+
+| 실험 | 결과 |
+|---|---|
+| redis-py `protocol=3`, `CacheConfig()`, 한 키를 1,001번 읽기 | 서버까지 간 GET 1번. 나머지 1,000번은 합계 33.83 ms |
+| 다른 클라이언트가 그 키에 `SET` | 캐시가 키를 버리고, 다음 읽기가 새 값을 한 번 가져옴 |
+| `CLIENT LIST` | 캐시 연결에 `t` 플래그 |
+| `CLIENT TRACKING ON BCAST PREFIX user:` 뒤 `user:2:name`, `order:9`, `user:3:cart`에 `SET` | `user:` 키 둘에 `invalidate` 푸시, `order:9`에는 없음 |
+
+무효화를 처리하는 애플리케이션 코드는 없다. 클라이언트에서 캐시를 켜는 것이 바뀐 전부다. 문서: [클라이언트 측 캐시 레퍼런스](https://redis.io/docs/latest/develop/reference/client-side-caching/). 실습: [`deep-dive/06-client-side-caching`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/06-client-side-caching).
+
+### Streams
+
+**확인: Redis 8.10.3, 2026-11-07.** 스트림 `orders`, 소비자 그룹 `shipping`, 항목 셋을 읽고 죽는 소비자 `c1`. 명령 페이지의 표현: XACKDEL은 "to both acknowledge entry processing and clean up the stream in a single atomic operation", IDMP는 "Enables idempotent message processing (at-most-once production) to prevent duplicate entries", NACK한 메시지는 "become immediately available for re-delivery to other consumers in the group, eliminating the idle-timeout delay normally required for message recovery."
+
+| 명령 | 푸는 문제 | 결과 |
+|---|---|---|
+| `XAUTOCLAIM orders shipping c2 100 0-0`(6.2) | 죽은 소비자에게 묶인 항목 | `c2`가 `c1`의 항목 셋을 모두 가져감. 전달 횟수 1 → 2 |
+| `XACKDEL orders shipping IDS 2 0-1 0-2`(8.2) | `XACK` 뒤 `XDEL`, 틈이 있는 두 번의 호출 | 응답 `1, 1`, `XLEN` 5 → 3 |
+| `XADD payments IDMP svc-a req-42 * …` 두 번(8.6) | 생산자 재시도가 중복을 씀 | 두 번 모두 같은 ID, `XLEN`은 1 그대로 |
+| `XNACK orders shipping FAIL IDS 1 0-4`(8.8) | 유휴 시간이 차기 전에 메시지를 돌려주기 | 항목은 주인 없이 남고 횟수는 1 유지 |
+
+`XNACK` 뒤 새 `XREADGROUP … >`는 그 항목을 돌려주지 않았다. `>`는 새 항목만 읽는다. 최소 유휴 60초를 준 `XAUTOCLAIM`이 그것을 바로 가져갔고, 다른 대기 항목은 주인에게 남겼다. XNACK은 회수를 빠르게 할 뿐이고, 회수 자체는 여전히 `XAUTOCLAIM`이나 `XCLAIM`으로 한다. 문서: [Streams](https://redis.io/docs/latest/develop/data-types/streams/), [XAUTOCLAIM](https://redis.io/docs/latest/commands/xautoclaim/), [XACKDEL](https://redis.io/docs/latest/commands/xackdel/), [XADD](https://redis.io/docs/latest/commands/xadd/), [XNACK](https://redis.io/docs/latest/commands/xnack/). 실습: [`deep-dive/07-streams`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/07-streams).
+
+### Functions와 ACL
+
+**확인: Redis 8.10.3, 2026-11-07.** 함수 페이지의 표현: "Functions provide the same core functionality as scripts but are first-class software artifacts of the database." ACL 페이지의 셀렉터 설명: "If a command matches either the user permissions or any selector, it is allowed."
+
+| 실험 | 결과 |
+|---|---|
+| `FCALL_RO stock`(`no-writes`로 등록) | 실행됨 |
+| `FCALL_RO sell`(쓰기) | `Can not execute a script with write flag using *_ro command` |
+| `%R~catalog:* %W~events:*`: `GET` / `SET catalog:1` | 허용 / `NOPERM` |
+| 같은 사용자: `XADD` / `XRANGE events:clicks` | 허용 / `NOPERM` |
+| `~report:* +@read (~audit:* +xadd)`: `XADD audit:log` / `XADD report:log` | 허용 / `NOPERM` |
+| `+@all -@write`: `JSON.GET` / `JSON.SET` / `TS.ADD` | 허용 / `NOPERM` / `NOPERM` |
+| `+@read`만: `JSON.GET` | 허용 |
+
+ACL 페이지에는 여전히 "command categories, with the exception of +@all, never include module commands"라고 적혀 있다. Redis 8.10.3에서는 더 이상 그렇지 않다. `ACL CAT write`에 JSON, time series, 확률형 명령 47개가 있다. Redis 7용으로 쓴 ACL은 업그레이드 뒤 더 허락하거나 더 막을 수 있다. 문서: [Redis functions](https://redis.io/docs/latest/develop/programmability/functions-intro/), [FCALL_RO](https://redis.io/docs/latest/commands/fcall_ro/), [ACL](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/). 실습: [`deep-dive/08-functions-acl`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/08-functions-acl).
+
 </div>
 
 <div class="lang" data-lang="zh" markdown="1">
@@ -159,10 +271,10 @@ The same `CROSSSLOT` refusal is what ElastiCache Serverless returned on the [Com
 ## 简体中文
 
 <div class="note" markdown="1">
-**状态：部分已运行。** 线程、持久化、带 Sentinel 的复制和集群已于 2026-11-07 运行（见下）。淘汰、客户端缓存、Streams，以及带 ACL 的 Functions 仍是 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) 中的计划。
+**状态：已运行。** 全部八种机制均已于 2026-11-07 在本地 Docker 中的 Redis 8.10.3 上运行（见下文）。
 </div>
 
-每个机制一页 — 通俗说明、官方文档链接、产生数字或可观察结果的脚本、实际运行输出：线程与事件循环（`io-threads`）、持久化（RDB、AOF、8.10 的 `BACKUP`）、复制 / Sentinel / Cluster（`PSYNC`、故障转移、16384 个槽、`CLUSTER MIGRATION`）、淘汰与内存（LRU / LFU / LRM、`HOTKEYS`）、客户端缓存（`CLIENT TRACKING`）、Streams（消费者组、`IDMP`、`XNACK`）、Functions 与 ACL。
+每种机制一节，包含：用通俗语言讲的机制、官方文档链接、能产出数字或可观察现象的脚本，以及实际运行的输出：线程与事件循环（`io-threads`）、持久化（RDB、AOF、8.10 起的 `BACKUP`）、复制 / Sentinel / Cluster（`PSYNC`、故障转移、16384 个槽、`CLUSTER MIGRATION`）、淘汰与内存（LRU / LFU / LRM、`HOTKEYS`）、客户端缓存（`CLIENT TRACKING`）、Streams（消费者组、`IDMP`、`XNACK`）、Functions 与 ACL。
 
 ### 线程与事件循环
 
@@ -226,6 +338,62 @@ The same `CROSSSLOT` refusal is what ElastiCache Serverless returned on the [Com
 
 ElastiCache Serverless 在 [Compare 页面]({{ '/compare/' | relative_url }}) 上返回的正是同样的 `CROSSSLOT` 拒绝：把需要一起使用的键规划为共用同一个 hash tag。 文档: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/). 实验: [`deep-dive/04-cluster`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/04-cluster).
 
+### 淘汰与内存
+
+**已在 Redis 8.10.3 上验证，2026-11-07。** `maxmemory 16mb`，三组各 5,000 个键，然后再写入 30,000 个新键。*读热点*键被读取五次且从未被改写；*写热点*键被改写五次且从未被读取。文档原文："allkeys-lrm : Evict the least recently modified (LRM) keys"，以及 "Use allkeys-lrm when you want to preserve frequently read data but evict data that hasn't been modified recently."
+
+| 策略 | 剩余的读热点 | 剩余的写热点 | 剩余的冷数据 | 含义 |
+|---|---|---|---|---|
+| `noeviction` | 5,000 | 5,000 | 5,000 | 写入被拒绝：`command not allowed when used memory > 'maxmemory'` |
+| `allkeys-lru` | 621 | 614 | 356 | 最近一次访问，无论读或写；最新的键胜出 |
+| `allkeys-lfu` | 5,000 | 5,000 | 2,117 | 读写频率保护了两组热点键 |
+| `allkeys-lrm` (8.6) | 368 | 3,318 | 431 | 只有写入能保护键；读取不能 |
+| `allkeys-random` | 2,595 | 2,568 | 2,636 | 每组大约留下一半 |
+
+LRU 和 LRM 采用采样，所以每次运行的数量会有变化；较早的一次运行中，LRU 下每个热点组保留了约 3,200 个。`HOTKEYS START METRICS 1 CPU` (8.6) 把脚本读取最多的两个键排在了第一和第二位。`INFO keysizes` 按类型给出以 2 的幂为分档的大小直方图。 文档: [Key eviction](https://redis.io/docs/latest/develop/reference/eviction/), [HOTKEYS](https://redis.io/docs/latest/commands/hotkeys/). 实验: [`deep-dive/05-eviction`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/05-eviction).
+
+### 客户端缓存
+
+**已在 Redis 8.10.3 和 redis-py 6.1.1 上验证，2026-11-07。** 文档原文："In the default mode, the server remembers what keys a given client accessed, and sends invalidation messages when the same keys are modified." 在广播模式下，"the server does not attempt to remember what keys a given client accessed, so this mode costs no memory at all in the server side."
+
+| 实验 | 结果 |
+|---|---|
+| redis-py `protocol=3`，`CacheConfig()`，对同一个键读取 1,001 次 | 只有 1 次 GET 到达服务器；其余 1,000 次总共耗时 33.83 ms |
+| 另一个客户端对该键执行 `SET` | 缓存丢弃了它；下一次读取只重新获取了一次新值 |
+| `CLIENT LIST` | 带缓存的连接上有标志 `t` |
+| `CLIENT TRACKING ON BCAST PREFIX user:`，然后对 `user:2:name`、`order:9`、`user:3:cart` 执行 `SET` | 两个 `user:` 键收到了 `invalidate` 推送，`order:9` 没有 |
+
+无需应用代码处理失效：在客户端打开缓存就是全部改动。 文档: [Client-side caching reference](https://redis.io/docs/latest/develop/reference/client-side-caching/). 实验: [`deep-dive/06-client-side-caching`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/06-client-side-caching).
+
+### Streams
+
+**已在 Redis 8.10.3 上验证，2026-11-07。** 一个流 `orders`，一个消费者组 `shipping`，以及读取三个条目后死亡的消费者 `c1`。命令页面中的原文：XACKDEL 的作用是 "to both acknowledge entry processing and clean up the stream in a single atomic operation"；IDMP "Enables idempotent message processing (at-most-once production) to prevent duplicate entries"；被 NACK 的消息 "become immediately available for re-delivery to other consumers in the group, eliminating the idle-timeout delay normally required for message recovery."
+
+| 命令 | 解决的问题 | 结果 |
+|---|---|---|
+| `XAUTOCLAIM orders shipping c2 100 0-0` (6.2) | 卡在已死亡消费者手中的条目 | `c2` 拿走了 `c1` 的全部三个条目；投递次数 1 → 2 |
+| `XACKDEL orders shipping IDS 2 0-1 0-2` (8.2) | `XACK` 再 `XDEL`，两次调用之间有空隙 | 回复 `1, 1`；`XLEN` 5 → 3 |
+| `XADD payments IDMP svc-a req-42 * …` 两次 (8.6) | 生产者重试写入了重复条目 | 两次返回相同的 ID；`XLEN` 保持 1 |
+| `XNACK orders shipping FAIL IDS 1 0-4` (8.8) | 消费者在空闲超时之前把消息还回去 | 条目变为无主，计数保持 1 |
+
+`XNACK` 之后，新的 `XREADGROUP … >` 并没有返回该条目：`>` 只读取新条目。最小空闲时间为 60 秒的 `XAUTOCLAIM` 立刻认领了它，并让其他待处理条目留在原持有者手里。所以 XNACK 加快了恢复，但恢复仍然要经过 `XAUTOCLAIM` 或 `XCLAIM`。 文档: [Streams](https://redis.io/docs/latest/develop/data-types/streams/), [XAUTOCLAIM](https://redis.io/docs/latest/commands/xautoclaim/), [XACKDEL](https://redis.io/docs/latest/commands/xackdel/), [XADD](https://redis.io/docs/latest/commands/xadd/), [XNACK](https://redis.io/docs/latest/commands/xnack/). 实验: [`deep-dive/07-streams`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/07-streams).
+
+### Functions 与 ACL
+
+**已在 Redis 8.10.3 上验证，2026-11-07。** Functions 页面原文："Functions provide the same core functionality as scripts but are first-class software artifacts of the database." ACL 页面中关于 selector 的原文："If a command matches either the user permissions or any selector, it is allowed."
+
+| 实验 | 结果 |
+|---|---|
+| `FCALL_RO stock`（以 `no-writes` 注册） | 运行 |
+| `FCALL_RO sell`（会写入） | `Can not execute a script with write flag using *_ro command` |
+| `%R~catalog:* %W~events:*`：`GET` / `SET catalog:1` | 允许 / `NOPERM` |
+| 同一用户：`XADD` / `XRANGE events:clicks` | 允许 / `NOPERM` |
+| `~report:* +@read (~audit:* +xadd)`：`XADD audit:log` / `XADD report:log` | 允许 / `NOPERM` |
+| `+@all -@write`：`JSON.GET` / `JSON.SET` / `TS.ADD` | 允许 / `NOPERM` / `NOPERM` |
+| 仅 `+@read`：`JSON.GET` | 允许 |
+
+ACL 页面仍然写着 "command categories, with the exception of +@all, never include module commands." 在 Redis 8.10.3 上已不再如此：`ACL CAT write` 列出了 47 个 JSON、时间序列和概率型数据结构的命令。为 Redis 7 编写的 ACL 在升级后可能授予或拦截更多的命令。 文档: [Redis functions](https://redis.io/docs/latest/develop/programmability/functions-intro/), [FCALL_RO](https://redis.io/docs/latest/commands/fcall_ro/), [ACL](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/). 实验: [`deep-dive/08-functions-acl`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/08-functions-acl).
+
 </div>
 
 <div class="lang" data-lang="ja" markdown="1">
@@ -233,10 +401,10 @@ ElastiCache Serverless 在 [Compare 页面]({{ '/compare/' | relative_url }}) �
 ## 日本語
 
 <div class="note" markdown="1">
-**状況：一部実行済み。** スレッド、永続化、Sentinel 付きレプリケーション、クラスターは 2026-11-07 に実行した（下記）。エビクション、クライアントサイドキャッシュ、Streams、ACL 付き Functions は、まだ [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) の計画段階である。
+**ステータス：実行済み。** 8 つのメカニズムをすべて 2026-11-07 にローカル Docker の Redis 8.10.3 で実行した（以下）。
 </div>
 
-仕組みごとに一ページ — 平易な説明、公式ドキュメントへのリンク、数値や観察結果を生むスクリプト、実行した出力: スレッドとイベントループ（`io-threads`）、永続化（RDB、AOF、8.10 の `BACKUP`）、レプリケーション / Sentinel / Cluster（`PSYNC`、フェイルオーバー、16384 スロット、`CLUSTER MIGRATION`）、エビクションとメモリ（LRU / LFU / LRM、`HOTKEYS`）、クライアントサイドキャッシュ（`CLIENT TRACKING`）、Streams（コンシューマーグループ、`IDMP`、`XNACK`）、Functions と ACL。
+メカニズムごとに 1 節。平易な説明、公式ドキュメントへのリンク、数値や観察結果を出すスクリプト、実行した出力を載せている：スレッドとイベントループ（`io-threads`）、永続化（RDB、AOF、8.10 の `BACKUP`）、レプリケーション / Sentinel / Cluster（`PSYNC`、フェイルオーバー、16384 スロット、`CLUSTER MIGRATION`）、エビクションとメモリ（LRU / LFU / LRM、`HOTKEYS`）、クライアントサイドキャッシュ（`CLIENT TRACKING`）、Streams（コンシューマーグループ、`IDMP`、`XNACK`）、Functions と ACL。
 
 ### スレッドとイベントループ
 
@@ -300,6 +468,62 @@ ElastiCache Serverless 在 [Compare 页面]({{ '/compare/' | relative_url }}) �
 
 [Compare ページ]({{ '/compare/' | relative_url }})で ElastiCache Serverless が返したのも同じ `CROSSSLOT` の拒否だった。一緒に使うキーは、共通のハッシュタグを付けて設計すること。 ドキュメント: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/). ラボ: [`deep-dive/04-cluster`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/04-cluster).
 
+### エビクションとメモリ
+
+**Redis 8.10.3 で検証、2026-11-07。** `maxmemory 16mb`、5,000 キーずつ 3 グループ、そこへ新しいキーを 30,000 個書き込んだ。*読み取りホット*のキーは 5 回読み取り、一度も書き換えていない。*書き込みホット*のキーは 5 回書き換え、一度も読んでいない。ドキュメントより："allkeys-lrm : Evict the least recently modified (LRM) keys"、および "Use allkeys-lrm when you want to preserve frequently read data but evict data that hasn't been modified recently."
+
+| ポリシー | 残った読み取りホット | 残った書き込みホット | 残ったコールド | 意味 |
+|---|---|---|---|---|
+| `noeviction` | 5,000 | 5,000 | 5,000 | 書き込みは拒否される：`command not allowed when used memory > 'maxmemory'` |
+| `allkeys-lru` | 621 | 614 | 356 | 最後のアクセス（読み取りでも書き込みでも）。新しいキーが勝つ |
+| `allkeys-lfu` | 5,000 | 5,000 | 2,117 | 読み書きの頻度が 2 つのホットグループを両方守る |
+| `allkeys-lrm` (8.6) | 368 | 3,318 | 431 | 書き込みだけがキーを守る。読み取りは守らない |
+| `allkeys-random` | 2,595 | 2,568 | 2,636 | 各グループとも約半分 |
+
+LRU と LRM はキーをサンプリングするため、件数は実行ごとに変わる。以前の実行では、LRU で各ホットグループが約 3,200 個残った。`HOTKEYS START METRICS 1 CPU` (8.6) は、スクリプトが最も多く読んだ 2 つのキーを 1 位と 2 位に並べた。`INFO keysizes` は、型ごとに 2 のべき乗刻みのサイズのヒストグラムを返す。 ドキュメント: [Key eviction](https://redis.io/docs/latest/develop/reference/eviction/), [HOTKEYS](https://redis.io/docs/latest/commands/hotkeys/). ラボ: [`deep-dive/05-eviction`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/05-eviction).
+
+### クライアントサイドキャッシュ
+
+**Redis 8.10.3 と redis-py 6.1.1 で検証、2026-11-07。** ドキュメントより："In the default mode, the server remembers what keys a given client accessed, and sends invalidation messages when the same keys are modified." ブロードキャストモードでは、"the server does not attempt to remember what keys a given client accessed, so this mode costs no memory at all in the server side."
+
+| 実験 | 結果 |
+|---|---|
+| redis-py `protocol=3`、`CacheConfig()`、同じキーを 1,001 回読み取り | サーバーに届いた GET は 1 回。残り 1,000 回の合計は 33.83 ms |
+| 別のクライアントがそのキーに `SET` | キャッシュがそれを破棄し、次の読み取りで新しい値を 1 回取得した |
+| `CLIENT LIST` | キャッシュ用の接続にフラグ `t` |
+| `CLIENT TRACKING ON BCAST PREFIX user:` のあと、`user:2:name`、`order:9`、`user:3:cart` に `SET` | `user:` の 2 つのキーには `invalidate` プッシュが届き、`order:9` には届かなかった |
+
+アプリケーションコードで無効化を扱う必要はない。クライアントでキャッシュを有効にするだけで済む。 ドキュメント: [Client-side caching reference](https://redis.io/docs/latest/develop/reference/client-side-caching/). ラボ: [`deep-dive/06-client-side-caching`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/06-client-side-caching).
+
+### Streams
+
+**Redis 8.10.3 で検証、2026-11-07。** ストリーム `orders`、コンシューマーグループ `shipping`、3 エントリを読んで死ぬコンシューマー `c1`。コマンドページより：XACKDEL は "to both acknowledge entry processing and clean up the stream in a single atomic operation" ためのもの。IDMP は "Enables idempotent message processing (at-most-once production) to prevent duplicate entries"。NACK されたメッセージは "become immediately available for re-delivery to other consumers in the group, eliminating the idle-timeout delay normally required for message recovery."
+
+| コマンド | 解決する問題 | 結果 |
+|---|---|---|
+| `XAUTOCLAIM orders shipping c2 100 0-0` (6.2) | 死んだコンシューマーが抱えたままのエントリ | `c2` が `c1` の 3 エントリすべてを引き取った。配信回数 1 → 2 |
+| `XACKDEL orders shipping IDS 2 0-1 0-2` (8.2) | `XACK` の後に `XDEL`、2 回の呼び出しの間にすき間がある | 応答は `1, 1`。`XLEN` 5 → 3 |
+| `XADD payments IDMP svc-a req-42 * …` 2 回 (8.6) | プロデューサーのリトライによる重複書き込み | どちらも同じ ID。`XLEN` は 1 のまま |
+| `XNACK orders shipping FAIL IDS 1 0-4` (8.8) | アイドルタイムアウトより前に、コンシューマーがメッセージを返す | エントリは持ち主なしになり、回数は 1 のまま |
+
+`XNACK` の後、新しい `XREADGROUP … >` はそのエントリを返さなかった。`>` は新しいエントリだけを読むからである。最小アイドル時間 60 秒の `XAUTOCLAIM` はそれをすぐに引き取り、他の保留エントリは持ち主のもとに残した。つまり XNACK は復旧を早めるが、復旧はやはり `XAUTOCLAIM` か `XCLAIM` を通る。 ドキュメント: [Streams](https://redis.io/docs/latest/develop/data-types/streams/), [XAUTOCLAIM](https://redis.io/docs/latest/commands/xautoclaim/), [XACKDEL](https://redis.io/docs/latest/commands/xackdel/), [XADD](https://redis.io/docs/latest/commands/xadd/), [XNACK](https://redis.io/docs/latest/commands/xnack/). ラボ: [`deep-dive/07-streams`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/07-streams).
+
+### Functions と ACL
+
+**Redis 8.10.3 で検証、2026-11-07。** Functions のページより："Functions provide the same core functionality as scripts but are first-class software artifacts of the database." ACL のページの selector の項より："If a command matches either the user permissions or any selector, it is allowed."
+
+| 実験 | 結果 |
+|---|---|
+| `FCALL_RO stock`（`no-writes` で登録） | 実行できる |
+| `FCALL_RO sell`（書き込みあり） | `Can not execute a script with write flag using *_ro command` |
+| `%R~catalog:* %W~events:*`：`GET` / `SET catalog:1` | 許可 / `NOPERM` |
+| 同じユーザー：`XADD` / `XRANGE events:clicks` | 許可 / `NOPERM` |
+| `~report:* +@read (~audit:* +xadd)`：`XADD audit:log` / `XADD report:log` | 許可 / `NOPERM` |
+| `+@all -@write`：`JSON.GET` / `JSON.SET` / `TS.ADD` | 許可 / `NOPERM` / `NOPERM` |
+| `+@read` のみ：`JSON.GET` | 許可 |
+
+ACL のページには今も "command categories, with the exception of +@all, never include module commands." とある。Redis 8.10.3 ではもうそうではない。`ACL CAT write` は JSON、時系列、確率的データ構造の 47 個のコマンドを列挙する。Redis 7 向けに書いた ACL は、アップグレード後に許可や拒否の対象が増えることがある。 ドキュメント: [Redis functions](https://redis.io/docs/latest/develop/programmability/functions-intro/), [FCALL_RO](https://redis.io/docs/latest/commands/fcall_ro/), [ACL](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/). ラボ: [`deep-dive/08-functions-acl`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/08-functions-acl).
+
 </div>
 
 <div class="lang" data-lang="th" markdown="1">
@@ -307,10 +531,10 @@ ElastiCache Serverless 在 [Compare 页面]({{ '/compare/' | relative_url }}) �
 ## ภาษาไทย
 
 <div class="note" markdown="1">
-**สถานะ: รันแล้วบางส่วน** เธรด การคงอยู่ของข้อมูล การทำ replication ร่วมกับ Sentinel และคลัสเตอร์ รันเมื่อ 2026-11-07 (ด้านล่าง) ส่วน eviction, client-side caching, Streams และ Functions ร่วมกับ ACL ยังเป็นแผนใน [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)
+**สถานะ: รันแล้ว** กลไกทั้งแปดอย่างถูกรันบน Redis 8.10.3 ใน Docker ในเครื่องเมื่อ 2026-11-07 (ด้านล่าง)
 </div>
 
-หนึ่งหน้าต่อหนึ่งกลไก แต่ละหน้ามีคำอธิบายกลไกด้วยภาษาง่ายๆ ลิงก์เอกสารทางการ สคริปต์ที่ให้ตัวเลขหรือสิ่งที่สังเกตได้ และผลลัพธ์จากการรันจริง ได้แก่ threading และ event loop (`io-threads`), persistence (RDB, AOF, `BACKUP` ตั้งแต่ 8.10), replication / Sentinel / Cluster (`PSYNC`, failover, 16384 slots, `CLUSTER MIGRATION`), eviction และหน่วยความจำ (LRU / LFU / LRM, `HOTKEYS`), client-side caching (`CLIENT TRACKING`), Streams (consumer groups, `IDMP`, `XNACK`), Functions และ ACL
+หนึ่งหัวข้อต่อหนึ่งกลไก แต่ละหัวข้อมีคำอธิบายกลไกด้วยภาษาง่าย ๆ ลิงก์เอกสารทางการ สคริปต์ที่ให้ตัวเลขหรือสิ่งที่สังเกตได้ และผลลัพธ์ตามที่รันจริง: เธรดและ event loop (`io-threads`), การคงอยู่ของข้อมูล (RDB, AOF, `BACKUP` ตั้งแต่ 8.10), replication / Sentinel / Cluster (`PSYNC`, failover, 16384 สล็อต, `CLUSTER MIGRATION`), eviction และหน่วยความจำ (LRU / LFU / LRM, `HOTKEYS`), client-side caching (`CLIENT TRACKING`), Streams (consumer group, `IDMP`, `XNACK`), Functions และ ACL
 
 ### เธรดและ event loop
 
@@ -374,6 +598,62 @@ ElastiCache Serverless 在 [Compare 页面]({{ '/compare/' | relative_url }}) �
 
 ElastiCache Serverless ก็ตอบปฏิเสธด้วย `CROSSSLOT` แบบเดียวกันนี้บน[หน้า Compare]({{ '/compare/' | relative_url }}): ให้วางแผนคีย์ที่ใช้ร่วมกันโดยใช้ hash tag ร่วมกัน เอกสาร: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/). แล็บ: [`deep-dive/04-cluster`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/04-cluster).
 
+### Eviction และหน่วยความจำ
+
+**ตรวจสอบบน Redis 8.10.3, 2026-11-07** `maxmemory 16mb` คีย์สามกลุ่มกลุ่มละ 5,000 คีย์ จากนั้นเขียนคีย์ใหม่ 30,000 คีย์ คีย์ *read-hot* ถูกอ่านห้าครั้งและไม่เคยถูกเขียนทับ คีย์ *write-hot* ถูกเขียนทับห้าครั้งและไม่เคยถูกอ่าน จากเอกสาร: "allkeys-lrm : Evict the least recently modified (LRM) keys" และ "Use allkeys-lrm when you want to preserve frequently read data but evict data that hasn't been modified recently."
+
+| นโยบาย | Read-hot ที่เหลือ | Write-hot ที่เหลือ | Cold ที่เหลือ | ความหมาย |
+|---|---|---|---|---|
+| `noeviction` | 5,000 | 5,000 | 5,000 | การเขียนถูกปฏิเสธ: `command not allowed when used memory > 'maxmemory'` |
+| `allkeys-lru` | 621 | 614 | 356 | การเข้าถึงครั้งล่าสุด ทั้งอ่านหรือเขียน คีย์ใหม่ที่สุดเป็นฝ่ายชนะ |
+| `allkeys-lfu` | 5,000 | 5,000 | 2,117 | ความถี่ของการอ่านและเขียนปกป้องทั้งสองกลุ่มที่ร้อน |
+| `allkeys-lrm` (8.6) | 368 | 3,318 | 431 | มีเพียงการเขียนที่ปกป้องคีย์ การอ่านไม่ช่วย |
+| `allkeys-random` | 2,595 | 2,568 | 2,636 | เหลือราวครึ่งหนึ่งของแต่ละกลุ่ม |
+
+LRU และ LRM สุ่มตัวอย่างคีย์ จำนวนที่เหลือจึงเปลี่ยนไปในแต่ละรอบ การรันครั้งก่อนหน้าเหลือราว 3,200 คีย์ต่อกลุ่มร้อนภายใต้ LRU `HOTKEYS START METRICS 1 CPU` (8.6) จัดอันดับสองคีย์ที่สคริปต์อ่านมากที่สุดไว้ที่อันดับหนึ่งและสอง `INFO keysizes` ให้ฮิสโตแกรมขนาดแบบยกกำลังสองต่อชนิด เอกสาร: [Key eviction](https://redis.io/docs/latest/develop/reference/eviction/), [HOTKEYS](https://redis.io/docs/latest/commands/hotkeys/). แล็บ: [`deep-dive/05-eviction`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/05-eviction).
+
+### Client-side caching
+
+**ตรวจสอบบน Redis 8.10.3 กับ redis-py 6.1.1, 2026-11-07** จากเอกสาร: "In the default mode, the server remembers what keys a given client accessed, and sends invalidation messages when the same keys are modified." ในโหมด broadcasting "the server does not attempt to remember what keys a given client accessed, so this mode costs no memory at all in the server side."
+
+| การทดลอง | ผลลัพธ์ |
+|---|---|
+| redis-py `protocol=3`, `CacheConfig()`, อ่านคีย์เดียว 1,001 ครั้ง | GET ถึงเซิร์ฟเวอร์ 1 ครั้ง อีก 1,000 ครั้งใช้เวลารวม 33.83 ms |
+| `SET` บนคีย์นั้นจากไคลเอนต์อื่น | แคชทิ้งคีย์นั้น การอ่านครั้งถัดไปดึงค่าใหม่หนึ่งครั้ง |
+| `CLIENT LIST` | แฟล็ก `t` บนการเชื่อมต่อที่ใช้แคช |
+| `CLIENT TRACKING ON BCAST PREFIX user:` แล้ว `SET` บน `user:2:name`, `order:9`, `user:3:cart` | ได้รับ push `invalidate` สำหรับคีย์ `user:` สองคีย์ ไม่มีสำหรับ `order:9` |
+
+ไม่มีโค้ดของแอปพลิเคชันที่ต้องจัดการ invalidation: การเปิดแคชในไคลเอนต์คือการเปลี่ยนแปลงทั้งหมด เอกสาร: [Client-side caching reference](https://redis.io/docs/latest/develop/reference/client-side-caching/). แล็บ: [`deep-dive/06-client-side-caching`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/06-client-side-caching).
+
+### Streams
+
+**ตรวจสอบบน Redis 8.10.3, 2026-11-07** stream `orders` consumer group `shipping` และ consumer `c1` ที่อ่านสามเอนทรีแล้วตาย จากหน้าคำสั่ง: XACKDEL ทำงาน "to both acknowledge entry processing and clean up the stream in a single atomic operation"; IDMP "Enables idempotent message processing (at-most-once production) to prevent duplicate entries"; ข้อความที่ถูก NACK "become immediately available for re-delivery to other consumers in the group, eliminating the idle-timeout delay normally required for message recovery."
+
+| คำสั่ง | แก้ปัญหาอะไร | ผลลัพธ์ |
+|---|---|---|
+| `XAUTOCLAIM orders shipping c2 100 0-0` (6.2) | เอนทรีที่ค้างอยู่กับ consumer ที่ตายแล้ว | `c2` รับเอนทรีทั้งสามของ `c1` ไป จำนวนการส่งมอบ 1 → 2 |
+| `XACKDEL orders shipping IDS 2 0-1 0-2` (8.2) | `XACK` แล้วตามด้วย `XDEL` สองคำสั่งที่มีช่องว่างระหว่างกัน | ตอบกลับ `1, 1` `XLEN` 5 → 3 |
+| `XADD payments IDMP svc-a req-42 * …` สองครั้ง (8.6) | producer retry แล้วเขียนเอนทรีซ้ำ | ได้ ID เดียวกันทั้งสองครั้ง `XLEN` คงที่ที่ 1 |
+| `XNACK orders shipping FAIL IDS 1 0-4` (8.8) | consumer คืนข้อความก่อนหมด idle timeout | เอนทรีไม่มีเจ้าของ จำนวนคงที่ที่ 1 |
+
+หลัง `XNACK` คำสั่ง `XREADGROUP … >` ใหม่ไม่คืนเอนทรีนั้น: `>` อ่านเฉพาะเอนทรีใหม่ `XAUTOCLAIM` ที่กำหนด idle time ขั้นต่ำ 60 วินาทีรับเอนทรีนั้นไปทันทีและปล่อยเอนทรีที่ค้างอื่น ๆ ไว้กับเจ้าของเดิม ดังนั้น XNACK ช่วยให้กู้คืนเร็วขึ้น แต่การกู้คืนยังต้องผ่าน `XAUTOCLAIM` หรือ `XCLAIM` เอกสาร: [Streams](https://redis.io/docs/latest/develop/data-types/streams/), [XAUTOCLAIM](https://redis.io/docs/latest/commands/xautoclaim/), [XACKDEL](https://redis.io/docs/latest/commands/xackdel/), [XADD](https://redis.io/docs/latest/commands/xadd/), [XNACK](https://redis.io/docs/latest/commands/xnack/). แล็บ: [`deep-dive/07-streams`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/07-streams).
+
+### Functions และ ACL
+
+**ตรวจสอบบน Redis 8.10.3, 2026-11-07** จากหน้า functions: "Functions provide the same core functionality as scripts but are first-class software artifacts of the database." จากหน้า ACL เรื่อง selector: "If a command matches either the user permissions or any selector, it is allowed."
+
+| การทดลอง | ผลลัพธ์ |
+|---|---|
+| `FCALL_RO stock` (ลงทะเบียนด้วย `no-writes`) | ทำงานได้ |
+| `FCALL_RO sell` (เขียนข้อมูล) | `Can not execute a script with write flag using *_ro command` |
+| `%R~catalog:* %W~events:*`: `GET` / `SET catalog:1` | อนุญาต / `NOPERM` |
+| ผู้ใช้เดียวกัน: `XADD` / `XRANGE events:clicks` | อนุญาต / `NOPERM` |
+| `~report:* +@read (~audit:* +xadd)`: `XADD audit:log` / `XADD report:log` | อนุญาต / `NOPERM` |
+| `+@all -@write`: `JSON.GET` / `JSON.SET` / `TS.ADD` | อนุญาต / `NOPERM` / `NOPERM` |
+| เฉพาะ `+@read`: `JSON.GET` | อนุญาต |
+
+หน้า ACL ยังคงเขียนว่า "command categories, with the exception of +@all, never include module commands." บน Redis 8.10.3 ไม่เป็นเช่นนั้นอีกต่อไป: `ACL CAT write` แสดงคำสั่งของ JSON, time series และ probabilistic 47 คำสั่ง ACL ที่เขียนไว้สำหรับ Redis 7 อาจอนุญาตหรือบล็อกมากขึ้นหลังอัปเกรด เอกสาร: [Redis functions](https://redis.io/docs/latest/develop/programmability/functions-intro/), [FCALL_RO](https://redis.io/docs/latest/commands/fcall_ro/), [ACL](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/). แล็บ: [`deep-dive/08-functions-acl`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/08-functions-acl).
+
 </div>
 
 <div class="lang" data-lang="id" markdown="1">
@@ -381,10 +661,10 @@ ElastiCache Serverless ก็ตอบปฏิเสธด้วย `CROSSSLOT`
 ## Bahasa Indonesia
 
 <div class="note" markdown="1">
-**Status: sebagian sudah dijalankan.** Threading, persistensi, replikasi dengan Sentinel, dan cluster dijalankan pada 2026-11-07 (di bawah). Eviction, client-side caching, Streams, serta Functions dengan ACL masih berupa rencana di [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+**Status: dijalankan.** Kedelapan mekanisme dijalankan pada Redis 8.10.3 di Docker lokal pada 2026-11-07 (di bawah).
 </div>
 
-Satu halaman per mekanisme, masing-masing berisi penjelasan mekanisme dengan kata-kata sederhana, tautan dokumen resmi, skrip yang menghasilkan angka atau hal yang dapat diamati, dan keluaran dari hasil eksekusi: threading dan event loop (`io-threads`), persistence (RDB, AOF, `BACKUP` sejak 8.10), replication / Sentinel / Cluster (`PSYNC`, failover, 16384 slot, `CLUSTER MIGRATION`), eviction dan memori (LRU / LFU / LRM, `HOTKEYS`), client-side caching (`CLIENT TRACKING`), Streams (consumer groups, `IDMP`, `XNACK`), Functions dan ACL.
+Satu bagian per mekanisme, masing-masing berisi mekanisme dalam bahasa sederhana, tautan dokumentasi resmi, skrip yang menghasilkan angka atau hal yang dapat diamati, dan output hasil eksekusi: threading dan event loop (`io-threads`), persistensi (RDB, AOF, `BACKUP` sejak 8.10), replikasi / Sentinel / Cluster (`PSYNC`, failover, 16384 slot, `CLUSTER MIGRATION`), eviction dan memori (LRU / LFU / LRM, `HOTKEYS`), client-side caching (`CLIENT TRACKING`), Streams (consumer group, `IDMP`, `XNACK`), Functions dan ACL.
 
 ### Threading dan event loop
 
@@ -448,6 +728,62 @@ Baris terakhir adalah jebakannya: dengan hostname, nama container yang dihentika
 
 Penolakan `CROSSSLOT` yang sama juga dikembalikan ElastiCache Serverless pada [halaman Compare]({{ '/compare/' | relative_url }}): rencanakan key yang digunakan bersama dengan hash tag yang sama. Dokumentasi: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/). Lab: [`deep-dive/04-cluster`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/04-cluster).
 
+### Eviction dan memori
+
+**Diverifikasi pada Redis 8.10.3, 2026-11-07.** `maxmemory 16mb`, tiga grup masing-masing 5,000 key, lalu 30,000 key baru. Key *read-hot* dibaca lima kali dan tidak pernah ditulis ulang; key *write-hot* ditulis ulang lima kali dan tidak pernah dibaca. Dari dokumentasi: "allkeys-lrm : Evict the least recently modified (LRM) keys", dan "Use allkeys-lrm when you want to preserve frequently read data but evict data that hasn't been modified recently."
+
+| Kebijakan | Read-hot tersisa | Write-hot tersisa | Cold tersisa | Artinya |
+|---|---|---|---|---|
+| `noeviction` | 5,000 | 5,000 | 5,000 | penulisan ditolak: `command not allowed when used memory > 'maxmemory'` |
+| `allkeys-lru` | 621 | 614 | 356 | akses terakhir, baca atau tulis; key terbaru menang |
+| `allkeys-lfu` | 5,000 | 5,000 | 2,117 | frekuensi baca dan tulis melindungi kedua grup panas |
+| `allkeys-lrm` (8.6) | 368 | 3,318 | 431 | hanya penulisan yang melindungi key; pembacaan tidak |
+| `allkeys-random` | 2,595 | 2,568 | 2,636 | sekitar setengah dari masing-masing |
+
+LRU dan LRM mengambil sampel key, sehingga jumlahnya berubah antar-run; run sebelumnya menyisakan sekitar 3,200 dari setiap grup panas di bawah LRU. `HOTKEYS START METRICS 1 CPU` (8.6) menempatkan dua key yang paling sering dibaca skrip di peringkat pertama dan kedua. `INFO keysizes` memberikan histogram ukuran per tipe dengan kelipatan pangkat dua. Dokumentasi: [Key eviction](https://redis.io/docs/latest/develop/reference/eviction/), [HOTKEYS](https://redis.io/docs/latest/commands/hotkeys/). Lab: [`deep-dive/05-eviction`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/05-eviction).
+
+### Client-side caching
+
+**Diverifikasi pada Redis 8.10.3 dengan redis-py 6.1.1, 2026-11-07.** Dari dokumentasi: "In the default mode, the server remembers what keys a given client accessed, and sends invalidation messages when the same keys are modified." Pada mode broadcasting, "the server does not attempt to remember what keys a given client accessed, so this mode costs no memory at all in the server side."
+
+| Eksperimen | Hasil |
+|---|---|
+| redis-py `protocol=3`, `CacheConfig()`, 1,001 pembacaan satu key | 1 GET sampai ke server; 1,000 lainnya memakan 33.83 ms secara total |
+| `SET` dari klien lain pada key itu | cache membuangnya; pembacaan berikutnya mengambil nilai baru satu kali |
+| `CLIENT LIST` | flag `t` pada koneksi yang melakukan caching |
+| `CLIENT TRACKING ON BCAST PREFIX user:`, lalu `SET` pada `user:2:name`, `order:9`, `user:3:cart` | push `invalidate` untuk dua key `user:`, tidak ada untuk `order:9` |
+
+Tidak ada kode aplikasi yang menangani invalidasi: mengaktifkan cache di klien adalah seluruh perubahannya. Dokumentasi: [Client-side caching reference](https://redis.io/docs/latest/develop/reference/client-side-caching/). Lab: [`deep-dive/06-client-side-caching`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/06-client-side-caching).
+
+### Streams
+
+**Diverifikasi pada Redis 8.10.3, 2026-11-07.** Sebuah stream `orders`, sebuah consumer group `shipping`, dan consumer `c1` yang membaca tiga entri lalu mati. Dari halaman perintah: XACKDEL bekerja "to both acknowledge entry processing and clean up the stream in a single atomic operation"; IDMP "Enables idempotent message processing (at-most-once production) to prevent duplicate entries"; pesan yang di-NACK "become immediately available for re-delivery to other consumers in the group, eliminating the idle-timeout delay normally required for message recovery."
+
+| Perintah | Masalah yang diselesaikan | Hasil |
+|---|---|---|
+| `XAUTOCLAIM orders shipping c2 100 0-0` (6.2) | entri yang tersangkut pada consumer yang sudah mati | `c2` mengambil ketiga entri milik `c1`; jumlah pengiriman 1 → 2 |
+| `XACKDEL orders shipping IDS 2 0-1 0-2` (8.2) | `XACK` lalu `XDEL`, dua panggilan dengan celah di antaranya | membalas `1, 1`; `XLEN` 5 → 3 |
+| `XADD payments IDMP svc-a req-42 * …` dua kali (8.6) | retry producer yang menulis entri duplikat | ID yang sama kedua kalinya; `XLEN` tetap 1 |
+| `XNACK orders shipping FAIL IDS 1 0-4` (8.8) | consumer mengembalikan pesan sebelum idle timeout-nya habis | entri tidak lagi dimiliki siapa pun, hitungan tetap 1 |
+
+Setelah `XNACK`, `XREADGROUP … >` yang baru tidak mengembalikan entri itu: `>` hanya membaca entri baru. `XAUTOCLAIM` dengan idle time minimum 60 detik langsung mengklaimnya dan membiarkan entri pending lainnya tetap pada pemiliknya. Jadi XNACK mempercepat pemulihan, dan pemulihan tetap lewat `XAUTOCLAIM` atau `XCLAIM`. Dokumentasi: [Streams](https://redis.io/docs/latest/develop/data-types/streams/), [XAUTOCLAIM](https://redis.io/docs/latest/commands/xautoclaim/), [XACKDEL](https://redis.io/docs/latest/commands/xackdel/), [XADD](https://redis.io/docs/latest/commands/xadd/), [XNACK](https://redis.io/docs/latest/commands/xnack/). Lab: [`deep-dive/07-streams`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/07-streams).
+
+### Functions dan ACL
+
+**Diverifikasi pada Redis 8.10.3, 2026-11-07.** Dari halaman functions: "Functions provide the same core functionality as scripts but are first-class software artifacts of the database." Dari halaman ACL tentang selector: "If a command matches either the user permissions or any selector, it is allowed."
+
+| Eksperimen | Hasil |
+|---|---|
+| `FCALL_RO stock` (didaftarkan dengan `no-writes`) | berjalan |
+| `FCALL_RO sell` (menulis) | `Can not execute a script with write flag using *_ro command` |
+| `%R~catalog:* %W~events:*`: `GET` / `SET catalog:1` | diizinkan / `NOPERM` |
+| pengguna yang sama: `XADD` / `XRANGE events:clicks` | diizinkan / `NOPERM` |
+| `~report:* +@read (~audit:* +xadd)`: `XADD audit:log` / `XADD report:log` | diizinkan / `NOPERM` |
+| `+@all -@write`: `JSON.GET` / `JSON.SET` / `TS.ADD` | diizinkan / `NOPERM` / `NOPERM` |
+| hanya `+@read`: `JSON.GET` | diizinkan |
+
+Halaman ACL masih menyatakan "command categories, with the exception of +@all, never include module commands." Pada Redis 8.10.3 hal itu tidak lagi berlaku: `ACL CAT write` mencantumkan 47 perintah JSON, time series, dan probabilistik. ACL yang ditulis untuk Redis 7 dapat mengizinkan atau memblokir lebih banyak setelah upgrade. Dokumentasi: [Redis functions](https://redis.io/docs/latest/develop/programmability/functions-intro/), [FCALL_RO](https://redis.io/docs/latest/commands/fcall_ro/), [ACL](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/). Lab: [`deep-dive/08-functions-acl`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/08-functions-acl).
+
 </div>
 
 <div class="lang" data-lang="ms" markdown="1">
@@ -455,10 +791,10 @@ Penolakan `CROSSSLOT` yang sama juga dikembalikan ElastiCache Serverless pada [h
 ## Bahasa Melayu
 
 <div class="note" markdown="1">
-**Status: sebahagian telah dijalankan.** Threading, kegigihan data, replikasi dengan Sentinel dan cluster telah dijalankan pada 2026-11-07 (di bawah). Eviction, client-side caching, Streams, serta Functions dengan ACL masih merupakan rancangan dalam [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+**Status: dijalankan.** Kesemua lapan mekanisme dijalankan pada Redis 8.10.3 dalam Docker setempat pada 2026-11-07 (di bawah).
 </div>
 
-Satu halaman bagi setiap mekanisme, setiap satu mengandungi penerangan mekanisme dalam bahasa mudah, pautan dokumen rasmi, skrip yang menghasilkan nombor atau sesuatu yang boleh diperhatikan, dan output hasil larian: threading dan event loop (`io-threads`), persistence (RDB, AOF, `BACKUP` sejak 8.10), replication / Sentinel / Cluster (`PSYNC`, failover, 16384 slot, `CLUSTER MIGRATION`), eviction dan memori (LRU / LFU / LRM, `HOTKEYS`), client-side caching (`CLIENT TRACKING`), Streams (consumer groups, `IDMP`, `XNACK`), Functions dan ACL.
+Satu bahagian bagi setiap mekanisme, masing-masing mengandungi mekanisme dalam bahasa mudah, pautan dokumentasi rasmi, skrip yang menghasilkan nombor atau perkara yang boleh diperhatikan, dan output seperti yang dijalankan: threading dan event loop (`io-threads`), kegigihan data (RDB, AOF, `BACKUP` sejak 8.10), replikasi / Sentinel / Cluster (`PSYNC`, failover, 16384 slot, `CLUSTER MIGRATION`), eviction dan memori (LRU / LFU / LRM, `HOTKEYS`), client-side caching (`CLIENT TRACKING`), Streams (consumer group, `IDMP`, `XNACK`), Functions dan ACL.
 
 ### Threading dan event loop
 
@@ -521,5 +857,61 @@ Baris terakhir ialah perangkapnya: dengan nama hos, nama container yang dihentik
 | `CLUSTER MIGRATION IMPORT 0 999` (8.4) di bawah ~200,000 penulisan/saat | 1,000 slot dipindahkan dalam 44 ms, `write_pause_ms 0`, tiada ralat klien |
 
 Penolakan `CROSSSLOT` yang sama juga dikembalikan oleh ElastiCache Serverless pada [halaman Compare]({{ '/compare/' | relative_url }}): rancang kunci yang digunakan bersama dengan hash tag yang dikongsi. Dokumentasi: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/). Makmal: [`deep-dive/04-cluster`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/04-cluster).
+
+### Eviction dan memori
+
+**Disahkan pada Redis 8.10.3, 2026-11-07.** `maxmemory 16mb`, tiga kumpulan masing-masing 5,000 kunci, kemudian 30,000 kunci baharu. Kunci *read-hot* dibaca lima kali dan tidak pernah ditulis semula; kunci *write-hot* ditulis semula lima kali dan tidak pernah dibaca. Daripada dokumentasi: "allkeys-lrm : Evict the least recently modified (LRM) keys", dan "Use allkeys-lrm when you want to preserve frequently read data but evict data that hasn't been modified recently."
+
+| Dasar | Read-hot berbaki | Write-hot berbaki | Cold berbaki | Maksudnya |
+|---|---|---|---|---|
+| `noeviction` | 5,000 | 5,000 | 5,000 | penulisan ditolak: `command not allowed when used memory > 'maxmemory'` |
+| `allkeys-lru` | 621 | 614 | 356 | capaian terakhir, baca atau tulis; kunci terbaharu menang |
+| `allkeys-lfu` | 5,000 | 5,000 | 2,117 | kekerapan baca dan tulis melindungi kedua-dua kumpulan panas |
+| `allkeys-lrm` (8.6) | 368 | 3,318 | 431 | hanya penulisan yang melindungi kunci; bacaan tidak |
+| `allkeys-random` | 2,595 | 2,568 | 2,636 | kira-kira separuh bagi setiap satu |
+
+LRU dan LRM mengambil sampel kunci, jadi bilangannya berubah antara larian; satu larian terdahulu mengekalkan kira-kira 3,200 bagi setiap kumpulan panas di bawah LRU. `HOTKEYS START METRICS 1 CPU` (8.6) meletakkan dua kunci yang paling banyak dibaca skrip di tempat pertama dan kedua. `INFO keysizes` memberikan histogram saiz kuasa dua bagi setiap jenis. Dokumentasi: [Key eviction](https://redis.io/docs/latest/develop/reference/eviction/), [HOTKEYS](https://redis.io/docs/latest/commands/hotkeys/). Makmal: [`deep-dive/05-eviction`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/05-eviction).
+
+### Client-side caching
+
+**Disahkan pada Redis 8.10.3 dengan redis-py 6.1.1, 2026-11-07.** Daripada dokumentasi: "In the default mode, the server remembers what keys a given client accessed, and sends invalidation messages when the same keys are modified." Dalam mod broadcasting, "the server does not attempt to remember what keys a given client accessed, so this mode costs no memory at all in the server side."
+
+| Eksperimen | Keputusan |
+|---|---|
+| redis-py `protocol=3`, `CacheConfig()`, 1,001 bacaan satu kunci | 1 GET sampai ke pelayan; 1,000 yang lain mengambil 33.83 ms secara keseluruhan |
+| `SET` daripada klien lain pada kunci itu | cache membuangnya; bacaan seterusnya mengambil nilai baharu sekali |
+| `CLIENT LIST` | bendera `t` pada sambungan yang melakukan caching |
+| `CLIENT TRACKING ON BCAST PREFIX user:`, kemudian `SET` pada `user:2:name`, `order:9`, `user:3:cart` | push `invalidate` untuk dua kunci `user:`, tiada untuk `order:9` |
+
+Tiada kod aplikasi yang mengendalikan invalidasi: menghidupkan cache pada klien ialah keseluruhan perubahannya. Dokumentasi: [Client-side caching reference](https://redis.io/docs/latest/develop/reference/client-side-caching/). Makmal: [`deep-dive/06-client-side-caching`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/06-client-side-caching).
+
+### Streams
+
+**Disahkan pada Redis 8.10.3, 2026-11-07.** Satu stream `orders`, satu consumer group `shipping`, dan consumer `c1` yang membaca tiga entri lalu mati. Daripada halaman arahan: XACKDEL bertindak "to both acknowledge entry processing and clean up the stream in a single atomic operation"; IDMP "Enables idempotent message processing (at-most-once production) to prevent duplicate entries"; mesej yang di-NACK "become immediately available for re-delivery to other consumers in the group, eliminating the idle-timeout delay normally required for message recovery."
+
+| Arahan | Masalah yang diselesaikan | Keputusan |
+|---|---|---|
+| `XAUTOCLAIM orders shipping c2 100 0-0` (6.2) | entri yang tersangkut pada consumer yang sudah mati | `c2` mengambil ketiga-tiga entri milik `c1`; kiraan penghantaran 1 → 2 |
+| `XACKDEL orders shipping IDS 2 0-1 0-2` (8.2) | `XACK` kemudian `XDEL`, dua panggilan dengan jurang di antaranya | membalas `1, 1`; `XLEN` 5 → 3 |
+| `XADD payments IDMP svc-a req-42 * …` dua kali (8.6) | percubaan semula producer yang menulis entri pendua | ID yang sama kedua-dua kali; `XLEN` kekal 1 |
+| `XNACK orders shipping FAIL IDS 1 0-4` (8.8) | consumer memulangkan mesej sebelum idle timeout tamat | entri tidak dimiliki sesiapa, kiraan kekal 1 |
+
+Selepas `XNACK`, `XREADGROUP … >` yang baharu tidak mengembalikan entri itu: `>` hanya membaca entri baharu. `XAUTOCLAIM` dengan idle time minimum 60 saat menuntutnya serta-merta dan membiarkan entri pending yang lain kekal pada pemiliknya. Jadi XNACK mempercepat pemulihan, dan pemulihan masih melalui `XAUTOCLAIM` atau `XCLAIM`. Dokumentasi: [Streams](https://redis.io/docs/latest/develop/data-types/streams/), [XAUTOCLAIM](https://redis.io/docs/latest/commands/xautoclaim/), [XACKDEL](https://redis.io/docs/latest/commands/xackdel/), [XADD](https://redis.io/docs/latest/commands/xadd/), [XNACK](https://redis.io/docs/latest/commands/xnack/). Makmal: [`deep-dive/07-streams`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/07-streams).
+
+### Functions dan ACL
+
+**Disahkan pada Redis 8.10.3, 2026-11-07.** Daripada halaman functions: "Functions provide the same core functionality as scripts but are first-class software artifacts of the database." Daripada halaman ACL tentang selector: "If a command matches either the user permissions or any selector, it is allowed."
+
+| Eksperimen | Keputusan |
+|---|---|
+| `FCALL_RO stock` (didaftarkan dengan `no-writes`) | berjalan |
+| `FCALL_RO sell` (menulis) | `Can not execute a script with write flag using *_ro command` |
+| `%R~catalog:* %W~events:*`: `GET` / `SET catalog:1` | dibenarkan / `NOPERM` |
+| pengguna yang sama: `XADD` / `XRANGE events:clicks` | dibenarkan / `NOPERM` |
+| `~report:* +@read (~audit:* +xadd)`: `XADD audit:log` / `XADD report:log` | dibenarkan / `NOPERM` |
+| `+@all -@write`: `JSON.GET` / `JSON.SET` / `TS.ADD` | dibenarkan / `NOPERM` / `NOPERM` |
+| hanya `+@read`: `JSON.GET` | dibenarkan |
+
+Halaman ACL masih menyatakan "command categories, with the exception of +@all, never include module commands." Pada Redis 8.10.3 perkara itu tidak lagi benar: `ACL CAT write` menyenaraikan 47 arahan JSON, time series dan probabilistik. ACL yang ditulis untuk Redis 7 boleh membenarkan atau menyekat lebih banyak selepas peningkatan. Dokumentasi: [Redis functions](https://redis.io/docs/latest/develop/programmability/functions-intro/), [FCALL_RO](https://redis.io/docs/latest/commands/fcall_ro/), [ACL](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/). Makmal: [`deep-dive/08-functions-acl`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/08-functions-acl).
 
 </div>
