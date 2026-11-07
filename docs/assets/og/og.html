@@ -1,0 +1,50 @@
+<!doctype html>
+<!-- Source for og.png (1200x630), the link-preview image. Render: node ../../../scripts/render-og.mjs -->
+<html><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0}
+  body{width:1200px;height:630px;background:#091a23;color:#eef1f3;font-family:Inter,system-ui,sans-serif;overflow:hidden;position:relative}
+  .grid{position:absolute;inset:0;background-image:linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px);background-size:40px 40px}
+  .glow{position:absolute;right:-180px;top:-160px;width:620px;height:620px;border-radius:50%;background:radial-gradient(circle,#ff443833 0%,#ff443800 65%)}
+  .bar{position:absolute;left:72px;top:92px;width:56px;height:8px;background:#ff4438;border-radius:4px}
+  .kicker{position:absolute;left:72px;top:122px;font:500 22px "JetBrains Mono",monospace;color:#ff6b61;letter-spacing:.08em}
+  h1{position:absolute;left:68px;top:150px;margin:0;font-weight:800;font-size:104px;letter-spacing:-.03em;line-height:1}
+  .sub{position:absolute;left:72px;top:290px;width:600px;font-size:28px;line-height:1.35;color:#c8d3da}
+  .chips{position:absolute;left:72px;top:420px;display:flex;flex-wrap:wrap;gap:10px;width:620px}
+  .chip{font:600 19px Inter;padding:8px 14px;border:1.5px solid #2a4250;border-radius:999px;color:#eef1f3;background:#0d2230}
+  .chip.r{border-color:#ff4438;color:#ffd3cf}
+  .foot{position:absolute;left:72px;bottom:44px;font:500 20px "JetBrains Mono",monospace;color:#9fb0ba}
+  .foot b{color:#eef1f3;font-weight:500}
+  svg{position:absolute;right:56px;top:118px}
+  svg text{font:600 15px Inter;fill:#eef1f3} svg .s{font:500 12px "JetBrains Mono";fill:#9fb0ba}
+</style></head><body>
+<div class="grid"></div><div class="glow"></div>
+<div class="bar"></div>
+<div class="kicker">HANDS-ON · MEASURED · 7 LANGUAGES</div>
+<h1>Notes on Redis</h1>
+<div class="sub">Run it, measure it, write it down: Redis 8, Redis Cloud, Redis Software and Iris, side by side with Valkey and ElastiCache.</div>
+<div class="chips">
+  <span class="chip">Setup</span><span class="chip">Architecture</span><span class="chip">Redis Cloud</span>
+  <span class="chip">Enterprise</span><span class="chip r">Iris</span><span class="chip">Compare</span><span class="chip">Deep Dive</span>
+</div>
+<div class="foot"><b>redis.litkhai.dev</b> · unofficial, every number from a run</div>
+<svg width="430" height="400" viewBox="0 0 430 400">
+  <g stroke="#9fb0ba" stroke-width="1.6" fill="none">
+    <path d="M120 200 L190 90"/><path d="M120 200 L190 160"/><path d="M120 200 L190 230"/><path d="M120 200 L190 300"/>
+    <path d="M330 110 L360 180" stroke-dasharray="5 4"/><path d="M330 250 L360 200" stroke-dasharray="5 4"/>
+  </g>
+  <g fill="#9fb0ba"><path d="M190 90 l-9 3 4 6z"/><path d="M190 160 l-10 0 3 7z"/><path d="M190 230 l-10 -1 4 6z"/><path d="M190 300 l-8 -5 1 8z"/></g>
+  <rect x="10" y="168" width="110" height="64" rx="10" fill="#0d2230" stroke="#2a4250" stroke-width="1.5"/>
+  <text x="65" y="198" text-anchor="middle">Agent</text><text class="s" x="65" y="216" text-anchor="middle">LLM app</text>
+  <g fill="#0d2230" stroke="#ff4438" stroke-width="2">
+    <rect x="190" y="62" width="140" height="52" rx="10"/><rect x="190" y="134" width="140" height="52" rx="10"/>
+    <rect x="190" y="206" width="140" height="52" rx="10"/><rect x="190" y="278" width="140" height="52" rx="10"/>
+    <rect x="345" y="160" width="78" height="62" rx="10"/>
+  </g>
+  <text x="260" y="94" text-anchor="middle">Router</text><text x="260" y="166" text-anchor="middle">Memory</text>
+  <text x="260" y="238" text-anchor="middle">Playbooks</text><text x="260" y="310" text-anchor="middle">Gateway</text>
+  <text x="384" y="189" text-anchor="middle">Redis</text><text class="s" x="384" y="207" text-anchor="middle">8.x</text>
+</svg>
+</body></html>
