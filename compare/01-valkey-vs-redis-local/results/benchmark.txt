@@ -1,0 +1,48 @@
+== port 16381 run 1
+SET: 78244.20 requests per second, p50=2.431 msec
+GET: 84008.91 requests per second, p50=2.239 msec
+== port 16381 run 2
+SET: 80612.66 requests per second, p50=2.351 msec
+GET: 84107.83 requests per second, p50=2.263 msec
+== port 16382 run 1
+SET: 82301.14 requests per second, p50=2.311 msec
+GET: 84012.44 requests per second, p50=2.255 msec
+== port 16382 run 2
+SET: 82280.83 requests per second, p50=2.295 msec
+GET: 83149.71 requests per second, p50=2.271 msec
+== port 16383 run 1
+SET: 82280.83 requests per second, p50=2.287 msec
+GET: 83239.69 requests per second, p50=2.247 msec
+== port 16383 run 2
+SET: 82284.21 requests per second, p50=2.287 msec
+GET: 83139.34 requests per second, p50=2.255 msec
+== nor-cmp-redis (shared netns) run 1
+SET: 119203.72 requests per second, p50=1.575 msec
+GET: 124797.21 requests per second, p50=1.503 msec
+== nor-cmp-redis (shared netns) run 2
+SET: 119196.62 requests per second, p50=1.575 msec
+GET: 122880.32 requests per second, p50=1.519 msec
+== nor-cmp-valkey (shared netns) run 1
+SET: 120992.13 requests per second, p50=1.527 msec
+GET: 122978.54 requests per second, p50=1.519 msec
+== nor-cmp-valkey (shared netns) run 2
+SET: 122850.12 requests per second, p50=1.519 msec
+GET: 122948.30 requests per second, p50=1.511 msec
+== nor-cmp-bundle (shared netns) run 1
+SET: 124766.05 requests per second, p50=1.471 msec
+GET: 124773.85 requests per second, p50=1.495 msec
+== nor-cmp-bundle (shared netns) run 2
+SET: 124781.63 requests per second, p50=1.495 msec
+GET: 126782.89 requests per second, p50=1.455 msec
+== nor-cmp-redis-io4 run 1
+SET: 342426.69 requests per second, p50=1.015 msec
+GET: 352485.03 requests per second, p50=0.991 msec
+== nor-cmp-redis-io4 run 2
+SET: 342465.75 requests per second, p50=1.007 msec
+GET: 352567.88 requests per second, p50=0.991 msec
+== nor-cmp-valkey-io4 run 1
+SET: 315391.09 requests per second, p50=1.191 msec
+GET: 342348.53 requests per second, p50=1.127 msec
+== nor-cmp-valkey-io4 run 2
+SET: 332889.47 requests per second, p50=1.159 msec
+GET: 332926.44 requests per second, p50=1.151 msec

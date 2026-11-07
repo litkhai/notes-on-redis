@@ -11,10 +11,32 @@ permalink: /compare/
 ## English
 
 <div class="note" markdown="1">
-**Status: partly run.** The ElastiCache section below was run on 2026-11-07; the rest of this page is still the plan in [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+**Status: partly run.** The local Redis and Valkey comparison, the feature matrix and the ElastiCache section below were run or sourced on 2026-11-07; the licence timeline and the alternatives are still the plan in [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
 </div>
 
 Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey and for Redis OSS (≤ 7.1), Azure Managed Redis (Redis Enterprise inside), Memorystore for Valkey — a matrix with a source per cell (licence, modules, Active-Active, tiering, SLA, pricing model), the licence timeline (BSD-3 → RSALv2/SSPL at 7.4 → AGPLv3 added at 8.0; Valkey forked 7.2.4 under BSD-3), and the same workload run on Redis 8.10 and Valkey 9.1 side by side. Dragonfly, KeyDB and Garnet in a paragraph each.
+
+### Redis 8.10 and Valkey 9.1, locally
+
+**Verified on Redis 8.10.3, Valkey 9.1.3 and the Valkey bundle 9.1, 2026-11-07,** in Docker on one 24-core host with defaults and no persistence. Source and full output: [`compare/01-valkey-vs-redis-local`](https://github.com/litkhai/notes-on-redis/tree/main/compare/01-valkey-vs-redis-local).
+
+| | Redis 8.10.3 | Valkey 9.1.3 | Valkey bundle 9.1 |
+|---|---|---|---|
+| `INFO` version fields | `redis_version:8.10.3` | `redis_version:7.2.4`, `valkey_version:9.1.3` | same as Valkey |
+| Modules loaded | Search, JSON, Bloom, Time series, vector sets | `lua` only | `json`, `bf`, `search`, `ldap`, `lua` |
+| Commands in `COMMAND LIST` | 669 | 399 | 450 |
+| JSON, Bloom, Search | yes | no | yes (subsets) |
+| Time series, top-k, vector sets, Array | yes | no | no |
+| Hash field expiration | yes | yes | yes |
+| 1 M small strings | 62.1 B/key | 57.5 B/key | 57.5 B/key |
+| SET/GET, defaults, req/s | 119,197–124,797 | 120,992–122,978 | 124,766–126,783 |
+| SET/GET, `io-threads 4`, req/s | 342,427–352,568 | 315,391–342,349 | not run |
+
+Only in Valkey: `CLUSTERSCAN`, atomic slot migration (`CLUSTER MIGRATESLOTS`), `COMMANDLOG`, `DELIFEQ`. Only in Redis besides the module families: `BACKUP`, `HOTKEYS`, `HIMPORT`, `DIGEST`, stream additions such as `XACKDEL`. On the bundle, `FT.SEARCH` right after `FT.CREATE` found nothing and found the documents a second later: existing keys are indexed in the background. The throughput rows are measurements on one machine; through Docker's published ports all three stopped at about 83,000 req/s, which is the port-forwarding path.
+
+### Feature matrix
+
+One table across Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache for Valkey and for Redis OSS, Azure Managed Redis and Memorystore for Valkey, every cell with a source: measured here on 2026-11-07, or vendor documentation read that day, or marked "not confirmed". It lives in the repository so it can grow cell by cell: [`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md).
 
 ### ElastiCache Serverless for Valkey, next to the Redis Cloud free database
 
@@ -111,10 +133,32 @@ The cache lived about 31 minutes. By the price list: about 0.2 GB-hours of stora
 ## 한국어
 
 <div class="note" markdown="1">
-**상태: 일부 실행.** 아래 ElastiCache 절은 2026-11-07에 실행했다. 나머지는 아직 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)의 계획이다.
+**상태: 일부 실행.** 아래 로컬 Redis·Valkey 비교, 기능 매트릭스, ElastiCache 절은 2026-11-07에 실행하거나 출처를 달았다. 라이선스 연표와 대안은 아직 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)의 계획이다.
 </div>
 
 Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey와 for Redis OSS(≤ 7.1), Azure Managed Redis(안은 Redis Enterprise), Memorystore for Valkey — 셀마다 출처가 있는 매트릭스(라이선스, 모듈, Active-Active, 티어링, SLA, 가격 모델), 라이선스 연표(BSD-3 → 7.4에서 RSALv2/SSPL → 8.0에서 AGPLv3 추가; Valkey는 7.2.4를 BSD-3로 포크), 그리고 Redis 8.10과 Valkey 9.1에 같은 워크로드를 나란히. Dragonfly, KeyDB, Garnet은 한 문단씩.
+
+### Redis 8.10과 Valkey 9.1, 로컬에서
+
+**확인: Redis 8.10.3, Valkey 9.1.3, Valkey 번들 9.1, 2026-11-07.** 24코어 호스트 하나의 Docker, 기본 설정, 영속성 없음. 소스와 전체 출력: [`compare/01-valkey-vs-redis-local`](https://github.com/litkhai/notes-on-redis/tree/main/compare/01-valkey-vs-redis-local).
+
+| | Redis 8.10.3 | Valkey 9.1.3 | Valkey 번들 9.1 |
+|---|---|---|---|
+| `INFO` 버전 항목 | `redis_version:8.10.3` | `redis_version:7.2.4`, `valkey_version:9.1.3` | Valkey와 같음 |
+| 실린 모듈 | Search, JSON, Bloom, Time series, 벡터 셋 | `lua`만 | `json`, `bf`, `search`, `ldap`, `lua` |
+| `COMMAND LIST`의 명령 수 | 669 | 399 | 450 |
+| JSON, Bloom, Search | 있음 | 없음 | 있음(일부) |
+| Time series, top-k, 벡터 셋, Array | 있음 | 없음 | 없음 |
+| 해시 필드 만료 | 있음 | 있음 | 있음 |
+| 작은 문자열 100만 개 | 키당 62.1 B | 키당 57.5 B | 키당 57.5 B |
+| SET/GET, 기본 설정, 초당 요청 | 119,197–124,797 | 120,992–122,978 | 124,766–126,783 |
+| SET/GET, `io-threads 4`, 초당 요청 | 342,427–352,568 | 315,391–342,349 | 미실행 |
+
+Valkey에만 있는 것: `CLUSTERSCAN`, 원자적 슬롯 이전(`CLUSTER MIGRATESLOTS`), `COMMANDLOG`, `DELIFEQ`. 모듈 계열 외에 Redis에만 있는 것: `BACKUP`, `HOTKEYS`, `HIMPORT`, `DIGEST`, `XACKDEL` 같은 스트림 추가 명령. 번들에서는 `FT.CREATE` 직후의 `FT.SEARCH`가 아무것도 찾지 못하고 1초 뒤에 찾았다. 기존 키는 백그라운드로 색인된다. 처리량 행은 기계 한 대에서 잰 값이다. Docker의 공개 포트를 거치면 셋 모두 초당 약 83,000에서 멈췄는데, 이는 포트 포워딩 경로의 한계다.
+
+### 기능 매트릭스
+
+Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache for Valkey와 for Redis OSS, Azure Managed Redis, Memorystore for Valkey를 한 표에 담았다. 칸마다 출처가 있다. 2026-11-07에 여기서 잰 값, 그날 읽은 공급사 문서, 또는 "확인 안 됨" 표시. 칸 단위로 늘려 가도록 저장소에 둔다: [`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md).
 
 ### ElastiCache Serverless for Valkey, Redis Cloud 무료 DB와 나란히
 
@@ -211,10 +255,32 @@ Public을 고르면 사용자 그룹에 IAM 인증 사용자만 있어야 한다
 ## 简体中文
 
 <div class="note" markdown="1">
-**状态：部分已运行。** 下面的 ElastiCache 一节于 2026-11-07 运行；本页其余部分仍是 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) 中的计划。
+**状态：部分已运行。** 下面的本地 Redis 与 Valkey 对比、功能矩阵和 ElastiCache 一节已于 2026-11-07 运行或查证；许可证时间线和替代方案仍是 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) 中的计划。
 </div>
 
 Redis Open Source 8.x、Redis Cloud / Software、Valkey 9.x、ElastiCache for Valkey 与 for Redis OSS（≤ 7.1）、Azure Managed Redis（内核为 Redis Enterprise）、Memorystore for Valkey — 每格有来源的矩阵（许可证、模块、Active-Active、分层、SLA、定价模型）、许可证时间线（BSD-3 → 7.4 起 RSALv2/SSPL → 8.0 加入 AGPLv3；Valkey 自 7.2.4 以 BSD-3 分叉），以及在 Redis 8.10 与 Valkey 9.1 上并排运行同一负载。Dragonfly、KeyDB、Garnet 各一段。
+
+### 在本地运行 Redis 8.10 与 Valkey 9.1
+
+**已于 2026-11-07 在 Redis 8.10.3、Valkey 9.1.3 和 Valkey bundle 9.1 上验证，** 在一台 24 核主机上用 Docker 运行，使用默认配置，不启用持久化。源码与完整输出：[`compare/01-valkey-vs-redis-local`](https://github.com/litkhai/notes-on-redis/tree/main/compare/01-valkey-vs-redis-local)。
+
+| | Redis 8.10.3 | Valkey 9.1.3 | Valkey bundle 9.1 |
+|---|---|---|---|
+| `INFO` 版本字段 | `redis_version:8.10.3` | `redis_version:7.2.4`, `valkey_version:9.1.3` | 与 Valkey 相同 |
+| 已加载的模块 | Search, JSON, Bloom, Time series, vector sets | `lua` only | `json`, `bf`, `search`, `ldap`, `lua` |
+| `COMMAND LIST` 中的命令数 | 669 | 399 | 450 |
+| JSON, Bloom, Search | 是 | 否 | 是 (子集) |
+| Time series, top-k, vector sets, Array | 是 | 否 | 否 |
+| 哈希字段过期 | 是 | 是 | 是 |
+| 100 万个小字符串 | 62.1 B/key | 57.5 B/key | 57.5 B/key |
+| SET/GET, 默认配置, req/s | 119,197–124,797 | 120,992–122,978 | 124,766–126,783 |
+| SET/GET, `io-threads 4`, req/s | 342,427–352,568 | 315,391–342,349 | 未运行 |
+
+仅 Valkey 有：`CLUSTERSCAN`、原子槽位迁移（`CLUSTER MIGRATESLOTS`）、`COMMANDLOG`、`DELIFEQ`。除模块系列外仅 Redis 有：`BACKUP`、`HOTKEYS`、`HIMPORT`、`DIGEST`，以及 `XACKDEL` 之类的 stream 新增命令。在 bundle 上，紧接 `FT.CREATE` 之后执行 `FT.SEARCH` 什么也没找到，一秒后才找到文档：已有的键是在后台建立索引的。吞吐量各行是在一台机器上的测量值；通过 Docker 发布的端口，三者都停在约 83,000 req/s，这是端口转发路径的上限。
+
+### 功能矩阵
+
+一张表涵盖 Redis Open Source 8、Redis Cloud、Valkey 9、ElastiCache for Valkey 与 for Redis OSS、Azure Managed Redis 和 Memorystore for Valkey，每个单元格都有来源：2026-11-07 在此实测，或当天读取的厂商文档，或标为“未确认”。它放在仓库中，因此可以逐格扩充：[`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md)。
 
 ### ElastiCache Serverless for Valkey 与 Redis Cloud 免费数据库的对比
 
@@ -311,10 +377,32 @@ Valkey caches 是一个带有 Create cache 按钮的列表。 <small>2026-11-07 
 ## 日本語
 
 <div class="note" markdown="1">
-**状態: 一部実行済み。** 下の ElastiCache の節は 2026-11-07 に実行した。このページの残りはまだ [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) の計画である。
+**状態: 一部実行済み。** 下のローカルでの Redis と Valkey の比較、機能マトリクス、ElastiCache の節は 2026-11-07 に実行または出典確認を行った。ライセンスの年表と代替製品は、まだ [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) の計画である。
 </div>
 
 Redis Open Source 8.x、Redis Cloud / Software、Valkey 9.x、ElastiCache for Valkey と for Redis OSS（≤ 7.1）、Azure Managed Redis（中身は Redis Enterprise）、Memorystore for Valkey — セルごとに出典のあるマトリクス（ライセンス、モジュール、Active-Active、階層化、SLA、価格モデル）、ライセンスの年表（BSD-3 → 7.4 で RSALv2/SSPL → 8.0 で AGPLv3 追加、Valkey は 7.2.4 を BSD-3 でフォーク）、そして Redis 8.10 と Valkey 9.1 で同じワークロードを並べて実行。Dragonfly、KeyDB、Garnet は一段落ずつ。
+
+### Redis 8.10 と Valkey 9.1 をローカルで
+
+**2026-11-07 に Redis 8.10.3、Valkey 9.1.3、Valkey bundle 9.1 で検証済み。** 24 コアのホスト 1 台で Docker を使い、デフォルト設定、永続化なしで実行した。ソースと全出力: [`compare/01-valkey-vs-redis-local`](https://github.com/litkhai/notes-on-redis/tree/main/compare/01-valkey-vs-redis-local)。
+
+| | Redis 8.10.3 | Valkey 9.1.3 | Valkey bundle 9.1 |
+|---|---|---|---|
+| `INFO` のバージョンフィールド | `redis_version:8.10.3` | `redis_version:7.2.4`, `valkey_version:9.1.3` | Valkey と同じ |
+| 読み込まれたモジュール | Search, JSON, Bloom, Time series, vector sets | `lua` のみ | `json`, `bf`, `search`, `ldap`, `lua` |
+| `COMMAND LIST` のコマンド数 | 669 | 399 | 450 |
+| JSON, Bloom, Search | はい | いいえ | はい (一部) |
+| Time series, top-k, vector sets, Array | はい | いいえ | いいえ |
+| ハッシュフィールドの有効期限 | はい | はい | はい |
+| 小さい文字列 1 M 個 | 62.1 B/key | 57.5 B/key | 57.5 B/key |
+| SET/GET, デフォルト, req/s | 119,197–124,797 | 120,992–122,978 | 124,766–126,783 |
+| SET/GET, `io-threads 4`, req/s | 342,427–352,568 | 315,391–342,349 | 未実行 |
+
+Valkey のみにあるもの: `CLUSTERSCAN`、アトミックなスロット移行（`CLUSTER MIGRATESLOTS`）、`COMMANDLOG`、`DELIFEQ`。モジュール群のほかに Redis のみにあるもの: `BACKUP`、`HOTKEYS`、`HIMPORT`、`DIGEST`、`XACKDEL` などのストリーム追加分。bundle では、`FT.CREATE` の直後の `FT.SEARCH` は何も見つけず、1 秒後にはドキュメントを見つけた。既存のキーはバックグラウンドでインデックスされる。スループットの行は 1 台のマシンでの測定値である。Docker の公開ポート経由では、3 つとも約 83,000 req/s で頭打ちになった。これはポート転送経路の上限である。
+
+### 機能マトリクス
+
+Redis Open Source 8、Redis Cloud、Valkey 9、ElastiCache for Valkey と for Redis OSS、Azure Managed Redis、Memorystore for Valkey を 1 つの表にまとめ、すべてのセルに出典を付けた。ここで 2026-11-07 に測定したもの、その日に読んだベンダーのドキュメント、または「未確認」と記したもののいずれかである。リポジトリに置いてあるので、セルごとに増やしていける: [`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md)。
 
 ### ElastiCache Serverless for Valkey と Redis Cloud 無料データベースの比較
 
@@ -411,10 +499,32 @@ Public を選ぶと、ユーザーグループには IAM 認証ユーザーの�
 ## ภาษาไทย
 
 <div class="note" markdown="1">
-**สถานะ: รันแล้วบางส่วน** ส่วนของ ElastiCache ด้านล่างรันเมื่อ 2026-11-07 ส่วนที่เหลือของหน้านี้ยังเป็นแผนใน [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)
+**สถานะ: รันแล้วบางส่วน** การเปรียบเทียบ Redis กับ Valkey บนเครื่อง ตารางคุณสมบัติ และส่วน ElastiCache ด้านล่างได้รันหรืออ้างอิงแหล่งที่มาเมื่อ 2026-11-07 ส่วนลำดับเหตุการณ์ด้านไลเซนส์และทางเลือกอื่นยังเป็นแผนใน [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)
 </div>
 
 Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey และ for Redis OSS (≤ 7.1), Azure Managed Redis (Redis Enterprise อยู่ภายใน), Memorystore for Valkey — ตารางเปรียบเทียบที่มีแหล่งอ้างอิงในทุกช่อง (ใบอนุญาต, โมดูล, Active-Active, tiering, SLA, รูปแบบราคา), ไทม์ไลน์ใบอนุญาต (BSD-3 → RSALv2/SSPL ที่ 7.4 → เพิ่ม AGPLv3 ที่ 8.0; Valkey แยกจาก 7.2.4 ภายใต้ BSD-3) และเวิร์กโหลดเดียวกันที่รันบน Redis 8.10 และ Valkey 9.1 เทียบกัน ส่วน Dragonfly, KeyDB และ Garnet อธิบายอย่างละหนึ่งย่อหน้า
+
+### Redis 8.10 และ Valkey 9.1 บนเครื่อง
+
+**ตรวจสอบแล้วบน Redis 8.10.3, Valkey 9.1.3 และ Valkey bundle 9.1 เมื่อ 2026-11-07** ใน Docker บนโฮสต์ 24 คอร์หนึ่งเครื่อง ใช้ค่าเริ่มต้นและไม่เปิดการเก็บข้อมูลถาวร ซอร์สและผลลัพธ์ทั้งหมด: [`compare/01-valkey-vs-redis-local`](https://github.com/litkhai/notes-on-redis/tree/main/compare/01-valkey-vs-redis-local)
+
+| | Redis 8.10.3 | Valkey 9.1.3 | Valkey bundle 9.1 |
+|---|---|---|---|
+| ฟิลด์เวอร์ชันของ `INFO` | `redis_version:8.10.3` | `redis_version:7.2.4`, `valkey_version:9.1.3` | เหมือน Valkey |
+| โมดูลที่โหลด | Search, JSON, Bloom, Time series, vector sets | `lua` เท่านั้น | `json`, `bf`, `search`, `ldap`, `lua` |
+| คำสั่งใน `COMMAND LIST` | 669 | 399 | 450 |
+| JSON, Bloom, Search | ใช่ | ไม่ | ใช่ (บางส่วน) |
+| Time series, top-k, vector sets, Array | ใช่ | ไม่ | ไม่ |
+| การหมดอายุของฟิลด์ใน hash | ใช่ | ใช่ | ใช่ |
+| สตริงขนาดเล็ก 1 M รายการ | 62.1 B/key | 57.5 B/key | 57.5 B/key |
+| SET/GET, ค่าเริ่มต้น, req/s | 119,197–124,797 | 120,992–122,978 | 124,766–126,783 |
+| SET/GET, `io-threads 4`, req/s | 342,427–352,568 | 315,391–342,349 | ไม่ได้รัน |
+
+มีเฉพาะใน Valkey: `CLUSTERSCAN`, การย้าย slot แบบ atomic (`CLUSTER MIGRATESLOTS`), `COMMANDLOG`, `DELIFEQ` มีเฉพาะใน Redis นอกจากกลุ่มโมดูล: `BACKUP`, `HOTKEYS`, `HIMPORT`, `DIGEST` และคำสั่งที่เพิ่มใน stream เช่น `XACKDEL` บน bundle การรัน `FT.SEARCH` ทันทีหลัง `FT.CREATE` ไม่พบอะไรเลย และพบเอกสารหลังจากผ่านไปหนึ่งวินาที เพราะคีย์ที่มีอยู่แล้วถูกทำดัชนีในเบื้องหลัง แถวของปริมาณงานเป็นผลการวัดบนเครื่องเดียว เมื่อผ่านพอร์ตที่ Docker เปิดให้ ทั้งสามตัวหยุดอยู่ที่ประมาณ 83,000 req/s ซึ่งเป็นเพดานของเส้นทางการส่งต่อพอร์ต
+
+### ตารางคุณสมบัติ
+
+ตารางเดียวครอบคลุม Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache for Valkey และ for Redis OSS, Azure Managed Redis และ Memorystore for Valkey ทุกเซลล์มีแหล่งที่มา คือวัดจริงที่นี่เมื่อ 2026-11-07 หรือเอกสารของผู้ให้บริการที่อ่านในวันนั้น หรือทำเครื่องหมายว่า "ยังไม่ยืนยัน" ตารางอยู่ในรีโพซิทอรี จึงเพิ่มทีละเซลล์ได้: [`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md)
 
 ### ElastiCache Serverless for Valkey เทียบกับฐานข้อมูลฟรีของ Redis Cloud
 
@@ -511,10 +621,32 @@ Monitoring หลังการทดสอบ: ข้อมูลที่จ�
 ## Bahasa Indonesia
 
 <div class="note" markdown="1">
-**Status: sebagian sudah dijalankan.** Bagian ElastiCache di bawah dijalankan pada 2026-11-07; sisa halaman ini masih berupa rencana di [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+**Status: sebagian sudah dijalankan.** Perbandingan Redis dan Valkey secara lokal, matriks fitur, dan bagian ElastiCache di bawah ini dijalankan atau bersumber pada 2026-11-07; linimasa lisensi dan alternatifnya masih berupa rencana di [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
 </div>
 
 Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey dan for Redis OSS (≤ 7.1), Azure Managed Redis (berisi Redis Enterprise), Memorystore for Valkey — sebuah matriks dengan sumber pada setiap sel (lisensi, modul, Active-Active, tiering, SLA, model harga), linimasa lisensi (BSD-3 → RSALv2/SSPL pada 7.4 → AGPLv3 ditambahkan pada 8.0; Valkey di-fork dari 7.2.4 di bawah BSD-3), dan beban kerja yang sama dijalankan berdampingan pada Redis 8.10 dan Valkey 9.1. Dragonfly, KeyDB, dan Garnet masing-masing satu paragraf.
+
+### Redis 8.10 dan Valkey 9.1 secara lokal
+
+**Diverifikasi pada Redis 8.10.3, Valkey 9.1.3, dan Valkey bundle 9.1, 2026-11-07,** di Docker pada satu host 24 core dengan pengaturan bawaan dan tanpa persistensi. Sumber dan keluaran lengkap: [`compare/01-valkey-vs-redis-local`](https://github.com/litkhai/notes-on-redis/tree/main/compare/01-valkey-vs-redis-local).
+
+| | Redis 8.10.3 | Valkey 9.1.3 | Valkey bundle 9.1 |
+|---|---|---|---|
+| Bidang versi `INFO` | `redis_version:8.10.3` | `redis_version:7.2.4`, `valkey_version:9.1.3` | sama seperti Valkey |
+| Modul yang dimuat | Search, JSON, Bloom, Time series, vector sets | `lua` saja | `json`, `bf`, `search`, `ldap`, `lua` |
+| Perintah di `COMMAND LIST` | 669 | 399 | 450 |
+| JSON, Bloom, Search | ya | tidak | ya (subset) |
+| Time series, top-k, vector sets, Array | ya | tidak | tidak |
+| Kedaluwarsa field hash | ya | ya | ya |
+| 1 M string kecil | 62.1 B/key | 57.5 B/key | 57.5 B/key |
+| SET/GET, pengaturan bawaan, req/s | 119,197–124,797 | 120,992–122,978 | 124,766–126,783 |
+| SET/GET, `io-threads 4`, req/s | 342,427–352,568 | 315,391–342,349 | tidak dijalankan |
+
+Hanya ada di Valkey: `CLUSTERSCAN`, migrasi slot atomik (`CLUSTER MIGRATESLOTS`), `COMMANDLOG`, `DELIFEQ`. Hanya ada di Redis selain keluarga modul: `BACKUP`, `HOTKEYS`, `HIMPORT`, `DIGEST`, serta tambahan stream seperti `XACKDEL`. Pada bundle, `FT.SEARCH` tepat setelah `FT.CREATE` tidak menemukan apa pun dan baru menemukan dokumen satu detik kemudian: key yang sudah ada diindeks di latar belakang. Baris throughput adalah hasil pengukuran pada satu mesin; melalui port yang dipublikasikan Docker, ketiganya berhenti di sekitar 83,000 req/s, yaitu batas jalur penerusan port.
+
+### Matriks fitur
+
+Satu tabel yang mencakup Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache for Valkey dan for Redis OSS, Azure Managed Redis, dan Memorystore for Valkey, dengan sumber di setiap sel: diukur di sini pada 2026-11-07, atau dokumentasi vendor yang dibaca pada hari itu, atau ditandai "belum terkonfirmasi". Tabel ini disimpan di repositori sehingga dapat bertambah sel demi sel: [`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md).
 
 ### ElastiCache Serverless for Valkey, dibandingkan dengan database gratis Redis Cloud
 
@@ -611,10 +743,32 @@ Cache hidup sekitar 31 menit. Menurut daftar harga: sekitar 0.2 GB-hour penyimpa
 ## Bahasa Melayu
 
 <div class="note" markdown="1">
-**Status: sebahagian telah dijalankan.** Bahagian ElastiCache di bawah dijalankan pada 2026-11-07; selebihnya halaman ini masih berupa pelan dalam [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+**Status: sebahagian sudah dijalankan.** Perbandingan Redis dan Valkey secara setempat, matriks ciri dan bahagian ElastiCache di bawah dijalankan atau diperoleh sumbernya pada 2026-11-07; garis masa lesen dan alternatif masih merupakan rancangan dalam [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
 </div>
 
 Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey dan for Redis OSS (≤ 7.1), Azure Managed Redis (mengandungi Redis Enterprise), Memorystore for Valkey — satu matriks dengan sumber bagi setiap sel (lesen, modul, Active-Active, tiering, SLA, model harga), garis masa lesen (BSD-3 → RSALv2/SSPL pada 7.4 → AGPLv3 ditambah pada 8.0; Valkey dipecahkan daripada 7.2.4 di bawah BSD-3), dan beban kerja yang sama dijalankan secara bersebelahan pada Redis 8.10 dan Valkey 9.1. Dragonfly, KeyDB dan Garnet masing-masing satu perenggan.
+
+### Redis 8.10 dan Valkey 9.1 secara setempat
+
+**Disahkan pada Redis 8.10.3, Valkey 9.1.3 dan Valkey bundle 9.1, 2026-11-07,** dalam Docker pada satu hos 24 teras dengan tetapan lalai dan tanpa kegigihan data. Sumber dan output penuh: [`compare/01-valkey-vs-redis-local`](https://github.com/litkhai/notes-on-redis/tree/main/compare/01-valkey-vs-redis-local).
+
+| | Redis 8.10.3 | Valkey 9.1.3 | Valkey bundle 9.1 |
+|---|---|---|---|
+| Medan versi `INFO` | `redis_version:8.10.3` | `redis_version:7.2.4`, `valkey_version:9.1.3` | sama seperti Valkey |
+| Modul yang dimuatkan | Search, JSON, Bloom, Time series, vector sets | `lua` sahaja | `json`, `bf`, `search`, `ldap`, `lua` |
+| Arahan dalam `COMMAND LIST` | 669 | 399 | 450 |
+| JSON, Bloom, Search | ya | tidak | ya (subset) |
+| Time series, top-k, vector sets, Array | ya | tidak | tidak |
+| Tamat tempoh medan hash | ya | ya | ya |
+| 1 M rentetan kecil | 62.1 B/key | 57.5 B/key | 57.5 B/key |
+| SET/GET, tetapan lalai, req/s | 119,197–124,797 | 120,992–122,978 | 124,766–126,783 |
+| SET/GET, `io-threads 4`, req/s | 342,427–352,568 | 315,391–342,349 | tidak dijalankan |
+
+Hanya ada dalam Valkey: `CLUSTERSCAN`, pemindahan slot atomik (`CLUSTER MIGRATESLOTS`), `COMMANDLOG`, `DELIFEQ`. Hanya ada dalam Redis selain keluarga modul: `BACKUP`, `HOTKEYS`, `HIMPORT`, `DIGEST`, serta tambahan stream seperti `XACKDEL`. Pada bundle, `FT.SEARCH` sejurus selepas `FT.CREATE` tidak menemui apa-apa dan menemui dokumen sesaat kemudian: kunci yang sedia ada diindeks di latar belakang. Baris truput ialah ukuran pada satu mesin; melalui port yang diterbitkan Docker, ketiga-tiganya berhenti pada sekitar 83,000 req/s, iaitu had laluan pemajuan port.
+
+### Matriks ciri
+
+Satu jadual merangkumi Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache for Valkey dan for Redis OSS, Azure Managed Redis dan Memorystore for Valkey, dengan sumber pada setiap sel: diukur di sini pada 2026-11-07, atau dokumentasi vendor yang dibaca pada hari itu, atau ditandakan "belum disahkan". Jadual ini disimpan dalam repositori supaya boleh bertambah sel demi sel: [`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md).
 
 ### ElastiCache Serverless for Valkey, bersebelahan dengan pangkalan data percuma Redis Cloud
 
