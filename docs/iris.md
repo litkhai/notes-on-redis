@@ -11,14 +11,14 @@ permalink: /iris/
 ## English
 
 <div class="note" markdown="1">
-**Status: partly run.** Agent Memory, Intent Router, Context Gateway and Agent Playbooks were run on the Redis Cloud free plan on 2026-11-07 (below). Lens and Agent Mesh are still the plan in [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+**Status: run, except Lens on Redis Cloud.** Agent Memory, Intent Router, Context Gateway and Agent Playbooks were run on the Redis Cloud free plan on 2026-11-07, and Agent Mesh on local Redis 8.10.3 (below). Lens needs an Essentials or Pro database, so only its SDK was run.
 </div>
 
 Redis Iris is, in Redis's words, "a production-ready context engine for AI agents" — a suite of services, not a database; Redis is the database underneath. Launched 2026-05-18; on 2026-11-04 it became six services: Intent Router, Agent Playbooks, Agent Memory and Context Gateway (GA), Lens and Agent Mesh (beta). Managed on Redis Cloud; self-managed via a Helm chart that needs a licence. One lab per service, all on the free database and the 5,000 free messages, with the messages consumed per lab recorded. The naming trap — Context Retriever → Context Gateway, LangCache vs Agent Playbooks — gets its own section. Read 2026-11-07 at [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/).
 
 ### Is Iris usable on the free plan?
 
-**Yes, as of 2026-11-07.** On a free account every Iris service in the sidebar offers a create button (Agent Memory, Agent Playbooks, Context Gateway, Intent Router, Lens); Agent Mesh is a library that runs in your own app. One Agent Memory service was created on the free 30 MB database, given two API keys, and used from the `redis-iris` 1.0.1 SDK and the `iris` CLI: health, writing a memory, a conversation, background extraction and recall all worked. The "5,000 free messages" were not shown anywhere in the console (Iris pages, Usage, Billing), so how many this lab used is unknown.
+**Yes, as of 2026-11-07.** On a free account four Iris services offer a create button (Agent Memory, Agent Playbooks, Context Gateway, Intent Router). **New Lens** is greyed out, because Lens needs an Essentials or Pro records database. Agent Mesh is a library that runs in your own app. One Agent Memory service was created on the free 30 MB database, given two API keys, and used from the `redis-iris` 1.0.1 SDK and the `iris` CLI: health, writing a memory, a conversation, background extraction and recall all worked. The "5,000 free messages" were not shown anywhere in the console (Iris pages, Usage, Billing), so how many this lab used is unknown.
 
 ### Lab: Agent Memory on the free database
 
@@ -157,6 +157,31 @@ The registry shows publication state and latest version per FAQ. <small>Captured
 
 Proposals wait in an inbox until someone accepts and publishes them. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
 
+### Agent Mesh and Lens (beta)
+
+**Verified on redis-iris 1.0.1 with Redis 8.10.3 in local Docker, 2026-11-07.** Agent Mesh keeps an agent's progress events in a Redis stream, so a client that disconnects can come back to any server and receive what it missed. From the docs: "When the client reconnects, it can receive retained updates after its last event cursor." It needs Redis 8.6.2+ for `XADD IDMP` ([Deep Dive]({{ '/deep-dive/' | relative_url }})), and "Cloud, Enterprise, failover recovery, and sustained capacity remain unqualified for this beta." The lab ran each integration as two replicas and moved the client from one to the other.
+
+| Experiment | Result |
+|---|---|
+| FastAPI SSE: read steps 1–5 from replica A, away 3 s, reconnect to replica B with `Last-Event-ID` | B replayed 6–11, then 12–20 live; all 20 exactly once |
+| Reconnect at the final cursor / malformed cursor / unknown run | HTTP 204 / 422 `invalid_cursor` / 404 |
+| What one run leaves in Redis | one stream, `XLEN 22`, IDMP on, TTL 120 s after completion |
+| Replica A killed mid-run, SDK defaults | no final event: B closed and reopened the connection every 35 s |
+| Same, with `REDIS_SOCKET_TIMEOUT=30` | `stream.end` `producer_lost` after the silence timeout |
+| A2A: Task versions 1–4 from A, reconnect to B with `Last-Event-ID: 4` | versions 5–12 and the completed status; ten artifacts, each once |
+
+**The one trap found:** redis-py 8.1.0 sets a 5 s socket timeout by default, shorter than the SDK's 15 s blocking read. The SDK takes each timeout for a Redis outage, so it never declares the producer lost. Set `REDIS_SOCKET_TIMEOUT` above the heartbeat interval.
+
+Lens traces agent turns over OpenTelemetry. On Redis Cloud its records database must be "A Redis Cloud Essentials or Pro database", so on the free plan **New Lens** is disabled. Pointed at a loopback receiver instead, the SDK sent one OTLP/HTTP request per turn. The turn's spans included the Agent Memory search, recorded with no extra code, plus the app's own retrieval and a custom step. With `IRIS_LENS_CAPTURE_CONTENT=false` the query and document texts were dropped, leaving IDs, scores and hashes. Docs: [Agent Mesh](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/), [FastAPI SSE SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/fastapi-sse-sdk/), [A2A SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/a2a-sdk/), [Lens](https://redis.io/docs/latest/develop/ai/context-engine/lens/), [Create Lens](https://redis.io/docs/latest/operate/iris/lens/create-lens/). Lab: [`iris/06-lens-and-mesh`](https://github.com/litkhai/notes-on-redis/tree/main/iris/06-lens-and-mesh).
+
+<p class="shot"><img src="{{ '/assets/img/iris/29-lens-free-plan.webp' | relative_url }}" width="1440" height="1351" alt="The Lens page in the Redis Cloud console with the New Lens button greyed out on a free-plan account" loading="lazy" decoding="async"></p>
+
+On the free plan, New Lens is disabled. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/30-agent-mesh.webp' | relative_url }}" width="1440" height="1121" alt="The Agent Mesh page in the console: a library for resumable SSE and A2A streams on Redis, with no create button" loading="lazy" decoding="async"></p>
+
+Agent Mesh has a page but nothing to create: it runs inside your own app. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
+
 ### What Iris costs the free database
 
 The services keep their data and their connection pools in the database you pick. With Agent Memory, Intent Router, a Context Surface and a Playbook all on the free database, nothing of ours running, on 2026-11-07:
@@ -171,7 +196,7 @@ On the free plan that leaves two connections for an application. Give Iris its o
 
 ### Not covered yet
 
-Lens and Agent Mesh (beta) have their own lab in the repository issues. Message consumption stays an open question until the console or the bill shows it.
+Lens on Redis Cloud waits for the Essentials budget in [#8](https://github.com/litkhai/notes-on-redis/issues/8): creating it, the Lens UI, reading turns back and model-call tracing. Message consumption stays an open question until the console or the bill shows it.
 
 </div>
 
@@ -180,14 +205,14 @@ Lens and Agent Mesh (beta) have their own lab in the repository issues. Message 
 ## 한국어
 
 <div class="note" markdown="1">
-**상태: 일부 실행.** Agent Memory, Intent Router, Context Gateway, Agent Playbooks를 2026-11-07에 Redis Cloud 무료 플랜에서 실행했다(아래). Lens와 Agent Mesh는 아직 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)의 계획이다.
+**상태: Redis Cloud의 Lens만 빼고 실행.** Agent Memory, Intent Router, Context Gateway, Agent Playbooks는 2026-11-07에 Redis Cloud 무료 플랜에서, Agent Mesh는 로컬 Redis 8.10.3에서 실행했다(아래). Lens는 Essentials나 Pro DB가 필요해 SDK만 실행했다.
 </div>
 
 Redis Iris는 Redis의 표현으로 "AI 에이전트를 위한 프로덕션 준비 컨텍스트 엔진" — 서비스 묶음이지 데이터베이스가 아니고, 밑에 있는 데이터베이스가 Redis다. 2026-05-18 출시, 2026-11-04에 서비스 여섯이 됨: Intent Router, Agent Playbooks, Agent Memory, Context Gateway(GA), Lens, Agent Mesh(베타). Redis Cloud 관리형, 자체 운영은 라이선스가 필요한 Helm 차트. 서비스마다 랩 하나, 모두 무료 DB와 무료 5,000 메시지로, 랩마다 소비한 메시지 수를 기록. 이름 함정 — Context Retriever → Context Gateway, LangCache vs Agent Playbooks — 은 별도 절. 2026-11-07 [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/)에서 읽음.
 
 ### 무료 플랜에서 Iris를 쓸 수 있나?
 
-**2026-11-07 기준으로 그렇다.** 무료 계정에서도 사이드바의 Iris 서비스마다 만들기 버튼이 있다(Agent Memory, Agent Playbooks, Context Gateway, Intent Router, Lens). Agent Mesh는 내 앱 안에서 도는 라이브러리다. 무료 30 MB DB에 Agent Memory 서비스를 하나 만들고 API 키 두 개를 발급해 `redis-iris` 1.0.1 SDK와 `iris` CLI로 썼다. 상태 확인, 기억 쓰기, 대화, 백그라운드 추출, 회상이 모두 됐다. "무료 메시지 5,000개"는 콘솔 어디에도(Iris 화면, Usage, Billing) 보이지 않아, 이 실습이 몇 개를 썼는지는 모른다.
+**2026-11-07 기준으로 그렇다.** 무료 계정에서도 Iris 서비스 넷에 만들기 버튼이 있다(Agent Memory, Agent Playbooks, Context Gateway, Intent Router). **New Lens**는 회색으로 비활성이다. Lens는 기록용 DB가 Essentials나 Pro여야 하기 때문이다. Agent Mesh는 내 앱 안에서 도는 라이브러리다. 무료 30 MB DB에 Agent Memory 서비스를 하나 만들고 API 키 두 개를 발급해 `redis-iris` 1.0.1 SDK와 `iris` CLI로 썼다. 상태 확인, 기억 쓰기, 대화, 백그라운드 추출, 회상이 모두 됐다. "무료 메시지 5,000개"는 콘솔 어디에도(Iris 화면, Usage, Billing) 보이지 않아, 이 실습이 몇 개를 썼는지는 모른다.
 
 ### 실습: 무료 DB 위의 Agent Memory
 
@@ -326,6 +351,31 @@ FAQ의 두 번째 버전은 초안으로 남았고, `faqs publish --version 2` �
 
 제안은 누군가 받아들이고 공개할 때까지 제안함에서 기다린다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
 
+### Agent Mesh와 Lens(베타)
+
+**확인: redis-iris 1.0.1, 로컬 Docker의 Redis 8.10.3, 2026-11-07.** Agent Mesh는 에이전트의 진행 이벤트를 Redis 스트림에 담아, 끊긴 클라이언트가 어느 서버로 돌아오든 놓친 것을 받게 한다. 문서의 표현: "When the client reconnects, it can receive retained updates after its last event cursor." `XADD IDMP`([Deep Dive]({{ '/deep-dive/' | relative_url }})) 때문에 Redis 8.6.2 이상이 필요하고, "Cloud, Enterprise, failover recovery, and sustained capacity remain unqualified for this beta." 실습은 통합 방식마다 복제본 둘을 띄우고 클라이언트를 한쪽에서 다른 쪽으로 옮겼다.
+
+| 실험 | 결과 |
+|---|---|
+| FastAPI SSE: 복제본 A에서 1–5단계를 읽고 3초 떠났다가 `Last-Event-ID`로 복제본 B에 재연결 | B가 6–11을 재생하고 12–20을 실시간으로. 20단계 모두 정확히 한 번 |
+| 마지막 커서 / 잘못된 커서 / 모르는 실행으로 재연결 | HTTP 204 / 422 `invalid_cursor` / 404 |
+| 실행 하나가 Redis에 남기는 것 | 스트림 하나, `XLEN 22`, IDMP 사용, 완료 뒤 TTL 120초 |
+| 실행 중 복제본 A를 죽임, SDK 기본 설정 | 최종 이벤트 없음: B가 35초마다 연결을 닫고 다시 열기를 반복 |
+| 같은 상황, `REDIS_SOCKET_TIMEOUT=30` | 침묵 제한 뒤 `stream.end` `producer_lost` |
+| A2A: A에서 Task 버전 1–4, `Last-Event-ID: 4`로 B에 재연결 | 버전 5–12와 완료 상태. 아티팩트 10개 각각 한 번 |
+
+**찾은 함정 하나:** redis-py 8.1.0은 소켓 제한 시간 기본값이 5초로, SDK의 15초 블로킹 읽기보다 짧다. SDK는 시간 초과를 매번 Redis 장애로 여겨 생산자 유실을 선언하지 않는다. `REDIS_SOCKET_TIMEOUT`을 하트비트 간격보다 길게 둔다.
+
+Lens는 OpenTelemetry로 에이전트 턴을 추적한다. Redis Cloud에서는 기록용 DB가 "A Redis Cloud Essentials or Pro database"여야 해서 무료 플랜에서는 **New Lens**가 비활성이다. 대신 루프백 수신기를 가리키게 하자 SDK는 턴마다 OTLP/HTTP 요청 하나를 보냈다. 턴의 스팬에는 코드를 더하지 않아도 기록된 Agent Memory 검색, 앱 자체 검색, 사용자 정의 단계가 있었다. `IRIS_LENS_CAPTURE_CONTENT=false`면 질의와 문서 텍스트가 빠지고 ID, 점수, 해시만 남았다. 문서: [Agent Mesh](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/), [FastAPI SSE SDK 가이드](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/fastapi-sse-sdk/), [A2A SDK 가이드](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/a2a-sdk/), [Lens](https://redis.io/docs/latest/develop/ai/context-engine/lens/), [Create Lens](https://redis.io/docs/latest/operate/iris/lens/create-lens/). 실습: [`iris/06-lens-and-mesh`](https://github.com/litkhai/notes-on-redis/tree/main/iris/06-lens-and-mesh).
+
+<p class="shot"><img src="{{ '/assets/img/iris/29-lens-free-plan.webp' | relative_url }}" width="1440" height="1351" alt="Redis Cloud 콘솔의 Lens 페이지. 무료 플랜 계정이라 New Lens 버튼이 회색으로 비활성" loading="lazy" decoding="async"></p>
+
+무료 플랜에서는 New Lens가 비활성이다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/30-agent-mesh.webp' | relative_url }}" width="1440" height="1121" alt="콘솔의 Agent Mesh 페이지: Redis 위의 재개 가능한 SSE·A2A 스트림용 라이브러리, 만들기 버튼 없음" loading="lazy" decoding="async"></p>
+
+Agent Mesh는 페이지만 있고 만들 것은 없다. 내 앱 안에서 돈다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
+
 ### Iris가 무료 DB에서 쓰는 것
 
 서비스들은 고른 DB에 데이터와 커넥션 풀을 둔다. Agent Memory, Intent Router, Context Surface, Playbook을 모두 무료 DB에 두고 우리 쪽은 아무것도 돌리지 않은 2026-11-07 상태:
@@ -340,7 +390,7 @@ FAQ의 두 번째 버전은 초안으로 남았고, `faqs publish --version 2` �
 
 ### 아직 다루지 않은 것
 
-Lens와 Agent Mesh(베타)는 저장소 이슈에 별도 실습이 있다. 메시지 사용량은 콘솔이나 청구서에 나타날 때까지 열린 질문으로 둔다.
+Redis Cloud의 Lens는 [#8](https://github.com/litkhai/notes-on-redis/issues/8)의 Essentials 예산을 기다린다: 생성, Lens UI, 턴 읽기, 모델 호출 추적. 메시지 사용량은 콘솔이나 청구서에 나타날 때까지 열린 질문으로 둔다.
 
 </div>
 
@@ -349,14 +399,14 @@ Lens와 Agent Mesh(베타)는 저장소 이슈에 별도 실습이 있다. 메�
 ## 简体中文
 
 <div class="note" markdown="1">
-**状态：部分已运行。** Agent Memory、Intent Router、Context Gateway 和 Agent Playbooks 于 2026-11-07 在 Redis Cloud 免费计划上运行过（见下文）。Lens 和 Agent Mesh 仍是 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) 中的计划。
+**状态：除 Redis Cloud 上的 Lens 外均已运行。** Agent Memory、Intent Router、Context Gateway 和 Agent Playbooks 于 2026-11-07 在 Redis Cloud 免费计划上运行，Agent Mesh 在本地 Redis 8.10.3 上运行（见下）。Lens 需要 Essentials 或 Pro 数据库，所以只运行了它的 SDK。
 </div>
 
-Redis Iris 按 Redis 的说法是"面向 AI 代理的生产级上下文引擎" — 一组服务而非数据库，底层数据库是 Redis。2026-05-18 发布，2026-11-04 扩展为六项服务：Intent Router、Agent Playbooks、Agent Memory、Context Gateway（GA），Lens、Agent Mesh（beta）。Redis Cloud 托管；自管理需带许可证的 Helm chart。每项服务一个实验，全部使用免费数据库和 5,000 条免费消息，并记录每个实验消耗的消息数。命名陷阱 — Context Retriever → Context Gateway、LangCache 与 Agent Playbooks — 单独成节。2026-11-07 读取自 [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/)。
+Redis Iris 用 Redis 自己的话说是 "a production-ready context engine for AI agents" —— 它是一组服务，不是数据库；底层的数据库是 Redis。2026-05-18 发布，2026-11-04 变为六项服务：Intent Router、Agent Playbooks、Agent Memory 和 Context Gateway（GA），以及 Lens 和 Agent Mesh（beta）。在 Redis Cloud 上托管；自行部署则通过需要许可证的 Helm chart。每项服务一个实验，全部使用免费数据库和 5,000 条免费消息，并记录每个实验消耗的消息数。命名陷阱 —— Context Retriever → Context Gateway，LangCache 与 Agent Playbooks —— 单独成节。2026-11-07 阅读于 [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/)。
 
-### 免费计划能用 Iris 吗？
+### Iris 能在免费计划上使用吗？
 
-**能，截至 2026-11-07。** 在免费账户上，侧边栏中的每项 Iris 服务都有创建按钮（Agent Memory、Agent Playbooks、Context Gateway、Intent Router、Lens）；Agent Mesh 是在你自己的应用中运行的库。在免费的 30 MB 数据库上创建了一个 Agent Memory 服务，生成两个 API 密钥，并通过 `redis-iris` 1.0.1 SDK 和 `iris` CLI 使用：健康检查、写入记忆、对话、后台提取和召回都正常。控制台的任何位置（Iris 页面、Usage、Billing）都没有显示“5,000 条免费消息”，因此本实验用了多少条未知。
+**能，截至 2026-11-07。** 免费账户上有四项 Iris 服务提供创建按钮（Agent Memory、Agent Playbooks、Context Gateway、Intent Router）。**New Lens** 是灰色的，因为 Lens 需要 Essentials 或 Pro 的记录数据库。Agent Mesh 是在你自己的应用中运行的库。在免费的 30 MB 数据库上创建了一个 Agent Memory 服务，发放了两个 API 密钥，并通过 `redis-iris` 1.0.1 SDK 和 `iris` CLI 使用：健康检查、写入记忆、对话、后台提取和召回都正常。“5,000 条免费消息”在控制台的任何地方（Iris 页面、Usage、Billing）都没有显示，所以这个实验用了多少条未知。
 
 ### 实验：免费数据库上的 Agent Memory
 
@@ -495,6 +545,31 @@ Context Surface 是一个数据模型：实体映射到键模板，字段有类�
 
 提案会留在收件箱中，直到有人接受并发布。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
+### Agent Mesh 和 Lens（beta）
+
+**已在 redis-iris 1.0.1、本地 Docker 中的 Redis 8.10.3 上验证，2026-11-07。** Agent Mesh 把 agent 的进度事件保存在 Redis stream 中，因此断开连接的客户端可以回到任意服务器，收到错过的内容。文档中写道："When the client reconnects, it can receive retained updates after its last event cursor." `XADD IDMP` 需要 Redis 8.6.2 及以上（[Deep Dive]({{ '/deep-dive/' | relative_url }})），并且 "Cloud, Enterprise, failover recovery, and sustained capacity remain unqualified for this beta." 实验对每种集成都运行两个副本，并把客户端从一个副本切换到另一个。
+
+| 实验 | 结果 |
+|---|---|
+| FastAPI SSE：从副本 A 读取第 1–5 步，离开 3 秒，用 `Last-Event-ID` 重连到副本 B | B 重放第 6–11 步，然后实时发送第 12–20 步；20 步各恰好一次 |
+| 在最终游标处重连 / 格式错误的游标 / 未知的运行 | HTTP 204 / 422 `invalid_cursor` / 404 |
+| 一次运行在 Redis 中留下什么 | 一个 stream，`XLEN 22`，IDMP 开启，完成后 TTL 120 秒 |
+| 运行中途杀掉副本 A，SDK 默认设置 | 没有最终事件：B 每 35 秒关闭并重新打开一次连接 |
+| 同样情况，`REDIS_SOCKET_TIMEOUT=30` | 沉默超时后 `stream.end` `producer_lost` |
+| A2A：从 A 获取 Task 版本 1–4，用 `Last-Event-ID: 4` 重连到 B | 版本 5–12 和已完成状态；十个 artifact，各一次 |
+
+**发现的唯一陷阱：** redis-py 8.1.0 默认设置 5 秒的套接字超时，比 SDK 的 15 秒阻塞读取更短。SDK 把每次超时都当作 Redis 故障，因此永远不会宣告生产者丢失。请把 `REDIS_SOCKET_TIMEOUT` 设置为大于心跳间隔。
+
+Lens 通过 OpenTelemetry 追踪 agent 的每一轮。在 Redis Cloud 上，它的记录数据库必须是 "A Redis Cloud Essentials or Pro database"，所以在免费计划上 **New Lens** 是禁用的。改为指向回环接收器后，SDK 每轮发送一个 OTLP/HTTP 请求。该轮的 span 包括无需额外代码就被记录的 Agent Memory 搜索，以及应用自己的检索和一个自定义步骤。设置 `IRIS_LENS_CAPTURE_CONTENT=false` 后，查询和文档文本被丢弃，只剩 ID、分数和哈希。文档： [Agent Mesh](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/)、[FastAPI SSE SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/fastapi-sse-sdk/)、[A2A SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/a2a-sdk/)、[Lens](https://redis.io/docs/latest/develop/ai/context-engine/lens/)、[Create Lens](https://redis.io/docs/latest/operate/iris/lens/create-lens/)。实验： [`iris/06-lens-and-mesh`](https://github.com/litkhai/notes-on-redis/tree/main/iris/06-lens-and-mesh)。
+
+<p class="shot"><img src="{{ '/assets/img/iris/29-lens-free-plan.webp' | relative_url }}" width="1440" height="1351" alt="Redis Cloud 控制台中的 Lens 页面，免费计划账户上的 New Lens 按钮为灰色" loading="lazy" decoding="async"></p>
+
+在免费计划上，New Lens 是禁用的。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/30-agent-mesh.webp' | relative_url }}" width="1440" height="1121" alt="控制台中的 Agent Mesh 页面：一个在 Redis 上实现可恢复 SSE 和 A2A 流的库，没有创建按钮" loading="lazy" decoding="async"></p>
+
+Agent Mesh 有页面，但没有可创建的东西：它在你自己的应用内运行。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
+
 ### Iris 对免费数据库的占用
 
 这些服务把数据和连接池放在你所选的数据库中。2026-11-07，Agent Memory、Intent Router、Context Surface 和 Playbook 全部放在免费数据库上，我们这边没有运行任何东西：
@@ -507,9 +582,9 @@ Context Surface 是一个数据模型：实体映射到键模板，字段有类�
 
 在免费计划上，这只给应用程序留下两个连接。在让真实流量与它并存之前，请为 Iris 单独准备一个数据库，或选择连接数更多的计划。
 
-### 尚未涵盖
+### 尚未涉及的内容
 
-Lens 和 Agent Mesh（beta）在仓库的 issue 中有各自的实验。消息消耗量仍是未决问题，要等控制台或账单给出数据。
+Redis Cloud 上的 Lens 在等待 [#8](https://github.com/litkhai/notes-on-redis/issues/8) 中的 Essentials 预算：创建它、Lens UI、回读各轮以及模型调用追踪。在控制台或账单显示出来之前，消息消耗量仍是一个未解的问题。
 
 </div>
 
@@ -518,14 +593,14 @@ Lens 和 Agent Mesh（beta）在仓库的 issue 中有各自的实验。消息�
 ## 日本語
 
 <div class="note" markdown="1">
-**状況：一部実行済み。** Agent Memory、Intent Router、Context Gateway、Agent Playbooks を 2026-11-07 に Redis Cloud の無料プランで実行した（下記）。Lens と Agent Mesh は引き続き [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) の計画である。
+**ステータス：Redis Cloud 上の Lens を除いて実行済み。** Agent Memory、Intent Router、Context Gateway、Agent Playbooks は 2026-11-07 に Redis Cloud の無料プランで、Agent Mesh はローカルの Redis 8.10.3 で実行した（下記）。Lens は Essentials か Pro のデータベースが必要なため、SDK だけを実行した。
 </div>
 
-Redis Iris は Redis の言葉では「AI エージェント向けの本番対応コンテキストエンジン」 — サービス群でありデータベースではなく、その下にあるデータベースが Redis。2026-05-18 公開、2026-11-04 に六つのサービスに: Intent Router、Agent Playbooks、Agent Memory、Context Gateway（GA）、Lens、Agent Mesh（ベータ）。Redis Cloud のマネージド、セルフマネージドはライセンスが必要な Helm チャート。サービスごとにラボ一つ、すべて無料 DB と無料 5,000 メッセージで行い、ラボごとの消費メッセージ数を記録。名前の罠 — Context Retriever → Context Gateway、LangCache と Agent Playbooks — は別の節。2026-11-07 に [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/) で読んだ。
+Redis Iris は、Redis 自身の言葉では "a production-ready context engine for AI agents" — サービスの集まりでありデータベースではなく、その下にあるデータベースが Redis である。2026-05-18 にリリースされ、2026-11-04 に六つのサービスになった：Intent Router、Agent Playbooks、Agent Memory、Context Gateway（GA）、Lens、Agent Mesh（ベータ）。Redis Cloud ではマネージド、セルフマネージドはライセンスが必要な Helm チャート。サービスごとに実習を一つ、すべて無料データベースと無料の 5,000 メッセージで行い、実習ごとに消費したメッセージ数を記録した。名前の落とし穴 — Context Retriever → Context Gateway、LangCache と Agent Playbooks — は別の節で扱う。2026-11-07 に [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/) で読んだ。
 
-### 無料プランで Iris は使えるか？
+### Iris は無料プランで使えるか？
 
-**使える（2026-11-07 時点）。** 無料アカウントでも、サイドバーの Iris サービスにはそれぞれ作成ボタンがある（Agent Memory、Agent Playbooks、Context Gateway、Intent Router、Lens）。Agent Mesh は自分のアプリ内で動くライブラリである。無料の 30 MB データベースに Agent Memory サービスを一つ作り、API キーを二つ発行して、`redis-iris` 1.0.1 SDK と `iris` CLI で使った。ヘルスチェック、記憶の書き込み、会話、バックグラウンド抽出、想起がすべて動いた。「無料 5,000 メッセージ」はコンソールのどこにも（Iris 画面、Usage、Billing）表示されなかったため、この実習で何件使ったかは不明である。
+**使える（2026-11-07 時点）。** 無料アカウントでも Iris の四つのサービスに作成ボタンがある（Agent Memory、Agent Playbooks、Context Gateway、Intent Router）。**New Lens** はグレーで無効になっている。Lens は記録用データベースが Essentials か Pro である必要があるからだ。Agent Mesh は自分のアプリの中で動くライブラリである。無料の 30 MB データベースに Agent Memory サービスを一つ作り、API キーを二つ発行して、`redis-iris` 1.0.1 SDK と `iris` CLI で使った。ヘルスチェック、記憶の書き込み、会話、バックグラウンド抽出、想起がすべて動いた。「無料メッセージ 5,000 件」はコンソールのどこにも（Iris 画面、Usage、Billing）表示されないため、この実習で何件使ったかは分からない。
 
 ### 実習：無料データベース上の Agent Memory
 
@@ -664,6 +739,31 @@ FAQ の二つ目のバージョンは下書きのままで、`faqs publish --ver
 
 提案は、誰かが受け入れて公開するまでトレイで待つ。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
 
+### Agent Mesh と Lens（ベータ）
+
+**確認：redis-iris 1.0.1、ローカル Docker の Redis 8.10.3、2026-11-07。** Agent Mesh はエージェントの進捗イベントを Redis ストリームに保持するので、切断されたクライアントはどのサーバーに戻っても、取りこぼした分を受け取れる。ドキュメントにはこうある："When the client reconnects, it can receive retained updates after its last event cursor." `XADD IDMP` のために Redis 8.6.2 以上が必要で（[Deep Dive]({{ '/deep-dive/' | relative_url }})）、"Cloud, Enterprise, failover recovery, and sustained capacity remain unqualified for this beta." 実習では統合ごとにレプリカを二つ動かし、クライアントを一方から他方へ移した。
+
+| 実験 | 結果 |
+|---|---|
+| FastAPI SSE：レプリカ A でステップ 1–5 を読み、3 秒離れ、`Last-Event-ID` でレプリカ B に再接続 | B が 6–11 を再生し、12–20 をライブで送信。20 ステップすべてがちょうど一回ずつ |
+| 最終カーソル / 不正なカーソル / 未知の実行で再接続 | HTTP 204 / 422 `invalid_cursor` / 404 |
+| 一回の実行が Redis に残すもの | ストリーム一つ、`XLEN 22`、IDMP 有効、完了後 TTL 120 秒 |
+| 実行中にレプリカ A を停止、SDK 既定値 | 最終イベントなし：B が 35 秒ごとに接続を閉じて開き直した |
+| 同じ状況で `REDIS_SOCKET_TIMEOUT=30` | 無通信タイムアウト後に `stream.end` `producer_lost` |
+| A2A：A から Task バージョン 1–4、`Last-Event-ID: 4` で B に再接続 | バージョン 5–12 と完了ステータス。アーティファクト十個が各一回 |
+
+**見つかった罠は一つ：** redis-py 8.1.0 はソケットのタイムアウトを既定で 5 秒にしており、SDK の 15 秒のブロッキング読み取りより短い。SDK はタイムアウトのたびに Redis の障害とみなすので、プロデューサー喪失を宣言しない。`REDIS_SOCKET_TIMEOUT` はハートビート間隔より長く設定する。
+
+Lens は OpenTelemetry でエージェントのターンをトレースする。Redis Cloud では記録用データベースが "A Redis Cloud Essentials or Pro database" でなければならないため、無料プランでは **New Lens** は無効になる。代わりにループバックの受信側を指定すると、SDK はターンごとに OTLP/HTTP リクエストを一つ送った。ターンのスパンには、追加コードなしで記録された Agent Memory の検索、アプリ自身の検索、カスタムステップが含まれていた。`IRIS_LENS_CAPTURE_CONTENT=false` にするとクエリと文書のテキストが落とされ、ID、スコア、ハッシュだけが残った。ドキュメント： [Agent Mesh](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/)、[FastAPI SSE SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/fastapi-sse-sdk/)、[A2A SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/a2a-sdk/)、[Lens](https://redis.io/docs/latest/develop/ai/context-engine/lens/)、[Create Lens](https://redis.io/docs/latest/operate/iris/lens/create-lens/)。実習： [`iris/06-lens-and-mesh`](https://github.com/litkhai/notes-on-redis/tree/main/iris/06-lens-and-mesh)。
+
+<p class="shot"><img src="{{ '/assets/img/iris/29-lens-free-plan.webp' | relative_url }}" width="1440" height="1351" alt="Redis Cloud コンソールの Lens ページ。無料プランのアカウントなので New Lens ボタンがグレーで無効" loading="lazy" decoding="async"></p>
+
+無料プランでは New Lens は無効になっている。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/30-agent-mesh.webp' | relative_url }}" width="1440" height="1121" alt="コンソールの Agent Mesh ページ：Redis 上で再開可能な SSE と A2A のストリームを扱うライブラリ、作成ボタンなし" loading="lazy" decoding="async"></p>
+
+Agent Mesh にはページがあるが、作るものはない。自分のアプリの中で動く。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
+
 ### Iris が無料データベースに与える負荷
 
 サービスは、選んだデータベースにデータとコネクションプールを置きます。Agent Memory、Intent Router、Context Surface、Playbook をすべて無料データベースに置き、こちらでは何も動かしていない 2026-11-07 の状態です。
@@ -678,7 +778,7 @@ FAQ の二つ目のバージョンは下書きのままで、`faqs publish --ver
 
 ### まだ扱っていないこと
 
-Lens と Agent Mesh（beta）の実習は、リポジトリの issue にある。メッセージの消費量は、コンソールか請求に表示されるまで未解決のままである。
+Redis Cloud の Lens は [#8](https://github.com/litkhai/notes-on-redis/issues/8) の Essentials の予算を待っている：作成、Lens UI、ターンの読み戻し、モデル呼び出しのトレース。メッセージの消費量は、コンソールか請求書に表示されるまで未解決の問いのままである。
 
 </div>
 
@@ -687,14 +787,14 @@ Lens と Agent Mesh（beta）の実習は、リポジトリの issue にある�
 ## ภาษาไทย
 
 <div class="note" markdown="1">
-**สถานะ: รันแล้วบางส่วน** Agent Memory, Intent Router, Context Gateway และ Agent Playbooks ถูกรันบนแผนฟรีของ Redis Cloud เมื่อ 2026-11-07 (ด้านล่าง) ส่วน Lens และ Agent Mesh ยังเป็นแผนใน [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)
+**สถานะ: รันแล้ว ยกเว้น Lens บน Redis Cloud** Agent Memory, Intent Router, Context Gateway และ Agent Playbooks รันบนแผนฟรีของ Redis Cloud เมื่อ 2026-11-07 ส่วน Agent Mesh รันบน Redis 8.10.3 ในเครื่อง (ด้านล่าง) Lens ต้องใช้ฐานข้อมูล Essentials หรือ Pro จึงรันได้เฉพาะ SDK
 </div>
 
-Redis Iris ตามคำของ Redis คือ "a production-ready context engine for AI agents" เป็นชุดบริการ ไม่ใช่ฐานข้อมูล โดยมี Redis เป็นฐานข้อมูลอยู่ข้างใต้ เปิดตัวเมื่อ 2026-05-18 และเมื่อ 2026-11-04 กลายเป็นหกบริการ ได้แก่ Intent Router, Agent Playbooks, Agent Memory และ Context Gateway (GA) รวมถึง Lens และ Agent Mesh (beta) ให้บริการแบบจัดการให้บน Redis Cloud ส่วนแบบดูแลเองใช้ Helm chart ซึ่งต้องมีใบอนุญาต มีหนึ่งแล็บต่อหนึ่งบริการ ทั้งหมดใช้ฐานข้อมูลฟรีและข้อความฟรี 5,000 ข้อความ โดยบันทึกจำนวนข้อความที่แต่ละแล็บใช้ไป กับดักเรื่องชื่อ คือ Context Retriever → Context Gateway และ LangCache เทียบกับ Agent Playbooks มีหัวข้อแยกต่างหาก อ่านเมื่อ 2026-11-07 ที่ [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/)
+Redis Iris คือ "a production-ready context engine for AI agents" ตามคำของ Redis เอง — เป็นชุดของบริการ ไม่ใช่ฐานข้อมูล โดยฐานข้อมูลที่อยู่ข้างใต้คือ Redis เปิดตัว 2026-05-18 และเมื่อ 2026-11-04 กลายเป็นหกบริการ: Intent Router, Agent Playbooks, Agent Memory และ Context Gateway (GA) กับ Lens และ Agent Mesh (เบต้า) จัดการบน Redis Cloud หรือติดตั้งเองผ่าน Helm chart ที่ต้องมีไลเซนส์ หนึ่งแล็บต่อหนึ่งบริการ ทั้งหมดใช้ฐานข้อมูลฟรีและ 5,000 ข้อความฟรี พร้อมบันทึกจำนวนข้อความที่แต่ละแล็บใช้ กับดักเรื่องชื่อ — Context Retriever → Context Gateway, LangCache เทียบกับ Agent Playbooks — มีหัวข้อของตัวเอง อ่านเมื่อ 2026-11-07 ที่ [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/)
 
-### ใช้ Iris บนแผนฟรีได้หรือไม่?
+### ใช้ Iris บนแผนฟรีได้ไหม
 
-**ได้ ณ วันที่ 2026-11-07** บนบัญชีฟรี ทุกบริการ Iris ในแถบด้านข้างมีปุ่มสร้าง (Agent Memory, Agent Playbooks, Context Gateway, Intent Router, Lens) ส่วน Agent Mesh เป็นไลบรารีที่รันในแอปของคุณเอง ได้สร้างบริการ Agent Memory หนึ่งรายการบนฐานข้อมูลฟรีขนาด 30 MB ออก API key สองตัว และใช้งานผ่าน SDK `redis-iris` 1.0.1 และ `iris` CLI ตรวจสถานะ เขียนหน่วยความจำ สนทนา การสกัดเบื้องหลัง และการเรียกคืนทำงานได้ทั้งหมด "5,000 ข้อความฟรี" ไม่แสดงที่ใดในคอนโซล (หน้า Iris, Usage, Billing) จึงไม่ทราบว่าแล็บนี้ใช้ไปกี่ข้อความ
+**ได้ ณ วันที่ 2026-11-07** บนบัญชีฟรี บริการ Iris สี่ตัวมีปุ่มสร้าง (Agent Memory, Agent Playbooks, Context Gateway, Intent Router) ส่วน **New Lens** เป็นสีเทากดไม่ได้ เพราะ Lens ต้องใช้ฐานข้อมูลบันทึกแบบ Essentials หรือ Pro Agent Mesh เป็นไลบรารีที่รันในแอปของคุณเอง มีการสร้างบริการ Agent Memory หนึ่งบริการบนฐานข้อมูลฟรีขนาด 30 MB ออก API key สองชุด และใช้ผ่าน SDK `redis-iris` 1.0.1 กับ CLI `iris` ได้แก่ การตรวจสถานะ การเขียนหน่วยความจำ การสนทนา การสกัดเบื้องหลัง และการเรียกคืน ซึ่งทำงานได้ทั้งหมด "5,000 ข้อความฟรี" ไม่ปรากฏที่ใดในคอนโซล (หน้า Iris, Usage, Billing) จึงไม่ทราบว่าแล็บนี้ใช้ไปกี่ข้อความ
 
 ### แล็บ: Agent Memory บนฐานข้อมูลฟรี
 
@@ -833,6 +933,31 @@ FAQ เวอร์ชันที่สองยังเป็นฉบับ�
 
 ข้อเสนอจะรออยู่ในกล่องจนกว่าจะมีคนรับและเผยแพร่ <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
+### Agent Mesh และ Lens (เบต้า)
+
+**ตรวจสอบบน redis-iris 1.0.1 กับ Redis 8.10.3 ใน Docker ในเครื่อง, 2026-11-07** Agent Mesh เก็บอีเวนต์ความคืบหน้าของเอเจนต์ไว้ใน Redis stream ทำให้ไคลเอนต์ที่หลุดการเชื่อมต่อกลับมาที่เซิร์ฟเวอร์ตัวไหนก็ได้และรับสิ่งที่พลาดไป จากเอกสาร: "When the client reconnects, it can receive retained updates after its last event cursor." ต้องใช้ Redis 8.6.2 ขึ้นไปสำหรับ `XADD IDMP` ([Deep Dive]({{ '/deep-dive/' | relative_url }})) และ "Cloud, Enterprise, failover recovery, and sustained capacity remain unqualified for this beta." แล็บรันแต่ละการเชื่อมต่อเป็นสองเรพลิกา และย้ายไคลเอนต์จากตัวหนึ่งไปอีกตัว
+
+| การทดลอง | ผลลัพธ์ |
+|---|---|
+| FastAPI SSE: อ่านขั้นที่ 1–5 จากเรพลิกา A หายไป 3 วินาที แล้วต่อใหม่ไปเรพลิกา B ด้วย `Last-Event-ID` | B ส่งซ้ำขั้นที่ 6–11 แล้วส่งขั้นที่ 12–20 แบบสด ครบ 20 ขั้น ขั้นละหนึ่งครั้งพอดี |
+| ต่อใหม่ที่เคอร์เซอร์สุดท้าย / เคอร์เซอร์ผิดรูปแบบ / run ที่ไม่รู้จัก | HTTP 204 / 422 `invalid_cursor` / 404 |
+| สิ่งที่หนึ่ง run ทิ้งไว้ใน Redis | stream หนึ่งรายการ, `XLEN 22`, เปิด IDMP, TTL 120 วินาทีหลังเสร็จสิ้น |
+| ปิดเรพลิกา A กลางการรัน ใช้ค่าเริ่มต้นของ SDK | ไม่มีอีเวนต์สุดท้าย: B ปิดแล้วเปิดการเชื่อมต่อใหม่ทุก 35 วินาที |
+| เหมือนกัน แต่ใช้ `REDIS_SOCKET_TIMEOUT=30` | `stream.end` `producer_lost` หลังหมดเวลาเงียบ |
+| A2A: Task เวอร์ชัน 1–4 จาก A แล้วต่อใหม่ไป B ด้วย `Last-Event-ID: 4` | เวอร์ชัน 5–12 และสถานะเสร็จสิ้น; อาร์ทิแฟกต์สิบรายการ รายการละหนึ่งครั้ง |
+
+**กับดักข้อเดียวที่พบ:** redis-py 8.1.0 ตั้ง socket timeout เริ่มต้นไว้ 5 วินาที สั้นกว่าการอ่านแบบบล็อกของ SDK ที่ 15 วินาที SDK ถือว่าทุก timeout คือ Redis ล่ม จึงไม่เคยประกาศว่าผู้ผลิตหายไป ให้ตั้ง `REDIS_SOCKET_TIMEOUT` ให้มากกว่าช่วง heartbeat
+
+Lens ติดตามเทิร์นของเอเจนต์ผ่าน OpenTelemetry บน Redis Cloud ฐานข้อมูลบันทึกของมันต้องเป็น "A Redis Cloud Essentials or Pro database" ดังนั้นบนแผนฟรี **New Lens** จึงถูกปิดใช้งาน เมื่อชี้ไปยังตัวรับแบบ loopback แทน SDK ส่งคำขอ OTLP/HTTP หนึ่งรายการต่อเทิร์น span ของเทิร์นประกอบด้วยการค้นหา Agent Memory ที่ถูกบันทึกโดยไม่ต้องเขียนโค้ดเพิ่ม บวกกับการดึงข้อมูลของแอปเองและขั้นตอนแบบกำหนดเอง เมื่อตั้ง `IRIS_LENS_CAPTURE_CONTENT=false` ข้อความของคำค้นและเอกสารจะถูกตัดออก เหลือเพียง ID คะแนน และแฮช เอกสาร: [Agent Mesh](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/), [FastAPI SSE SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/fastapi-sse-sdk/), [A2A SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/a2a-sdk/), [Lens](https://redis.io/docs/latest/develop/ai/context-engine/lens/), [Create Lens](https://redis.io/docs/latest/operate/iris/lens/create-lens/) แล็บ: [`iris/06-lens-and-mesh`](https://github.com/litkhai/notes-on-redis/tree/main/iris/06-lens-and-mesh)
+
+<p class="shot"><img src="{{ '/assets/img/iris/29-lens-free-plan.webp' | relative_url }}" width="1440" height="1351" alt="หน้า Lens ในคอนโซล Redis Cloud ที่ปุ่ม New Lens เป็นสีเทาบนบัญชีแผนฟรี" loading="lazy" decoding="async"></p>
+
+บนแผนฟรี New Lens ถูกปิดใช้งาน <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/30-agent-mesh.webp' | relative_url }}" width="1440" height="1121" alt="หน้า Agent Mesh ในคอนโซล: ไลบรารีสำหรับสตรีม SSE และ A2A ที่กลับมาต่อได้บน Redis ไม่มีปุ่มสร้าง" loading="lazy" decoding="async"></p>
+
+Agent Mesh มีหน้าของตัวเองแต่ไม่มีอะไรให้สร้าง: มันรันอยู่ในแอปของคุณเอง <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
 ### Iris ใช้อะไรจากฐานข้อมูลฟรี
 
 บริการเหล่านี้เก็บข้อมูลและ connection pool ไว้ในฐานข้อมูลที่คุณเลือก เมื่อวางทั้ง Agent Memory, Intent Router, Context Surface และ Playbook ไว้บนฐานข้อมูลฟรี โดยฝั่งเราไม่ได้รันอะไรเลย ณ วันที่ 2026-11-07:
@@ -845,9 +970,9 @@ FAQ เวอร์ชันที่สองยังเป็นฉบับ�
 
 บนแผนฟรี จะเหลือการเชื่อมต่อให้แอปพลิเคชันเพียงสองรายการ ควรให้ Iris มีฐานข้อมูลของตัวเอง หรือใช้แผนที่มีการเชื่อมต่อมากกว่านี้ ก่อนนำทราฟฟิกจริงมาวางไว้ข้างกัน
 
-### ยังไม่ครอบคลุม
+### สิ่งที่ยังไม่ได้ครอบคลุม
 
-Lens และ Agent Mesh (beta) มีแล็บของตัวเองใน issue ของรีโพซิทอรี การใช้ข้อความยังเป็นคำถามที่เปิดอยู่จนกว่าคอนโซลหรือบิลจะแสดงตัวเลข
+Lens บน Redis Cloud รองบประมาณ Essentials ใน [#8](https://github.com/litkhai/notes-on-redis/issues/8) ได้แก่ การสร้าง, UI ของ Lens, การอ่านเทิร์นย้อนกลับ และการติดตามการเรียกโมเดล ปริมาณการใช้ข้อความยังเป็นคำถามที่เปิดอยู่จนกว่าคอนโซลหรือใบเรียกเก็บเงินจะแสดงให้เห็น
 
 </div>
 
@@ -856,14 +981,14 @@ Lens และ Agent Mesh (beta) มีแล็บของตัวเอง�
 ## Bahasa Indonesia
 
 <div class="note" markdown="1">
-**Status: sebagian dijalankan.** Agent Memory, Intent Router, Context Gateway, dan Agent Playbooks dijalankan pada paket gratis Redis Cloud pada 2026-11-07 (di bawah). Lens dan Agent Mesh masih berupa rencana di [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+**Status: dijalankan, kecuali Lens di Redis Cloud.** Agent Memory, Intent Router, Context Gateway, dan Agent Playbooks dijalankan pada paket gratis Redis Cloud pada 2026-11-07, dan Agent Mesh pada Redis 8.10.3 lokal (di bawah). Lens memerlukan basis data Essentials atau Pro, jadi hanya SDK-nya yang dijalankan.
 </div>
 
-Redis Iris, menurut Redis, adalah "a production-ready context engine for AI agents", yaitu kumpulan layanan, bukan basis data; Redis adalah basis data di bawahnya. Diluncurkan 2026-05-18; pada 2026-11-04 menjadi enam layanan: Intent Router, Agent Playbooks, Agent Memory dan Context Gateway (GA), Lens dan Agent Mesh (beta). Dikelola di Redis Cloud; untuk dikelola sendiri tersedia Helm chart yang memerlukan lisensi. Satu lab per layanan, semuanya memakai basis data gratis dan 5.000 pesan gratis, dengan jumlah pesan yang terpakai per lab dicatat. Jebakan penamaan, yaitu Context Retriever → Context Gateway serta LangCache vs Agent Playbooks, dibahas di bagian tersendiri. Dibaca 2026-11-07 di [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/).
+Redis Iris, dalam kata-kata Redis sendiri, adalah "a production-ready context engine for AI agents" — sekumpulan layanan, bukan basis data; Redis adalah basis data di bawahnya. Diluncurkan 2026-05-18; pada 2026-11-04 menjadi enam layanan: Intent Router, Agent Playbooks, Agent Memory, dan Context Gateway (GA), serta Lens dan Agent Mesh (beta). Dikelola di Redis Cloud; dikelola sendiri lewat Helm chart yang memerlukan lisensi. Satu lab per layanan, semuanya pada basis data gratis dan 5.000 pesan gratis, dengan pesan yang terpakai per lab dicatat. Jebakan penamaan — Context Retriever → Context Gateway, LangCache vs Agent Playbooks — mendapat bagiannya sendiri. Dibaca 2026-11-07 di [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/).
 
-### Apakah Iris dapat digunakan pada paket gratis?
+### Apakah Iris bisa dipakai di paket gratis?
 
-**Ya, per 2026-11-07.** Pada akun gratis, setiap layanan Iris di bilah sisi memiliki tombol buat (Agent Memory, Agent Playbooks, Context Gateway, Intent Router, Lens); Agent Mesh adalah pustaka yang berjalan di aplikasi Anda sendiri. Satu layanan Agent Memory dibuat pada basis data gratis 30 MB, diberi dua kunci API, dan digunakan dari SDK `redis-iris` 1.0.1 serta CLI `iris`: pemeriksaan kesehatan, penulisan memori, percakapan, ekstraksi latar belakang, dan pemanggilan kembali semuanya berfungsi. "5.000 pesan gratis" tidak ditampilkan di mana pun di konsol (halaman Iris, Usage, Billing), sehingga jumlah yang dipakai lab ini tidak diketahui.
+**Ya, per 2026-11-07.** Pada akun gratis, empat layanan Iris menyediakan tombol buat (Agent Memory, Agent Playbooks, Context Gateway, Intent Router). **New Lens** berwarna abu-abu dan nonaktif, karena Lens membutuhkan basis data pencatatan Essentials atau Pro. Agent Mesh adalah pustaka yang berjalan di aplikasi Anda sendiri. Satu layanan Agent Memory dibuat pada basis data gratis 30 MB, diberi dua kunci API, dan dipakai dari SDK `redis-iris` 1.0.1 serta CLI `iris`: pemeriksaan kesehatan, penulisan memori, percakapan, ekstraksi latar belakang, dan pemanggilan kembali semuanya berfungsi. "5.000 pesan gratis" tidak ditampilkan di mana pun di konsol (halaman Iris, Usage, Billing), sehingga jumlah yang dipakai lab ini tidak diketahui.
 
 ### Lab: Agent Memory pada basis data gratis
 
@@ -1002,6 +1127,31 @@ Registri menampilkan status penerbitan dan versi terbaru setiap FAQ. <small>Dita
 
 Usulan menunggu di kotak masuk sampai seseorang menerima dan menerbitkannya. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
 
+### Agent Mesh dan Lens (beta)
+
+**Diverifikasi pada redis-iris 1.0.1 dengan Redis 8.10.3 di Docker lokal, 2026-11-07.** Agent Mesh menyimpan peristiwa kemajuan agen dalam stream Redis, sehingga klien yang terputus dapat kembali ke server mana pun dan menerima apa yang terlewat. Dari dokumentasi: "When the client reconnects, it can receive retained updates after its last event cursor." Ia memerlukan Redis 8.6.2+ untuk `XADD IDMP` ([Deep Dive]({{ '/deep-dive/' | relative_url }})), dan "Cloud, Enterprise, failover recovery, and sustained capacity remain unqualified for this beta." Lab menjalankan setiap integrasi sebagai dua replika dan memindahkan klien dari satu ke yang lain.
+
+| Eksperimen | Hasil |
+|---|---|
+| FastAPI SSE: baca langkah 1–5 dari replika A, pergi 3 detik, sambung ulang ke replika B dengan `Last-Event-ID` | B memutar ulang 6–11, lalu 12–20 secara langsung; ke-20 langkah tepat satu kali |
+| Sambung ulang pada kursor terakhir / kursor tidak valid / run tidak dikenal | HTTP 204 / 422 `invalid_cursor` / 404 |
+| Yang ditinggalkan satu run di Redis | satu stream, `XLEN 22`, IDMP aktif, TTL 120 detik setelah selesai |
+| Replika A dimatikan di tengah run, bawaan SDK | tanpa peristiwa akhir: B menutup dan membuka ulang koneksi setiap 35 detik |
+| Sama, dengan `REDIS_SOCKET_TIMEOUT=30` | `stream.end` `producer_lost` setelah batas waktu hening |
+| A2A: Task versi 1–4 dari A, sambung ulang ke B dengan `Last-Event-ID: 4` | versi 5–12 dan status selesai; sepuluh artefak, masing-masing sekali |
+
+**Satu jebakan yang ditemukan:** redis-py 8.1.0 menetapkan batas waktu soket 5 detik secara bawaan, lebih pendek daripada pembacaan pemblokiran 15 detik milik SDK. SDK menganggap setiap batas waktu sebagai gangguan Redis, sehingga tidak pernah menyatakan produsen hilang. Atur `REDIS_SOCKET_TIMEOUT` lebih besar dari interval heartbeat.
+
+Lens melacak giliran agen lewat OpenTelemetry. Di Redis Cloud, basis data pencatatnya harus "A Redis Cloud Essentials or Pro database", sehingga pada paket gratis **New Lens** dinonaktifkan. Setelah diarahkan ke penerima loopback, SDK mengirim satu permintaan OTLP/HTTP per giliran. Span giliran itu mencakup pencarian Agent Memory yang tercatat tanpa kode tambahan, ditambah pengambilan milik aplikasi sendiri dan satu langkah kustom. Dengan `IRIS_LENS_CAPTURE_CONTENT=false`, teks kueri dan dokumen dibuang, menyisakan ID, skor, dan hash. Dokumentasi: [Agent Mesh](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/), [FastAPI SSE SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/fastapi-sse-sdk/), [A2A SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/a2a-sdk/), [Lens](https://redis.io/docs/latest/develop/ai/context-engine/lens/), [Create Lens](https://redis.io/docs/latest/operate/iris/lens/create-lens/). Lab: [`iris/06-lens-and-mesh`](https://github.com/litkhai/notes-on-redis/tree/main/iris/06-lens-and-mesh).
+
+<p class="shot"><img src="{{ '/assets/img/iris/29-lens-free-plan.webp' | relative_url }}" width="1440" height="1351" alt="Halaman Lens di konsol Redis Cloud dengan tombol New Lens berwarna abu-abu pada akun paket gratis" loading="lazy" decoding="async"></p>
+
+Pada paket gratis, New Lens dinonaktifkan. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/30-agent-mesh.webp' | relative_url }}" width="1440" height="1121" alt="Halaman Agent Mesh di konsol: pustaka untuk aliran SSE dan A2A yang dapat dilanjutkan di Redis, tanpa tombol buat" loading="lazy" decoding="async"></p>
+
+Agent Mesh punya halaman tetapi tidak ada yang dibuat: ia berjalan di dalam aplikasi Anda sendiri. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
+
 ### Biaya Iris pada database gratis
 
 Layanan menyimpan data dan connection pool-nya di database yang Anda pilih. Dengan Agent Memory, Intent Router, Context Surface, dan Playbook semuanya di database gratis, tanpa ada yang kami jalankan sendiri, pada 2026-11-07:
@@ -1014,9 +1164,9 @@ Layanan menyimpan data dan connection pool-nya di database yang Anda pilih. Deng
 
 Pada paket gratis, itu menyisakan dua koneksi untuk aplikasi. Berikan Iris database tersendiri, atau paket dengan lebih banyak koneksi, sebelum menempatkan lalu lintas nyata di sampingnya.
 
-### Belum tercakup
+### Yang belum dicakup
 
-Lens dan Agent Mesh (beta) memiliki lab sendiri di issue repositori. Konsumsi pesan tetap menjadi pertanyaan terbuka sampai konsol atau tagihan menunjukkannya.
+Lens di Redis Cloud menunggu anggaran Essentials di [#8](https://github.com/litkhai/notes-on-redis/issues/8): pembuatannya, UI Lens, membaca kembali giliran, dan pelacakan panggilan model. Konsumsi pesan tetap menjadi pertanyaan terbuka sampai konsol atau tagihan menunjukkannya.
 
 </div>
 
@@ -1025,14 +1175,14 @@ Lens dan Agent Mesh (beta) memiliki lab sendiri di issue repositori. Konsumsi pe
 ## Bahasa Melayu
 
 <div class="note" markdown="1">
-**Status: sebahagian dijalankan.** Agent Memory, Intent Router, Context Gateway dan Agent Playbooks dijalankan pada pelan percuma Redis Cloud pada 2026-11-07 (di bawah). Lens dan Agent Mesh masih berupa rancangan dalam [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+**Status: dijalankan, kecuali Lens di Redis Cloud.** Agent Memory, Intent Router, Context Gateway dan Agent Playbooks dijalankan pada pelan percuma Redis Cloud pada 2026-11-07, dan Agent Mesh pada Redis 8.10.3 setempat (di bawah). Lens memerlukan pangkalan data Essentials atau Pro, jadi hanya SDK-nya yang dijalankan.
 </div>
 
-Redis Iris, menurut Redis, ialah "a production-ready context engine for AI agents", iaitu suite perkhidmatan, bukan pangkalan data; Redis ialah pangkalan data di bawahnya. Dilancarkan 2026-05-18; pada 2026-11-04 ia menjadi enam perkhidmatan: Intent Router, Agent Playbooks, Agent Memory dan Context Gateway (GA), Lens dan Agent Mesh (beta). Diurus di Redis Cloud; untuk diurus sendiri tersedia Helm chart yang memerlukan lesen. Satu makmal bagi setiap perkhidmatan, kesemuanya menggunakan pangkalan data percuma dan 5,000 mesej percuma, dengan bilangan mesej yang digunakan setiap makmal direkodkan. Perangkap penamaan, iaitu Context Retriever → Context Gateway serta LangCache vs Agent Playbooks, diberi bahagian tersendiri. Dibaca 2026-11-07 di [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/).
+Redis Iris, dalam kata-kata Redis sendiri, ialah "a production-ready context engine for AI agents" — satu set perkhidmatan, bukan pangkalan data; Redis ialah pangkalan data di bawahnya. Dilancarkan 2026-05-18; pada 2026-11-04 ia menjadi enam perkhidmatan: Intent Router, Agent Playbooks, Agent Memory dan Context Gateway (GA), serta Lens dan Agent Mesh (beta). Diurus di Redis Cloud; urus sendiri melalui Helm chart yang memerlukan lesen. Satu makmal bagi setiap perkhidmatan, semuanya pada pangkalan data percuma dan 5,000 mesej percuma, dengan mesej yang digunakan bagi setiap makmal direkodkan. Perangkap penamaan — Context Retriever → Context Gateway, LangCache lwn Agent Playbooks — diberi bahagiannya sendiri. Dibaca 2026-11-07 di [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/).
 
-### Bolehkah Iris digunakan pada pelan percuma?
+### Adakah Iris boleh digunakan pada pelan percuma?
 
-**Ya, setakat 2026-11-07.** Pada akaun percuma, setiap perkhidmatan Iris di bar sisi mempunyai butang cipta (Agent Memory, Agent Playbooks, Context Gateway, Intent Router, Lens); Agent Mesh ialah pustaka yang berjalan dalam aplikasi anda sendiri. Satu perkhidmatan Agent Memory dicipta pada pangkalan data percuma 30 MB, diberi dua kunci API, dan digunakan daripada SDK `redis-iris` 1.0.1 serta CLI `iris`: semakan kesihatan, penulisan memori, perbualan, pengekstrakan latar belakang dan ingatan semula semuanya berfungsi. "5,000 mesej percuma" tidak dipaparkan di mana-mana dalam konsol (halaman Iris, Usage, Billing), jadi bilangan yang digunakan oleh makmal ini tidak diketahui.
+**Ya, setakat 2026-11-07.** Pada akaun percuma, empat perkhidmatan Iris menawarkan butang cipta (Agent Memory, Agent Playbooks, Context Gateway, Intent Router). **New Lens** berwarna kelabu dan dilumpuhkan, kerana Lens memerlukan pangkalan data rekod Essentials atau Pro. Agent Mesh ialah pustaka yang berjalan dalam aplikasi anda sendiri. Satu perkhidmatan Agent Memory dicipta pada pangkalan data percuma 30 MB, diberi dua kunci API, dan digunakan daripada SDK `redis-iris` 1.0.1 serta CLI `iris`: pemeriksaan kesihatan, penulisan memori, perbualan, pengekstrakan latar belakang dan ingatan semula semuanya berfungsi. "5,000 mesej percuma" tidak dipaparkan di mana-mana dalam konsol (halaman Iris, Usage, Billing), jadi bilangan yang digunakan makmal ini tidak diketahui.
 
 ### Makmal: Agent Memory pada pangkalan data percuma
 
@@ -1171,6 +1321,31 @@ Daftar ini memaparkan status penerbitan dan versi terkini bagi setiap FAQ. <smal
 
 Cadangan menunggu dalam peti masuk sehingga seseorang menerima dan menerbitkannya. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
 
+### Agent Mesh dan Lens (beta)
+
+**Disahkan pada redis-iris 1.0.1 dengan Redis 8.10.3 dalam Docker setempat, 2026-11-07.** Agent Mesh menyimpan peristiwa kemajuan ejen dalam stream Redis, supaya klien yang terputus sambungan boleh kembali ke mana-mana pelayan dan menerima apa yang terlepas. Daripada dokumentasi: "When the client reconnects, it can receive retained updates after its last event cursor." Ia memerlukan Redis 8.6.2+ untuk `XADD IDMP` ([Deep Dive]({{ '/deep-dive/' | relative_url }})), dan "Cloud, Enterprise, failover recovery, and sustained capacity remain unqualified for this beta." Makmal menjalankan setiap integrasi sebagai dua replika dan memindahkan klien dari satu ke yang lain.
+
+| Eksperimen | Hasil |
+|---|---|
+| FastAPI SSE: baca langkah 1–5 dari replika A, pergi 3 saat, sambung semula ke replika B dengan `Last-Event-ID` | B memainkan semula 6–11, kemudian 12–20 secara langsung; kesemua 20 langkah tepat sekali |
+| Sambung semula pada kursor akhir / kursor tidak sah / run tidak dikenali | HTTP 204 / 422 `invalid_cursor` / 404 |
+| Apa yang ditinggalkan satu run dalam Redis | satu stream, `XLEN 22`, IDMP hidup, TTL 120 saat selepas selesai |
+| Replika A dimatikan di tengah run, lalai SDK | tiada peristiwa akhir: B menutup dan membuka semula sambungan setiap 35 saat |
+| Sama, dengan `REDIS_SOCKET_TIMEOUT=30` | `stream.end` `producer_lost` selepas had masa senyap |
+| A2A: Task versi 1–4 dari A, sambung semula ke B dengan `Last-Event-ID: 4` | versi 5–12 dan status selesai; sepuluh artifak, setiap satu sekali |
+
+**Satu perangkap yang ditemui:** redis-py 8.1.0 menetapkan had masa soket 5 saat secara lalai, lebih pendek daripada bacaan menyekat 15 saat milik SDK. SDK menganggap setiap had masa sebagai gangguan Redis, jadi ia tidak pernah mengisytiharkan pengeluar hilang. Tetapkan `REDIS_SOCKET_TIMEOUT` melebihi sela heartbeat.
+
+Lens menjejak giliran ejen melalui OpenTelemetry. Di Redis Cloud, pangkalan data rekodnya mesti "A Redis Cloud Essentials or Pro database", jadi pada pelan percuma **New Lens** dilumpuhkan. Setelah diarahkan ke penerima loopback, SDK menghantar satu permintaan OTLP/HTTP bagi setiap giliran. Span giliran itu termasuk carian Agent Memory yang direkodkan tanpa kod tambahan, serta pengambilan milik aplikasi sendiri dan satu langkah tersuai. Dengan `IRIS_LENS_CAPTURE_CONTENT=false`, teks pertanyaan dan dokumen dibuang, meninggalkan ID, skor dan hash. Dokumentasi: [Agent Mesh](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/), [FastAPI SSE SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/fastapi-sse-sdk/), [A2A SDK guide](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/a2a-sdk/), [Lens](https://redis.io/docs/latest/develop/ai/context-engine/lens/), [Create Lens](https://redis.io/docs/latest/operate/iris/lens/create-lens/). Makmal: [`iris/06-lens-and-mesh`](https://github.com/litkhai/notes-on-redis/tree/main/iris/06-lens-and-mesh).
+
+<p class="shot"><img src="{{ '/assets/img/iris/29-lens-free-plan.webp' | relative_url }}" width="1440" height="1351" alt="Halaman Lens dalam konsol Redis Cloud dengan butang New Lens berwarna kelabu pada akaun pelan percuma" loading="lazy" decoding="async"></p>
+
+Pada pelan percuma, New Lens dilumpuhkan. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/iris/30-agent-mesh.webp' | relative_url }}" width="1440" height="1121" alt="Halaman Agent Mesh dalam konsol: pustaka untuk aliran SSE dan A2A yang boleh disambung semula pada Redis, tanpa butang cipta" loading="lazy" decoding="async"></p>
+
+Agent Mesh mempunyai halaman tetapi tiada apa yang perlu dicipta: ia berjalan di dalam aplikasi anda sendiri. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
+
 ### Kos Iris pada pangkalan data percuma
 
 Perkhidmatan menyimpan data dan connection pool mereka dalam pangkalan data yang anda pilih. Dengan Agent Memory, Intent Router, Context Surface dan Playbook semuanya pada pangkalan data percuma, tanpa sebarang perkara kami berjalan sendiri, pada 2026-11-07:
@@ -1183,8 +1358,8 @@ Perkhidmatan menyimpan data dan connection pool mereka dalam pangkalan data yang
 
 Pada pelan percuma, itu hanya meninggalkan dua sambungan untuk aplikasi. Berikan Iris pangkalan data sendiri, atau pelan dengan lebih banyak sambungan, sebelum meletakkan trafik sebenar di sebelahnya.
 
-### Belum diliputi
+### Yang belum diliputi
 
-Lens dan Agent Mesh (beta) mempunyai makmal tersendiri dalam isu repositori. Penggunaan mesej kekal sebagai persoalan terbuka sehingga konsol atau bil menunjukkannya.
+Lens di Redis Cloud menunggu bajet Essentials di [#8](https://github.com/litkhai/notes-on-redis/issues/8): mencipta, UI Lens, membaca semula giliran dan penjejakan panggilan model. Penggunaan mesej kekal sebagai soalan terbuka sehingga konsol atau bil menunjukkannya.
 
 </div>
