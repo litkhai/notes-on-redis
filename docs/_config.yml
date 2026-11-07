@@ -38,6 +38,9 @@ nav:
   - { title: Overview, url: /, group: start }
   - { title: Setup, url: /setup/, group: start }
 
+  # How it is deployed / 배치
+  - { title: Architecture, url: /architecture/, group: architecture }
+
   # The product tracks / 제품 트랙
   - { title: Redis Cloud, url: /cloud/, group: products }
   - { title: Enterprise, url: /enterprise/, group: products }
