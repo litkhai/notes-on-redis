@@ -5,6 +5,7 @@
  "theme": "dark",
  "viewport": [1440, 765],
  "shots": [
-  { "name": "31-gateway-full-exposure", "path": "iris/context-gateway/gw_e659c251b49c4645ae7484db8f0b42fa/configuration", "tall": true, "waitMs": 9000 }
+  { "name": "31-gateway-full-exposure", "path": "iris/context-gateway/gw_e659c251b49c4645ae7484db8f0b42fa/configuration", "tall": true, "waitMs": 9000 },
+  { "name": "34-gateway-mcp-redis-upstream", "path": "iris/context-gateway/gw_e659c251b49c4645ae7484db8f0b42fa/upstreams/up_13c8f9b64e5a4f3394a639148dfeedd4/configuration", "tall": true, "waitMs": 9000 }
  ]
 }
