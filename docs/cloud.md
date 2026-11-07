@@ -172,6 +172,19 @@ The account menu switches between accounts and opens the user profile. <small>Ca
 
 One connection without pipelining reached 249 ops/s, which is the round trip, not the plan. The ops/s figure looks like a sizing guide that the console reports against, not a throttle; that may change without notice, so do not build on the overage.
 
+### Lab: the REST API on the free plan
+
+**Verified on the Redis Cloud REST API v1, free plan, 2026-11-07.** Turn on **Enable API**, create a user key, and send the account key (`x-api-key`) and the user key (`x-api-secret-key`) on every call. From the docs: "All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously".
+
+| Call | Result |
+|---|---|
+| `GET /v1/fixed/subscriptions` | HTTP 200 in about 300 ms: 30 MB, 30 connections, one database, no replication, persistence or backups |
+| `GET /v1/fixed/plans?provider=AWS` | 21 Seoul plans, $0 for 30 MB to $240 a month for 12 GB; 1 GB is $22 to $27 |
+| `PUT` the connections alert 80 → 95 → 80 | HTTP 202 and a `taskId`; the task went `processing-in-progress` → `processing-completed` |
+| `POST` a second database | also HTTP 202; the task ended in `processing-error`, `FIXED_DATABASE_FIXED_SUBSCRIPTION_REACHED_MAX_DATABASES_COUNT` |
+
+Two things to know before writing a client. Check the task, not the HTTP status: a refused request still returns 202. And `alerts` replaces the whole list. Sending only the connections alert switched the dataset-size alert off, as the system log showed; it was restored at once. Docs: [REST API](https://redis.io/docs/latest/operate/rc/api/), [API lifecycle](https://redis.io/docs/latest/operate/rc/api/get-started/process-lifecycle/). Lab: [`cloud/04-rest-api`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/04-rest-api).
+
 ### First-week checklist
 
 - Set a **CIDR allow list**: the free database starts at 0.0.0.0/0. **TLS** cannot be turned on on the free plan (the API refuses with `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`), so keep test data only, or move to a paid plan and turn TLS on there.
@@ -183,7 +196,7 @@ One connection without pipelining reached 249 ops/s, which is the round trip, no
 
 ### Not covered yet
 
-Essentials in Seoul with replication, persistence, backups and RBAC, the REST API lab, and Pro Active-Active are separate labs with their own issues in the repository.
+Essentials in Seoul with replication, persistence, backups and RBAC, and Pro Active-Active are separate labs with their own issues in the repository.
 
 </div>
 
@@ -353,6 +366,19 @@ Settings: 계정 정보, 사업자 연락처, MFA 강제(기본 꺼짐), TLS 클
 
 파이프라인 없이 연결 하나로는 249 ops/s였다. 이것은 플랜이 아니라 왕복 시간 때문이다. ops/s 수치는 제한이 아니라 콘솔이 비교해 보여 주는 크기 기준으로 보인다. 예고 없이 바뀔 수 있으니 초과 처리량에 기대어 설계하지 말 것.
 
+### 실습: 무료 플랜의 REST API
+
+**확인: Redis Cloud REST API v1, 무료 플랜, 2026-11-07.** **Enable API**를 켜고 사용자 키를 만든 뒤, 호출마다 계정 키(`x-api-key`)와 사용자 키(`x-api-secret-key`)를 보낸다. 문서의 표현: "All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously".
+
+| 호출 | 결과 |
+|---|---|
+| `GET /v1/fixed/subscriptions` | 약 300 ms에 HTTP 200: 30 MB, 커넥션 30개, DB 하나, 복제·영속·백업 없음 |
+| `GET /v1/fixed/plans?provider=AWS` | 서울 플랜 21개, 30 MB $0부터 12 GB 월 $240까지. 1 GB는 $22–27 |
+| 커넥션 알림을 80 → 95 → 80으로 `PUT` | HTTP 202와 `taskId`. 태스크는 `processing-in-progress` → `processing-completed` |
+| 두 번째 DB를 `POST` | 역시 HTTP 202. 태스크가 `processing-error`, `FIXED_DATABASE_FIXED_SUBSCRIPTION_REACHED_MAX_DATABASES_COUNT`로 끝남 |
+
+클라이언트를 짜기 전에 알 것 둘. HTTP 상태가 아니라 태스크를 확인한다. 거절된 요청도 202를 돌려준다. 그리고 `alerts`는 목록 전체를 바꾼다. 커넥션 알림만 보냈더니 데이터셋 크기 알림이 꺼졌고 시스템 로그에 그대로 남았다. 바로 되돌렸다. 문서: [REST API](https://redis.io/docs/latest/operate/rc/api/), [API lifecycle](https://redis.io/docs/latest/operate/rc/api/get-started/process-lifecycle/). 실습: [`cloud/04-rest-api`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/04-rest-api).
+
 ### 첫 주 체크리스트
 
 - **CIDR 허용 목록**을 정한다. 무료 DB는 0.0.0.0/0으로 시작한다. 무료 플랜에서는 **TLS**를 켤 수 없으므로(API가 `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`으로 거절) 시험 데이터만 두거나, 유료 플랜으로 옮겨 거기서 TLS를 켠다.
@@ -364,7 +390,7 @@ Settings: 계정 정보, 사업자 연락처, MFA 강제(기본 꺼짐), TLS 클
 
 ### 아직 다루지 않은 것
 
-서울 Essentials의 복제·영속·백업·RBAC, REST API 실습, Pro Active-Active는 저장소에 각자의 이슈가 있는 별도 실습이다.
+서울 Essentials의 복제·영속·백업·RBAC와 Pro Active-Active는 저장소에 각자의 이슈가 있는 별도 실습이다.
 
 </div>
 
@@ -534,6 +560,19 @@ Settings：账户信息、业务联系人、MFA enforcement（默认关闭）、
 
 不使用 pipeline 的单个连接达到 249 ops/s，这是往返时间决定的，与计划无关。ops/s 的数值更像是控制台用来对照显示的规格参考，而不是限流；这一点可能会在没有通知的情况下改变，所以不要依赖超出限额的行为。
 
+### 实验：免费计划上的 REST API
+
+**已在 Redis Cloud REST API v1 上验证（免费计划），2026-11-07。** 打开 **Enable API**，创建用户密钥，并在每次调用中同时发送账户密钥（`x-api-key`）和用户密钥（`x-api-secret-key`）。文档中写道："All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously"。
+
+| 调用 | 结果 |
+|---|---|
+| `GET /v1/fixed/subscriptions` | HTTP 200，约 300 ms：30 MB、30 个连接、一个数据库，没有复制、持久化或备份 |
+| `GET /v1/fixed/plans?provider=AWS` | 首尔有 21 个计划，从 30 MB 的 $0 到 12 GB 的每月 $240；1 GB 为 $22 到 $27 |
+| `PUT` 连接数告警 80 → 95 → 80 | HTTP 202 和一个 `taskId`；任务从 `processing-in-progress` 变为 `processing-completed` |
+| `POST` 创建第二个数据库 | 同样是 HTTP 202；任务以 `processing-error` 结束，`FIXED_DATABASE_FIXED_SUBSCRIPTION_REACHED_MAX_DATABASES_COUNT` |
+
+编写客户端之前有两点需要了解。要检查任务，而不是 HTTP 状态：被拒绝的请求同样返回 202。另外 `alerts` 会替换整个列表。只发送连接数告警会关闭数据集大小告警，系统日志中可以看到这一点；已立即恢复。文档：[REST API](https://redis.io/docs/latest/operate/rc/api/)、[API lifecycle](https://redis.io/docs/latest/operate/rc/api/get-started/process-lifecycle/)。实验：[`cloud/04-rest-api`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/04-rest-api)。
+
 ### 第一周检查清单
 
 - 设置 **CIDR allow list**：免费数据库默认为 0.0.0.0/0。免费计划无法开启 **TLS**（API 会以 `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN` 拒绝），所以只放测试数据，或者升级到付费计划并在那里开启 TLS。
@@ -545,7 +584,7 @@ Settings：账户信息、业务联系人、MFA enforcement（默认关闭）、
 
 ### 尚未涵盖
 
-Essentials 首尔区域的复制、持久化、备份和 RBAC，REST API 实验，以及 Pro Active-Active，都是独立的实验，在仓库中各有自己的 issue。
+首尔的 Essentials（带复制、持久化、备份和 RBAC）以及 Pro Active-Active 是各自独立的实验，在仓库中都有对应的 issue。
 
 </div>
 
@@ -715,6 +754,19 @@ Settings：アカウント情報、ビジネス連絡先、MFA enforcement（デ
 
 pipeline を使わない 1 接続では 249 ops/s で、これは往復時間によるもので、プランによるものではありません。ops/s の値は、コンソールが比較表示する目安のサイズ指標であって、スロットルではないようです。予告なく変わる可能性があるため、超過を前提に作らないでください。
 
+### ラボ：無料プランでの REST API
+
+**Redis Cloud REST API v1（無料プラン）で検証、2026-11-07。** **Enable API** をオンにしてユーザーキーを作成し、すべての呼び出しでアカウントキー（`x-api-key`）とユーザーキー（`x-api-secret-key`）の両方を送ります。ドキュメントには次のようにあります："All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously"。
+
+| 呼び出し | 結果 |
+|---|---|
+| `GET /v1/fixed/subscriptions` | HTTP 200、約 300 ms：30 MB、30 接続、データベース 1 つ、レプリケーション・永続化・バックアップなし |
+| `GET /v1/fixed/plans?provider=AWS` | ソウルのプランは 21 種類で、30 MB の $0 から 12 GB の月 $240 まで。1 GB は $22 から $27 |
+| 接続数アラートを `PUT` で 80 → 95 → 80 | HTTP 202 と `taskId`。タスクは `processing-in-progress` から `processing-completed` に進んだ |
+| 2 つ目のデータベースを `POST` | こちらも HTTP 202。タスクは `processing-error` で終了：`FIXED_DATABASE_FIXED_SUBSCRIPTION_REACHED_MAX_DATABASES_COUNT` |
+
+クライアントを書く前に知っておくべき点が 2 つあります。HTTP ステータスではなくタスクを確認してください。拒否されたリクエストでも 202 が返ります。また、`alerts` はリスト全体を置き換えます。接続数アラートだけを送ったところ、システムログのとおりデータセットサイズのアラートがオフになりました。すぐに元に戻しました。ドキュメント：[REST API](https://redis.io/docs/latest/operate/rc/api/)、[API lifecycle](https://redis.io/docs/latest/operate/rc/api/get-started/process-lifecycle/)。ラボ：[`cloud/04-rest-api`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/04-rest-api)。
+
 ### 最初の 1 週間のチェックリスト
 
 - **CIDR allow list** を設定する：無料データベースは 0.0.0.0/0 で始まります。無料プランでは **TLS** をオンにできない（API は `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN` で拒否します）ため、テストデータだけを置くか、有料プランに移ってそこで TLS をオンにします。
@@ -724,9 +776,9 @@ pipeline を使わない 1 接続では 249 ops/s で、これは往復時間に
 - 参加者が増えたら、Settings で **MFA enforcement** をオンにする。
 - **API** を有効にした場合、使わなくなったユーザーキーは削除する：システムログには、呼び出しごとにそのキー名が記録されます。
 
-### まだ扱っていないもの
+### まだ扱っていないこと
 
-ソウルの Essentials でのレプリケーション、永続化、バックアップ、RBAC、REST API のラボ、Pro Active-Active は、それぞれ別のラボで、リポジトリに個別の issue があります。
+ソウルの Essentials（レプリケーション、永続化、バックアップ、RBAC 付き）と Pro Active-Active は別のラボで、それぞれリポジトリに専用の issue があります。
 
 </div>
 
@@ -896,6 +948,19 @@ Settings: ข้อมูลบัญชี ผู้ติดต่อทาง
 
 การเชื่อมต่อเดียวที่ไม่ใช้ pipeline ได้ 249 ops/s ซึ่งเป็นผลจากเวลาไป-กลับ ไม่ใช่จากแผน ตัวเลข ops/s ดูเป็นแนวทางกำหนดขนาดที่คอนโซลใช้รายงานเทียบ ไม่ใช่ตัวจำกัดอัตรา ซึ่งอาจเปลี่ยนโดยไม่แจ้งล่วงหน้า จึงไม่ควรสร้างระบบโดยพึ่งการใช้เกินขีดจำกัด
 
+### Lab: REST API บนแผนฟรี
+
+**ตรวจสอบบน Redis Cloud REST API v1 (แผนฟรี) เมื่อ 2026-11-07** เปิด **Enable API** สร้าง user key แล้วส่ง account key (`x-api-key`) และ user key (`x-api-secret-key`) ในทุกการเรียก เอกสารระบุว่า: "All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously"
+
+| Call | Result |
+|---|---|
+| `GET /v1/fixed/subscriptions` | HTTP 200 ใช้เวลาประมาณ 300 ms: 30 MB, 30 การเชื่อมต่อ, หนึ่งฐานข้อมูล, ไม่มี replication, persistence หรือ backup |
+| `GET /v1/fixed/plans?provider=AWS` | มี 21 แผนที่โซล ตั้งแต่ $0 สำหรับ 30 MB ถึง $240 ต่อเดือนสำหรับ 12 GB; 1 GB อยู่ที่ $22 ถึง $27 |
+| `PUT` การแจ้งเตือนจำนวนการเชื่อมต่อ 80 → 95 → 80 | HTTP 202 และ `taskId`; งานเปลี่ยนจาก `processing-in-progress` เป็น `processing-completed` |
+| `POST` ฐานข้อมูลที่สอง | ได้ HTTP 202 เช่นกัน; งานจบด้วย `processing-error`, `FIXED_DATABASE_FIXED_SUBSCRIPTION_REACHED_MAX_DATABASES_COUNT` |
+
+สองเรื่องที่ควรรู้ก่อนเขียนไคลเอนต์ ให้ตรวจสอบงาน (task) ไม่ใช่สถานะ HTTP: คำขอที่ถูกปฏิเสธก็ยังคืน 202 และ `alerts` จะแทนที่ทั้งรายการ การส่งเฉพาะการแจ้งเตือนจำนวนการเชื่อมต่อทำให้การแจ้งเตือนขนาดชุดข้อมูลถูกปิด ดังที่ system log แสดงไว้ และได้คืนค่าทันที เอกสาร: [REST API](https://redis.io/docs/latest/operate/rc/api/), [API lifecycle](https://redis.io/docs/latest/operate/rc/api/get-started/process-lifecycle/) Lab: [`cloud/04-rest-api`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/04-rest-api)
+
 ### รายการตรวจสอบสัปดาห์แรก
 
 - ตั้ง **CIDR allow list**: ฐานข้อมูลฟรีเริ่มต้นที่ 0.0.0.0/0 แผนฟรีเปิด **TLS** ไม่ได้ (API ปฏิเสธด้วย `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`) จึงควรเก็บเฉพาะข้อมูลทดสอบ หรือย้ายไปใช้แผนแบบชำระเงินแล้วเปิด TLS ที่นั่น
@@ -905,9 +970,9 @@ Settings: ข้อมูลบัญชี ผู้ติดต่อทาง
 - เปิด **MFA enforcement** ใน Settings เมื่อมีคนเข้าร่วมมากขึ้น
 - หากเปิดใช้ **API** ให้ลบ user key ที่ไม่ใช้แล้ว: system log ระบุชื่อ key ในทุกการเรียกที่ key นั้นทำ
 
-### ที่ยังไม่ครอบคลุม
+### ยังไม่ครอบคลุม
 
-Essentials ใน Seoul พร้อม replication, persistence, backup และ RBAC, lab ของ REST API และ Pro Active-Active เป็น lab แยกต่างหาก โดยมี issue ของตัวเองใน repository
+Essentials ที่โซลพร้อม replication, persistence, backup และ RBAC รวมถึง Pro Active-Active เป็น lab แยกต่างหาก โดยแต่ละอันมี issue ของตัวเองในรีโพซิทอรี
 
 </div>
 
@@ -1077,6 +1142,19 @@ Menu akun beralih antar akun dan membuka profil pengguna. <small>Diambil pada 20
 
 Satu koneksi tanpa pipeline mencapai 249 ops/s, yang ditentukan oleh round trip, bukan oleh paket. Angka ops/s tampaknya merupakan panduan ukuran yang dilaporkan konsol, bukan pembatas laju; hal ini dapat berubah tanpa pemberitahuan, jadi jangan membangun sesuatu di atas kelebihan tersebut.
 
+### Lab: REST API pada paket gratis
+
+**Diverifikasi pada Redis Cloud REST API v1, paket gratis, 2026-11-07.** Aktifkan **Enable API**, buat user key, lalu kirim account key (`x-api-key`) dan user key (`x-api-secret-key`) pada setiap panggilan. Dari dokumentasi: "All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously".
+
+| Call | Result |
+|---|---|
+| `GET /v1/fixed/subscriptions` | HTTP 200 dalam sekitar 300 ms: 30 MB, 30 koneksi, satu database, tanpa replikasi, persistensi, atau backup |
+| `GET /v1/fixed/plans?provider=AWS` | 21 paket di Seoul, $0 untuk 30 MB hingga $240 per bulan untuk 12 GB; 1 GB seharga $22 hingga $27 |
+| `PUT` alert koneksi 80 → 95 → 80 | HTTP 202 dan sebuah `taskId`; task berpindah dari `processing-in-progress` ke `processing-completed` |
+| `POST` database kedua | juga HTTP 202; task berakhir dengan `processing-error`, `FIXED_DATABASE_FIXED_SUBSCRIPTION_REACHED_MAX_DATABASES_COUNT` |
+
+Dua hal yang perlu diketahui sebelum menulis klien. Periksa task, bukan status HTTP: permintaan yang ditolak tetap mengembalikan 202. Dan `alerts` mengganti seluruh daftar. Mengirim hanya alert koneksi mematikan alert ukuran dataset, seperti yang ditunjukkan log sistem; alert itu segera dipulihkan. Dokumentasi: [REST API](https://redis.io/docs/latest/operate/rc/api/), [API lifecycle](https://redis.io/docs/latest/operate/rc/api/get-started/process-lifecycle/). Lab: [`cloud/04-rest-api`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/04-rest-api).
+
 ### Daftar periksa minggu pertama
 
 - Atur **CIDR allow list**: database gratis dimulai dengan 0.0.0.0/0. **TLS** tidak dapat diaktifkan pada paket gratis (API menolaknya dengan `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`), jadi simpan hanya data uji, atau pindah ke paket berbayar dan aktifkan TLS di sana.
@@ -1088,7 +1166,7 @@ Satu koneksi tanpa pipeline mencapai 249 ops/s, yang ditentukan oleh round trip,
 
 ### Belum dibahas
 
-Essentials di Seoul dengan replikasi, persistence, backup, dan RBAC, lab REST API, dan Pro Active-Active adalah lab terpisah dengan issue masing-masing di repositori.
+Essentials di Seoul dengan replikasi, persistensi, backup, dan RBAC, serta Pro Active-Active adalah lab terpisah dengan issue masing-masing di repositori.
 
 </div>
 
@@ -1258,6 +1336,19 @@ Menu akaun bertukar antara akaun dan membuka profil pengguna. <small>Ditangkap p
 
 Satu sambungan tanpa pipeline mencapai 249 ops/s, iaitu round trip, bukan pelan. Angka ops/s kelihatan seperti panduan saiz yang dilaporkan oleh konsol, bukan pendikit; ini mungkin berubah tanpa notis, jadi jangan membina sesuatu berdasarkan lebihan itu.
 
+### Makmal: REST API pada pelan percuma
+
+**Disahkan pada Redis Cloud REST API v1, pelan percuma, 2026-11-07.** Hidupkan **Enable API**, cipta user key, dan hantar account key (`x-api-key`) serta user key (`x-api-secret-key`) pada setiap panggilan. Daripada dokumentasi: "All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously".
+
+| Call | Result |
+|---|---|
+| `GET /v1/fixed/subscriptions` | HTTP 200 dalam kira-kira 300 ms: 30 MB, 30 sambungan, satu pangkalan data, tiada replikasi, kegigihan atau sandaran |
+| `GET /v1/fixed/plans?provider=AWS` | 21 pelan di Seoul, $0 untuk 30 MB hingga $240 sebulan untuk 12 GB; 1 GB berharga $22 hingga $27 |
+| `PUT` amaran sambungan 80 → 95 → 80 | HTTP 202 dan satu `taskId`; tugasan beralih daripada `processing-in-progress` kepada `processing-completed` |
+| `POST` pangkalan data kedua | juga HTTP 202; tugasan berakhir dengan `processing-error`, `FIXED_DATABASE_FIXED_SUBSCRIPTION_REACHED_MAX_DATABASES_COUNT` |
+
+Dua perkara yang perlu diketahui sebelum menulis klien. Semak tugasan, bukan status HTTP: permintaan yang ditolak masih mengembalikan 202. Dan `alerts` menggantikan keseluruhan senarai. Menghantar hanya amaran sambungan telah mematikan amaran saiz set data, seperti yang ditunjukkan oleh log sistem; ia dipulihkan serta-merta. Dokumentasi: [REST API](https://redis.io/docs/latest/operate/rc/api/), [API lifecycle](https://redis.io/docs/latest/operate/rc/api/get-started/process-lifecycle/). Makmal: [`cloud/04-rest-api`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/04-rest-api).
+
 ### Senarai semak minggu pertama
 
 - Tetapkan **CIDR allow list**: pangkalan data percuma bermula dengan 0.0.0.0/0. **TLS** tidak boleh dihidupkan pada pelan percuma (API menolaknya dengan `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`), jadi simpan data ujian sahaja, atau beralih ke pelan berbayar dan hidupkan TLS di sana.
@@ -1269,6 +1360,6 @@ Satu sambungan tanpa pipeline mencapai 249 ops/s, iaitu round trip, bukan pelan.
 
 ### Belum diliputi
 
-Essentials di Seoul dengan replikasi, persistence, sandaran dan RBAC, makmal REST API, dan Pro Active-Active ialah makmal berasingan dengan isu masing-masing dalam repositori.
+Essentials di Seoul dengan replikasi, kegigihan, sandaran dan RBAC, serta Pro Active-Active ialah makmal berasingan dengan isu masing-masing dalam repositori.
 
 </div>
