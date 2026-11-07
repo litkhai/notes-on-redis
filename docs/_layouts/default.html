@@ -7,8 +7,8 @@
 <meta name="description" content="{{ page.description | default: site.description }}">
 <meta name="theme-color" content="#06111a">
 {%- comment -%} Link previews (messengers, social). The image is docs/assets/og/og.png, rendered from og.html by scripts/render-og.mjs. {%- endcomment -%}
-{%- assign og_title = page.title | default: site.title -%}
-{%- if page.title and page.url != "/" %}{% assign og_title = page.title | append: " · " | append: site.title %}{% endif %}
+{%- if page.url == "/" or page.title == nil -%}{%- assign og_title = site.title -%}
+{%- else -%}{%- assign og_title = page.title | append: " · " | append: site.title -%}{%- endif -%}
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="{{ site.title }}">
 <meta property="og:title" content="{{ og_title }}">
