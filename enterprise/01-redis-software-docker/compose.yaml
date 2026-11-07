@@ -1,0 +1,14 @@
+# Single-node Redis Software (Redis Enterprise) for enterprise/01. Ports on 127.0.0.1 only:
+# 18443 Cluster Manager UI, 19443 REST API, 12000-12009 databases.
+# 단일 노드 Redis Software. 포트는 127.0.0.1에만 연다.
+name: nor-rs
+services:
+  rs:
+    image: redislabs/redis:8.2.6-25.21
+    container_name: nor-rs
+    hostname: rs1
+    cap_add: [SYS_RESOURCE]
+    ports:
+      - "127.0.0.1:18443:8443"
+      - "127.0.0.1:19443:9443"
+      - "127.0.0.1:12000-12009:12000-12009"
