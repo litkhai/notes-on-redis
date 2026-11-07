@@ -28,7 +28,7 @@ documentation without one.
 ### 📁 Repository Structure
 
 ```
-redis-hols/
+notes-on-redis/
 ├── setup/           # ← Start here
 ├── local/           # Redis Open Source in Docker
 ├── cloud/           # Redis Cloud console, plans, REST API, Active-Active
@@ -43,7 +43,7 @@ redis-hols/
 
 | Track | Status | Contents |
 |---|---|---|
-| [`design/`](./design) | ✅ v0 written 2026-11-07 | Site map, page designs, budget, order of work |
+| [`design/`](./design) | ✅ v0 | Site map, page designs, budget, order of work |
 | everything else | ⬜ Not started | Directories are created with their first lab — see the design |
 
 ### How This Repository Works
@@ -72,7 +72,7 @@ followed menu by menu with one masked screenshot per screen, and a first-week ch
 
 [`docs/`](./docs) is built by Jekyll and will be deployed to [redis.litkhai.dev](https://redis.litkhai.dev)
 by Vercel on every push to `main` (project root directory `docs/`, settings in
-[`docs/vercel.json`](./docs/vercel.json)). `litkhai.github.io/redis-hols` will publish a
+[`docs/vercel.json`](./docs/vercel.json)). `litkhai.github.io/notes-on-redis` will publish a
 redirect stub per page once the host is live.
 
 | Choice | Why |
@@ -138,7 +138,7 @@ Software, 그리고 AI 에이전트용 컨텍스트 엔진 **Redis Iris**.
 
 | 트랙 | 상태 | 내용 |
 |---|---|---|
-| [`design/`](./design) | ✅ v0 작성 2026-11-07 | 사이트 맵, 페이지 설계, 예산, 작업 순서 |
+| [`design/`](./design) | ✅ v0 | 사이트 맵, 페이지 설계, 예산, 작업 순서 |
 | 나머지 | ⬜ 미착수 | 설계 §7의 순서대로 |
 
 ### 이 저장소의 규칙
@@ -162,7 +162,7 @@ Cloud 페이지는 **콘솔 안내**다 — *확인 조건* 문단, 메뉴 순�
 
 [`docs/`](./docs)는 Jekyll로 빌드되어 `main`에 푸시할 때마다 Vercel이
 [redis.litkhai.dev](https://redis.litkhai.dev)로 배포한다(프로젝트 루트 `docs/`, 설정은
-[`docs/vercel.json`](./docs/vercel.json)). 호스트가 살아나면 `litkhai.github.io/redis-hols`는
+[`docs/vercel.json`](./docs/vercel.json)). 호스트가 살아나면 `litkhai.github.io/notes-on-redis`는
 페이지마다 리다이렉트 스텁을 게시한다. 선택과 이유는 영문 절의 표와 같다.
 
 ### 참고한 Redis 공식 자료

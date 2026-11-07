@@ -11,7 +11,7 @@
 <script>
 (function () {
   try {
-    var t = localStorage.getItem('redis-hols-theme');
+    var t = localStorage.getItem('notes-on-redis-theme');
     document.documentElement.dataset.theme = (t === 'light' || t === 'dark') ? t : 'dark';
   } catch (e) { /* private mode — keep the dark default */ }
 })();
@@ -182,7 +182,7 @@
   var LANG_CODE = { en: 'EN', ko: 'KO', zh: '中', ja: '日' };
   var browserLang = (navigator.language || 'en').slice(0, 2).toLowerCase();
   bind({
-    key: 'redis-hols-lang',
+    key: 'notes-on-redis-lang',
     attr: 'data-set-lang',
     fallback: LANG_TAG[browserLang] ? browserLang : 'en',
     valid: ['en', 'ko', 'zh', 'ja'],
@@ -327,7 +327,7 @@
   // 테마: 기본 다크. <head> 스크립트가 이미 속성을 설정했으므로
   // 여기서는 버튼 상태 동기화와 클릭 처리만 한다.
   bind({
-    key: 'redis-hols-theme',
+    key: 'notes-on-redis-theme',
     attr: 'data-set-theme',
     fallback: 'dark',
     valid: ['dark', 'light'],
