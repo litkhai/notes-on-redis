@@ -116,6 +116,8 @@ With three examples per intent the default threshold is too strict; more example
 
 **Thresholds** (`thresholds.py`). A per-intent `minScore` overrides the Router's 0.70, and a per-call `min_score` overrides both, as the docs order them. With `tls_question` at 0.60 the Korean TLS question (0.61) matched; with `off_topic` at 0.85 a joke request (0.71) no longer did; a per-call 0.5 brought all five back. Router templates (`CUSTOM`, `MODEL`, `GUARDRAILS`, `AGENT`) are labels: "Every template serves the same way."
 
+**The Router's own default** is the console's **Minimum score**. Lowered from 0.70 to 0.60 for one run, it let the Korean TLS question (0.61) match with no other threshold set; then it was put back to 0.70.
+
 <p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="Intent Router intents list with targets tool, model, agent and guardrail, and a Try a query box" loading="lazy" decoding="async"></p>
 
 Intents with their targets and example counts; Try a query matches from the console. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
@@ -333,6 +335,8 @@ MemoryETL(베타): extractor는 사용자 정의 기억 유형의 프롬프트�
 의도마다 예시 셋이면 기본 임계값이 너무 엄격하다. 예시를 늘리거나 임계값을 낮추는 것이 첫 조정이다. 매칭은 한국에서 건마다 560–1,090 ms였다.
 
 **임계값**(`thresholds.py`). 의도별 `minScore`는 Router의 0.70을 덮어쓰고, 호출별 `min_score`는 둘 다 덮어쓴다. 문서의 순서 그대로다. `tls_question`을 0.60으로 두자 한국어 TLS 질문(0.61)이 매칭됐고, `off_topic`을 0.85로 두자 농담 요청(0.71)은 더는 매칭되지 않았다. 호출별 0.5는 다섯 질의를 모두 되살렸다. Router 템플릿(`CUSTOM`, `MODEL`, `GUARDRAILS`, `AGENT`)은 라벨이다: "Every template serves the same way."
+
+**Router 자체의 기본값**은 콘솔의 **Minimum score**다. 한 번 0.70에서 0.60으로 낮추자 다른 임계값 없이도 한국어 TLS 질문(0.61)이 매칭됐다. 그 뒤 0.70으로 되돌렸다.
 
 <p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="도구·모델·에이전트·가드레일 대상이 있는 Intent Router 의도 목록과 질의 시험 칸" loading="lazy" decoding="async"></p>
 
@@ -552,6 +556,8 @@ MemoryETL（beta）：extractor 复制自定义记忆类型的提示，把上传
 
 **阈值**（`thresholds.py`）。每个 intent 的 `minScore` 会覆盖 Router 的 0.70，每次调用的 `min_score` 又会覆盖两者，与文档给出的顺序一致。把 `tls_question` 设为 0.60 后，韩语的 TLS 问题（0.61）匹配上了；把 `off_topic` 设为 0.85 后，一条讲笑话的请求（0.71）不再匹配；每次调用设为 0.5，则五个查询全部恢复。Router 模板（`CUSTOM`、`MODEL`、`GUARDRAILS`、`AGENT`）只是标签："Every template serves the same way."
 
+**Router 自身的默认值**是控制台中的 **Minimum score**。将它从 0.70 降到 0.60 运行一次后，在没有设置其他阈值的情况下，韩语的 TLS 问题（0.61）也匹配上了；随后又把它恢复为 0.70。
+
 <p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="Intent Router 意图列表，目标有 tool、model、agent 和 guardrail，下方有 Try a query 输入框" loading="lazy" decoding="async"></p>
 
 各 intent 及其目标和示例数；用 Try a query 可直接在控制台中匹配。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
@@ -769,6 +775,8 @@ MemoryETL（beta）：extractor はカスタム記憶タイプのプロンプト
 intent ごとの例が三つだと既定のしきい値は厳しすぎる。例を増やすかしきい値を下げるのが最初の調整である。一回のマッチは韓国から 560〜1,090 ms かかった。
 
 **しきい値**（`thresholds.py`）。インテントごとの `minScore` は Router の 0.70 を上書きし、呼び出しごとの `min_score` はその両方を上書きする。ドキュメントの順序どおりである。`tls_question` を 0.60 にすると韓国語の TLS の質問（0.61）がマッチし、`off_topic` を 0.85 にすると冗談を頼む依頼（0.71）はもうマッチしなくなった。呼び出しごとに 0.5 を指定すると、五つのクエリがすべて戻った。Router のテンプレート（`CUSTOM`、`MODEL`、`GUARDRAILS`、`AGENT`）はラベルである："Every template serves the same way."
+
+**Router 自身のデフォルト**は、コンソールの **Minimum score** である。これを 0.70 から 0.60 に下げて一度実行すると、ほかのしきい値を設定しなくても韓国語の TLS の質問（0.61）がマッチした。その後、0.70 に戻した。
 
 <p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="ターゲットが tool、model、agent、guardrail の Intent Router の intent 一覧と Try a query 欄" loading="lazy" decoding="async"></p>
 
@@ -988,6 +996,8 @@ MemoryETL (beta): extractor คัดลอก prompt ของประเภ�
 
 **ค่าเกณฑ์** (`thresholds.py`) `minScore` ต่อ intent จะแทนที่ 0.70 ของ Router และ `min_score` ต่อการเรียกจะแทนที่ทั้งสองค่า ตามลำดับที่เอกสารระบุ เมื่อตั้ง `tls_question` ที่ 0.60 คำถามเรื่อง TLS ภาษาเกาหลี (0.61) จับคู่ได้ เมื่อตั้ง `off_topic` ที่ 0.85 คำขอให้เล่าเรื่องตลก (0.71) ก็ไม่จับคู่อีกต่อไป และการตั้งค่า 0.5 ต่อการเรียกทำให้ทั้งห้าคำค้นกลับมาจับคู่ได้ เทมเพลตของ Router (`CUSTOM`, `MODEL`, `GUARDRAILS`, `AGENT`) เป็นเพียงป้ายกำกับ: "Every template serves the same way."
 
+**ค่าเริ่มต้นของ Router เอง** คือ **Minimum score** ในคอนโซล เมื่อลดจาก 0.70 เป็น 0.60 สำหรับการรันหนึ่งครั้ง คำถามเรื่อง TLS ภาษาเกาหลี (0.61) จับคู่ได้โดยไม่ต้องตั้งค่าเกณฑ์อื่นเลย จากนั้นจึงตั้งกลับเป็น 0.70
+
 <p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="รายการ intent ของ Intent Router ที่มีเป้าหมาย tool, model, agent และ guardrail พร้อมช่อง Try a query" loading="lazy" decoding="async"></p>
 
 intent พร้อมเป้าหมายและจำนวนตัวอย่าง; Try a query ใช้จับคู่จากคอนโซลได้ทันที <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
@@ -1206,6 +1216,8 @@ Dengan tiga contoh per intent, ambang bawaan terlalu ketat; menambah contoh atau
 
 **Ambang batas** (`thresholds.py`). `minScore` per intent menggantikan 0.70 milik Router, dan `min_score` per panggilan menggantikan keduanya, sesuai urutan dalam dokumentasi. Dengan `tls_question` di 0.60, pertanyaan TLS berbahasa Korea (0.61) cocok; dengan `off_topic` di 0.85, permintaan lelucon (0.71) tidak lagi cocok; 0.5 per panggilan mengembalikan kelima kueri. Template Router (`CUSTOM`, `MODEL`, `GUARDRAILS`, `AGENT`) hanyalah label: "Every template serves the same way."
 
+**Default milik Router sendiri** adalah **Minimum score** di konsol. Setelah diturunkan dari 0.70 ke 0.60 untuk satu kali jalan, pertanyaan TLS berbahasa Korea (0.61) cocok tanpa ambang batas lain yang ditetapkan; kemudian nilainya dikembalikan ke 0.70.
+
 <p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="Daftar intent Intent Router dengan target tool, model, agent, dan guardrail, serta kotak Try a query" loading="lazy" decoding="async"></p>
 
 Intent beserta target dan jumlah contohnya; Try a query mencocokkan langsung dari konsol. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
@@ -1423,6 +1435,8 @@ Pengesan tersuai dan pengecualian semantik pada perkhidmatan Agent Memory makmal
 Dengan tiga contoh bagi setiap intent, ambang lalai terlalu ketat; menambah contoh atau menurunkan ambang ialah langkah penalaan pertama. Setiap padanan mengambil masa 560–1,090 ms dari Korea.
 
 **Ambang** (`thresholds.py`). `minScore` bagi setiap intent menggantikan 0.70 milik Router, dan `min_score` bagi setiap panggilan menggantikan kedua-duanya, mengikut susunan dalam dokumentasi. Dengan `tls_question` pada 0.60, soalan TLS dalam bahasa Korea (0.61) dipadankan; dengan `off_topic` pada 0.85, permintaan jenaka (0.71) tidak lagi dipadankan; 0.5 bagi setiap panggilan memulihkan kelima-lima pertanyaan. Templat Router (`CUSTOM`, `MODEL`, `GUARDRAILS`, `AGENT`) ialah label: "Every template serves the same way."
+
+**Lalai milik Router sendiri** ialah **Minimum score** dalam konsol. Apabila diturunkan daripada 0.70 kepada 0.60 untuk satu larian, soalan TLS dalam bahasa Korea (0.61) dipadankan tanpa ambang lain ditetapkan; kemudian nilainya dikembalikan kepada 0.70.
 
 <p class="shot"><img src="{{ '/assets/img/iris/24-intent-router-intents.webp' | relative_url }}" width="1440" height="765" alt="Senarai intent Intent Router dengan sasaran tool, model, agent dan guardrail, serta kotak Try a query" loading="lazy" decoding="async"></p>
 

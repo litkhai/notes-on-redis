@@ -131,7 +131,7 @@ Captured 2026-11-07, Redis Cloud free plan.
 
 ### Not run / caveats
 
-- The custom memory type kept "Use for session extraction" on; the switch did not turn off from automation.
+- The custom memory type's "Use for session extraction" switch is now off (2026-11-07, a second attempt from automation that persisted).
 - Message consumption is still not visible in the console.
 
 | | |
@@ -187,7 +187,7 @@ PII_RUN=on  .venv/bin/python lab.py pii
 
 ### 미실행 / 주의
 
-- 사용자 정의 기억 유형의 "Use for session extraction"은 켜진 채로 남았다. 자동화로는 꺼지지 않았다.
+- 사용자 정의 기억 유형의 "Use for session extraction" 스위치는 이제 꺼져 있다(2026-11-07, 자동화로 다시 시도해 저장됨).
 - 메시지 사용량은 여전히 콘솔에 보이지 않는다.
 
 | | |
