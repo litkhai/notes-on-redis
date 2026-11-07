@@ -21,6 +21,9 @@ PII_RUN=on  .venv/bin/python lab.py pii
 .venv/bin/python lab.py forget
 # console: Add type plan_limit; MemoryETL > New extractor plan-limits-from-docs
 .venv/bin/python etl.py                     # submits free-plan-limits.md
+# console: Configuration > Edit > Sensitive-data exclusions: custom detector lab-account-id, ACCT-[0-9]{6}, Drop memory;
+#   semantic exclusions on, prompt about passwords, one-time codes, recovery codes and API keys
+.venv/bin/python detectors.py   # a direct write and an extracted conversation, then forget both test owners
 ```
 
 Output as it appeared (2026-11-07; service ids and endpoints removed):
@@ -83,6 +86,31 @@ memories created: 8
   [plan_limit] On 2026-11-07, TLS cannot be turned on for a Redis Cloud free database; the API refuses enableTls.
 ```
 
+`detectors.py` output as it appeared (2026-11-07):
+
+```text
+== direct writes (remember)
+   remember('Customer account ACCT-654321 is on the support plan.') -> stored: 'Customer account ACCT-654321 is on the support plan.'
+   remember('The customer prefers invoices by email.') -> stored: 'The customer prefers invoices by email.'
+   memories now: ['The customer prefers invoices by email.', 'Customer account ACCT-654321 is on the support plan.']
+
+== a conversation, extracted in the background
+     31 s: nothing extracted yet
+     62 s: nothing extracted yet
+     92 s: nothing extracted yet
+    123 s: nothing extracted yet
+   after 185 s, long-term memories for this owner:
+    - User usually deploys on Friday evenings.
+    - The user wants all invoices sent by email.
+    - User wants all invoices sent by email.
+    - The user wants new databases created in the Seoul region.
+    - User wants new databases created in the Seoul region.
+    - User wants maintenance scheduled outside Friday evenings.
+    - The user usually deploys on Friday evenings and prefers maintenance not to be scheduled during that time.
+
+both test owners forgotten
+```
+
 ### What was observed
 
 - **Summaries.** After 24 messages the session kept 14 events plus a summary of the rest; all 24 are still readable with `include_summarised_events=True`. The setting is "summarize after 20, keep 10": 10 kept at the summary plus the 4 that came after.
@@ -92,10 +120,17 @@ memories created: 8
 - **Timing.** Extraction took about 15 s in `iris/01` but 4–5 minutes in these runs; it runs in the background on its own schedule.
 - **MemoryETL (beta).** A custom memory type (`plan_limit`, with an extraction prompt) and an extractor turned a 9-line Markdown document into 8 `plan_limit` memories in 183 s; prices were left out as the prompt asked.
 - **Forget.** `forget(owner)` removed the owner's sessions and long-term memories in one call (25, 3 and 3 here).
+- **Custom detectors and semantic exclusions are console settings.** The service's **Sensitive-data exclusions** section takes a detector name, a regular expression and an action (**Redact match** or **Drop memory**), and a free-text exclusion prompt of up to 2,000 characters that the console marks "Advisory only: this steers the extraction model but does not guarantee exclusion, and sensitive text still reaches the model provider. Not applied to direct writes."
+- **Direct writes skip them.** `remember("Customer account ACCT-654321 is on the support plan.")` was stored verbatim despite the `ACCT-[0-9]{6}` detector set to drop. The developer guide says so: "Direct creation does not wait for background extraction and does not apply the extraction prompt or sensitive-data exclusions."
+- **Extraction applied them.** From a conversation that mentioned `ACCT-123456` and a made-up recovery code, background extraction kept seven memories after 185 s: the email preference, the Seoul region, the Friday deployments. None contained the account number or the code. This run cannot tell a detector drop from the model leaving the text out, and the exclusion is advisory, so treat it as one observation, not a guarantee.
+- **Extraction repeats itself.** Several memories came in two near-identical wordings ("The user wants…" and "User wants…").
+
+<img src="../../docs/assets/img/iris/33-agent-memory-custom-detectors.webp" width="1440" height="2110" alt="Agent Memory configuration: built-in detectors, a custom detector lab-account-id with pattern ACCT-[0-9]{6} set to Drop memory, and a semantic exclusion prompt" loading="lazy" decoding="async">
+
+Captured 2026-11-07, Redis Cloud free plan.
 
 ### Not run / caveats
 
-- Custom detectors and semantic exclusions were not tried.
 - The custom memory type kept "Use for session extraction" on; the switch did not turn off from automation.
 - Message consumption is still not visible in the console.
 
@@ -123,9 +158,14 @@ PII_RUN=on  .venv/bin/python lab.py pii
 .venv/bin/python lab.py forget
 # console: Add type plan_limit; MemoryETL > New extractor plan-limits-from-docs
 .venv/bin/python etl.py                     # submits free-plan-limits.md
+# console: Configuration > Edit > Sensitive-data exclusions: custom detector lab-account-id, ACCT-[0-9]{6}, Drop memory;
+#   semantic exclusions on, prompt about passwords, one-time codes, recovery codes and API keys
+.venv/bin/python detectors.py   # a direct write and an extracted conversation, then forget both test owners
 ```
 
 출력은 영문 절과 같다(2026-11-07).
+
+`detectors.py`의 출력도 영문 절과 같다(2026-11-07).
 
 ### 관찰한 것
 
@@ -136,10 +176,17 @@ PII_RUN=on  .venv/bin/python lab.py pii
 - **시간.** 추출은 `iris/01`에서 약 15초였지만 이번에는 4–5분이었다. 백그라운드에서 자체 일정으로 돈다.
 - **MemoryETL(베타).** 사용자 정의 기억 유형(`plan_limit`, 추출 프롬프트 포함)과 extractor가 9줄짜리 Markdown 문서를 183초 만에 `plan_limit` 기억 8개로 바꿨다. 프롬프트대로 가격은 빠졌다.
 - **삭제.** `forget(owner)` 한 번에 소유자의 세션과 장기 기억이 지워졌다(여기서는 25, 3, 3).
+- **사용자 정의 탐지기와 의미 기반 제외는 콘솔 설정이다.** 서비스의 **Sensitive-data exclusions** 절에서 탐지기 이름, 정규식, 동작(**Redact match** 또는 **Drop memory**)과 최대 2,000자의 제외 프롬프트를 받는다. 콘솔은 프롬프트에 "Advisory only: this steers the extraction model but does not guarantee exclusion, and sensitive text still reaches the model provider. Not applied to direct writes."라고 적는다.
+- **직접 쓰기는 이를 건너뛴다.** 버리도록 설정한 `ACCT-[0-9]{6}` 탐지기가 있는데도 `remember("Customer account ACCT-654321 is on the support plan.")`가 그대로 저장됐다. 개발자 가이드도 그렇게 적는다: "Direct creation does not wait for background extraction and does not apply the extraction prompt or sensitive-data exclusions."
+- **추출에서는 적용됐다.** `ACCT-123456`과 가상의 복구 코드가 나온 대화에서 백그라운드 추출이 185초 뒤 기억 일곱 개를 남겼다: 이메일 선호, 서울 리전, 금요일 배포. 계정 번호나 코드가 든 기억은 없었다. 이 실행만으로는 탐지기가 버린 것인지 모델이 빼놓은 것인지 구분할 수 없고 제외는 권고 수준이므로, 보장이 아니라 관찰 한 번으로 읽는다.
+- **추출이 겹친다.** 여러 기억이 거의 같은 두 문장("The user wants…"와 "User wants…")으로 들어왔다.
+
+<img src="../../docs/assets/img/iris/33-agent-memory-custom-detectors.webp" width="1440" height="2110" alt="Agent Memory 설정: 기본 탐지기, 패턴 ACCT-[0-9]{6}을 Drop memory로 처리하는 사용자 정의 탐지기 lab-account-id, 의미 기반 제외 프롬프트" loading="lazy" decoding="async">
+
+2026-11-07 캡처, Redis Cloud 무료 플랜.
 
 ### 미실행 / 주의
 
-- 사용자 정의 탐지기와 의미 기반 제외는 시험하지 않았다.
 - 사용자 정의 기억 유형의 "Use for session extraction"은 켜진 채로 남았다. 자동화로는 꺼지지 않았다.
 - 메시지 사용량은 여전히 콘솔에 보이지 않는다.
 

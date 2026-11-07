@@ -41,7 +41,7 @@ const PATTERNS = [
   "redis-\\d+\\.[\\w.-]+\\.(redislabs|redis-cloud)\\.com(:\\d+)?",
   "[\\w.-]+\\.cache\\.amazonaws\\.com(:\\d+)?",                      // ElastiCache endpoints
   "[\\w.-]+\\.ultra\\.redis\\.io",                                 // Iris service endpoints
-  "st_[0-9a-f]{32}", "mem-[0-9a-f]{24}", "\\b[0-9a-f]{32}\\b",           // Iris store, memory and key ids
+  "\\b[a-z]{2,4}_[0-9a-f]{32}\\b", "mem-[0-9a-f]{24}", "\\b[0-9a-f]{32}\\b",   // Iris ids: st_, gw_, pb_, rtr_, ent_ ... + 32 hex
   "\\b\\d{1,3}(\\.\\d{1,3}){3}\\b",                                  // IPv4
   "\\b\\d{4}-?\\d{4}-?\\d{4}\\b",                                    // AWS account IDs
   "\\b(vpc|subnet|sg|eni|igw|rtb|acl|i)-[0-9a-f]{8,17}\\b", "arn:aws[\\w:/.*-]+",
@@ -124,6 +124,7 @@ try {
     const leaks = await mask(page);
     if (leaks.length) throw new Error(`${s.name}: still visible after masking: ${leaks.join(", ")}`);
     await page.waitForTimeout(300);
+    await page.bringToFront();           // a tab left in the background can stall the screenshot
     const png = join(raw, s.name + ".png");
     await page.screenshot({ path: png });
     execFileSync("python3", ["-c", "import sys;from PIL import Image;im=Image.open(sys.argv[1]);im.save(sys.argv[2],'WEBP',quality=82,method=6);print(sys.argv[3],im.size)",

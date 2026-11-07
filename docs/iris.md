@@ -92,6 +92,12 @@ Built-in detectors: credit card, email, IP, phone (US, CA, UK, DE, IL, IN, BR) a
 
 MemoryETL (beta): an extractor copies a custom memory type's prompt and turns uploaded or API-submitted documents into memories of that type. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
 
+**Custom detectors and semantic exclusions** (`detectors.py`). A detector `ACCT-[0-9]{6}` set to **Drop memory** and an exclusion prompt about passwords and recovery codes were added in the console. A direct `remember()` with an account number was stored verbatim: "Direct creation ... does not apply the extraction prompt or sensitive-data exclusions." From a conversation, background extraction kept the preferences and left out the account number and the made-up recovery code; the console calls the prompt "Advisory only", so that is an observation, not a guarantee.
+
+<p class="shot"><img src="{{ '/assets/img/iris/33-agent-memory-custom-detectors.webp' | relative_url }}" width="1440" height="2110" alt="Agent Memory sensitive-data exclusions with a custom detector lab-account-id set to Drop memory and a semantic exclusion prompt" loading="lazy" decoding="async"></p>
+
+A custom detector and a semantic exclusion on the lab's Agent Memory service. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
+
 ### Intent Router
 
 **Verified on redis-iris 1.0.1, 2026-11-07.** Four intents with three examples each, targets of four kinds; eight English and Korean queries. The embedder is the managed OpenAI `text-embedding-3-small`; no key of our own was asked for. Lab: [`iris/03-intent-router`](https://github.com/litkhai/notes-on-redis/tree/main/iris/03-intent-router).
@@ -137,6 +143,12 @@ A Context Surface is a data model: entities mapped to key templates, fields type
 
 Both upstreams behind one endpoint, each switchable on or off. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
 
+**Full versus search exposure** (`exposure.py`). Switched to **Full** in the console, the agent saw 13 tools named `namespace__tool` (10 from the Context Surface, 3 from DeepWiki); in **Search** it sees only `search_tools` and `run_tool`. Result caching and compression are not in the Redis Cloud console: the docs set them with an admin token on a self-managed Gateway, and compression needs a `noeviction` database, which the free one is not.
+
+<p class="shot"><img src="{{ '/assets/img/iris/31-gateway-full-exposure.webp' | relative_url }}" width="1440" height="1040" alt="Context Gateway configuration with tool exposure set to Full" loading="lazy" decoding="async"></p>
+
+Tool exposure set to Full for the measurement, then back to Search. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
+
 ### Agent Playbooks
 
 **Verified on redis-iris 1.0.1, 2026-11-07.** Four FAQs written from this site's findings, authored as JSON and synced with the `iris` CLI. Lab: [`iris/05-agent-playbooks`](https://github.com/litkhai/notes-on-redis/tree/main/iris/05-agent-playbooks).
@@ -152,6 +164,12 @@ Both upstreams behind one endpoint, each switchable on or off. <small>Captured 2
 A second version of an FAQ stayed a draft and discovery kept serving version 1 until `faqs publish --version 2`. Keys follow the same workflow: read, write, propose, publish, full. The console lists Agent Playbooks and no LangCache entry.
 
 **Skills and proposals** (`more.py`). A skill is a zipped folder with `SKILL.md` and reference files; this one checks a workload against the free plan's measured limits. Once published, `discover` returned it for an English sizing question and an agent loaded its steps and reference file on demand. The open proposal was edited, accepted into an unpublished FAQ, and found by `discover` only after `publish_faq`.
+
+**FAQs extracted from Agent Memory** (`extract.py`). An extraction job in the playbook's console settings reads the Agent Memory service once a session has been idle (1 minute here). A four-message support conversation turned into an open FAQ proposal 310 s later, rewritten as a general question and answer; extraction "never publishes them", so it waits in the inbox.
+
+<p class="shot"><img src="{{ '/assets/img/iris/32-playbook-faq-extraction.webp' | relative_url }}" width="1440" height="1549" alt="Playbook configuration with automatic FAQ extraction enabled for the notes-on-redis-memory store" loading="lazy" decoding="async"></p>
+
+Automatic FAQ extraction on during the measurement; it was turned off afterwards. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
 
 <p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="Playbook registry with four published FAQs, one at version 2" loading="lazy" decoding="async"></p>
 
@@ -292,6 +310,12 @@ Memory Inspector는 소유자나 네임스페이스로 세션과 장기 기억�
 
 MemoryETL(베타): extractor는 사용자 정의 기억 유형의 프롬프트를 복사해, 올리거나 API로 보낸 문서를 그 유형의 기억으로 바꾼다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
 
+**사용자 정의 탐지기와 의미 기반 제외**(`detectors.py`). 콘솔에서 **Drop memory**로 설정한 탐지기 `ACCT-[0-9]{6}`과 비밀번호·복구 코드에 관한 제외 프롬프트를 넣었다. 계정 번호를 담은 직접 `remember()`는 그대로 저장됐다: "Direct creation ... does not apply the extraction prompt or sensitive-data exclusions." 대화에서는 백그라운드 추출이 선호는 남기고 계정 번호와 가상의 복구 코드는 뺐다. 콘솔은 프롬프트를 "Advisory only"라고 부르므로 보장이 아니라 관찰이다.
+
+<p class="shot"><img src="{{ '/assets/img/iris/33-agent-memory-custom-detectors.webp' | relative_url }}" width="1440" height="2110" alt="Drop memory로 설정한 사용자 정의 탐지기 lab-account-id와 의미 기반 제외 프롬프트가 있는 Agent Memory의 민감 정보 제외 설정" loading="lazy" decoding="async"></p>
+
+실습용 Agent Memory 서비스의 사용자 정의 탐지기와 의미 기반 제외. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
+
 ### Intent Router
 
 **확인: redis-iris 1.0.1, 2026-11-07.** 예시 셋씩인 의도 네 개, 대상 네 종류, 영어·한국어 질문 여덟 개. 임베딩은 관리형 OpenAI `text-embedding-3-small`이고 내 키는 요구하지 않았다. 실습: [`iris/03-intent-router`](https://github.com/litkhai/notes-on-redis/tree/main/iris/03-intent-router).
@@ -337,6 +361,12 @@ Context Surface는 데이터 모델이다. 엔티티를 키 템플릿에 대응�
 
 두 업스트림이 엔드포인트 하나 뒤에 있고, 각각 켜고 끌 수 있다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
 
+**Full 대 Search 노출**(`exposure.py`). 콘솔에서 **Full**로 바꾸자 에이전트에 `namespace__tool` 이름의 도구 13개(Context Surface 10개, DeepWiki 3개)가 보였다. **Search**에서는 `search_tools`와 `run_tool`만 보인다. 결과 캐시와 압축은 Redis Cloud 콘솔에 없다. 문서는 자체 운영 게이트웨이에서 관리 토큰으로 설정하고, 압축에는 `noeviction` DB가 필요한데 무료 DB는 아니다.
+
+<p class="shot"><img src="{{ '/assets/img/iris/31-gateway-full-exposure.webp' | relative_url }}" width="1440" height="1040" alt="도구 노출을 Full로 둔 Context Gateway 설정" loading="lazy" decoding="async"></p>
+
+측정을 위해 도구 노출을 Full로 바꾼 화면. 그 뒤 Search로 되돌렸다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
+
 ### Agent Playbooks
 
 **확인: redis-iris 1.0.1, 2026-11-07.** 이 사이트의 발견으로 쓴 FAQ 네 개를 JSON으로 작성해 `iris` CLI로 동기화했다. 실습: [`iris/05-agent-playbooks`](https://github.com/litkhai/notes-on-redis/tree/main/iris/05-agent-playbooks).
@@ -352,6 +382,12 @@ Context Surface는 데이터 모델이다. 엔티티를 키 템플릿에 대응�
 FAQ의 두 번째 버전은 초안으로 남았고, `faqs publish --version 2` 전까지 검색은 버전 1을 냈다. 키도 같은 흐름을 따른다: read, write, propose, publish, full. 콘솔에는 Agent Playbooks가 있고 LangCache 항목은 없다.
 
 **Skill과 제안**(`more.py`). Skill은 `SKILL.md`와 참조 파일을 담은 압축 폴더다. 이 skill은 무료 플랜의 측정 한도로 워크로드를 판정한다. 게시 뒤 영어 용량 질문에 `discover`가 이것을 돌려줬고, 에이전트는 단계와 참조 파일을 필요할 때 불러왔다. 열린 제안은 고쳐 쓴 뒤 게시되지 않은 FAQ로 수락됐고, `publish_faq` 뒤에야 `discover`에 나왔다.
+
+**Agent Memory에서 추출한 FAQ**(`extract.py`). 플레이북의 콘솔 설정에서 만든 추출 작업은 세션이 조용해지면(여기서는 1분) Agent Memory 서비스를 읽는다. 메시지 넷짜리 상담 대화가 310초 뒤 일반적인 질문과 답으로 다시 쓰인 열린 FAQ 제안이 됐다. 추출은 "never publishes them"이라 제안함에서 기다린다.
+
+<p class="shot"><img src="{{ '/assets/img/iris/32-playbook-faq-extraction.webp' | relative_url }}" width="1440" height="1549" alt="notes-on-redis-memory 스토어에 대해 자동 FAQ 추출을 켠 플레이북 설정" loading="lazy" decoding="async"></p>
+
+측정 중 자동 FAQ 추출을 켠 화면. 그 뒤 껐다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
 
 <p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="FAQ 네 개가 공개됐고 하나는 버전 2인 Playbook 레지스트리" loading="lazy" decoding="async"></p>
 
@@ -492,6 +528,12 @@ Memory Inspector 可按所有者或命名空间浏览会话和长期记忆。 <s
 
 MemoryETL（beta）：extractor 复制自定义记忆类型的提示，把上传或通过 API 提交的文档转换成该类型的记忆。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
+**自定义检测器与语义排除**（`detectors.py`）。在控制台中添加了一个设为 **Drop memory** 的检测器 `ACCT-[0-9]{6}`，以及一条关于密码和恢复码的排除提示。带有账号的直接 `remember()` 被原样存储："Direct creation ... does not apply the extraction prompt or sensitive-data exclusions." 在对话中，后台提取保留了偏好，略去了账号和编造的恢复码；控制台称该提示为 "Advisory only"，所以这是观察结果，不是保证。
+
+<p class="shot"><img src="{{ '/assets/img/iris/33-agent-memory-custom-detectors.webp' | relative_url }}" width="1440" height="2110" alt="Agent Memory 的敏感数据排除设置：自定义检测器 lab-account-id 设为 Drop memory，并带有语义排除提示" loading="lazy" decoding="async"></p>
+
+实验用 Agent Memory 服务上的自定义检测器和语义排除。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
+
 ### Intent Router
 
 **已在 redis-iris 1.0.1 上验证，2026-11-07。** 四个 intent，每个三条示例，目标共四类；八条英文和韩文查询。嵌入器是托管的 OpenAI `text-embedding-3-small`；没有要求提供我们自己的密钥。实验： [`iris/03-intent-router`](https://github.com/litkhai/notes-on-redis/tree/main/iris/03-intent-router)。
@@ -537,6 +579,12 @@ Context Surface 是一个数据模型：实体映射到键模板，字段有类�
 
 两个上游在同一个端点之后，每个都可单独开关。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
+**Full 与 Search 暴露方式**（`exposure.py`）。在控制台切换到 **Full** 后，agent 看到 13 个名为 `namespace__tool` 的工具（10 个来自 Context Surface，3 个来自 DeepWiki）；在 **Search** 下只能看到 `search_tools` 和 `run_tool`。结果缓存和压缩不在 Redis Cloud 控制台中：文档说明要在自行管理的 Gateway 上用管理员令牌设置，而压缩需要 `noeviction` 数据库，免费数据库不满足。
+
+<p class="shot"><img src="{{ '/assets/img/iris/31-gateway-full-exposure.webp' | relative_url }}" width="1440" height="1040" alt="工具暴露方式设为 Full 的 Context Gateway 配置" loading="lazy" decoding="async"></p>
+
+为测量将工具暴露方式设为 Full，之后改回 Search。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
+
 ### Agent Playbooks
 
 **已在 redis-iris 1.0.1 上验证，2026-11-07。** 根据本站的发现撰写了四条 FAQ，以 JSON 编写并用 `iris` CLI 同步。实验： [`iris/05-agent-playbooks`](https://github.com/litkhai/notes-on-redis/tree/main/iris/05-agent-playbooks)。
@@ -552,6 +600,12 @@ Context Surface 是一个数据模型：实体映射到键模板，字段有类�
 某条 FAQ 的第二个版本一直是草稿，发现服务持续返回版本 1，直到执行 `faqs publish --version 2`。密钥遵循同样的流程：read、write、propose、publish、full。控制台列出了 Agent Playbooks，没有 LangCache 条目。
 
 **Skill 与提案**（`more.py`）。Skill 是一个压缩文件夹，里面有 `SKILL.md` 和参考文件；这个 skill 用免费计划的实测上限来检查工作负载。发布之后，`discover` 为一个英文的容量规划问题返回了它，agent 按需加载了它的步骤和参考文件。那个未处理的提案经过修改后被接受为一个未发布的 FAQ，直到 `publish_faq` 之后才被 `discover` 找到。
+
+**从 Agent Memory 提取的 FAQ**（`extract.py`）。playbook 控制台设置中的提取任务会在会话空闲（这里是 1 分钟）后读取 Agent Memory 服务。一段四条消息的客服对话在 310 秒后变成一条待处理的 FAQ 提案，被改写为通用的问题和答案；提取 "never publishes them"，所以它留在收件箱里等待处理。
+
+<p class="shot"><img src="{{ '/assets/img/iris/32-playbook-faq-extraction.webp' | relative_url }}" width="1440" height="1549" alt="为 notes-on-redis-memory 存储启用自动 FAQ 提取的 playbook 配置" loading="lazy" decoding="async"></p>
+
+测量期间开启了自动 FAQ 提取，之后已关闭。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
 <p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="Playbook 注册表，四条 FAQ 已发布，其中一条为版本 2" loading="lazy" decoding="async"></p>
 
@@ -692,6 +746,12 @@ Memory Inspector は、所有者またはネームスペースごとにセッシ
 
 MemoryETL（beta）：extractor はカスタム記憶タイプのプロンプトをコピーし、アップロードまたは API で送られたドキュメントをそのタイプの記憶に変える。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
 
+**カスタム検出器とセマンティック除外**（`detectors.py`）。コンソールで **Drop memory** に設定した検出器 `ACCT-[0-9]{6}` と、パスワードや復旧コードに関する除外プロンプトを追加した。アカウント番号を含む直接の `remember()` はそのまま保存された："Direct creation ... does not apply the extraction prompt or sensitive-data exclusions." 会話ではバックグラウンド抽出が好みを残し、アカウント番号と架空の復旧コードを除いた。コンソールはこのプロンプトを "Advisory only" と呼んでいるので、これは保証ではなく観察である。
+
+<p class="shot"><img src="{{ '/assets/img/iris/33-agent-memory-custom-detectors.webp' | relative_url }}" width="1440" height="2110" alt="カスタム検出器 lab-account-id を Drop memory に設定し、セマンティック除外プロンプトを置いた Agent Memory の機密データ除外設定" loading="lazy" decoding="async"></p>
+
+実習用 Agent Memory サービスのカスタム検出器とセマンティック除外。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
+
 ### Intent Router
 
 **確認：redis-iris 1.0.1、2026-11-07。** 四つの intent、それぞれ例三つ、ターゲットは四種類。英語と韓国語のクエリ八件。埋め込みはマネージドの OpenAI `text-embedding-3-small` で、自前のキーは求められなかった。実習： [`iris/03-intent-router`](https://github.com/litkhai/notes-on-redis/tree/main/iris/03-intent-router)。
@@ -737,6 +797,12 @@ Context Surface はデータモデルである。エンティティをキーの�
 
 二つの上流が一つのエンドポイントの後ろにあり、それぞれオン・オフを切り替えられる。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
 
+**Full と Search の公開方式**（`exposure.py`）。コンソールで **Full** に切り替えると、agent には `namespace__tool` という名前のツールが 13 個見えた（Context Surface から 10 個、DeepWiki から 3 個）。**Search** では `search_tools` と `run_tool` だけが見える。結果キャッシュと圧縮は Redis Cloud のコンソールにはない。ドキュメントでは、セルフマネージドの Gateway で管理者トークンを使って設定するとされ、圧縮には `noeviction` のデータベースが必要だが、無料のものは該当しない。
+
+<p class="shot"><img src="{{ '/assets/img/iris/31-gateway-full-exposure.webp' | relative_url }}" width="1440" height="1040" alt="ツールの公開方式を Full にした Context Gateway の設定" loading="lazy" decoding="async"></p>
+
+測定のためにツールの公開方式を Full にした画面。その後 Search に戻した。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
+
 ### Agent Playbooks
 
 **確認：redis-iris 1.0.1、2026-11-07。** このサイトの知見から FAQ を四件書き、JSON で作成して `iris` CLI で同期した。実習： [`iris/05-agent-playbooks`](https://github.com/litkhai/notes-on-redis/tree/main/iris/05-agent-playbooks)。
@@ -752,6 +818,12 @@ Context Surface はデータモデルである。エンティティをキーの�
 FAQ の二つ目のバージョンは下書きのままで、`faqs publish --version 2` を実行するまで discovery はバージョン 1 を返し続けた。キーも同じ流れで、read、write、propose、publish、full の順になる。コンソールには Agent Playbooks が並び、LangCache の項目はない。
 
 **Skill と提案**（`more.py`）。Skill は `SKILL.md` と参照ファイルを入れた zip 圧縮のフォルダである。この skill は、無料プランの実測した上限に照らしてワークロードを判定する。公開後、`discover` は英語の容量見積もりの質問にこれを返し、エージェントは手順と参照ファイルを必要なときに読み込んだ。未処理の提案は編集してから未公開の FAQ として承認され、`publish_faq` の後でようやく `discover` で見つかった。
+
+**Agent Memory から抽出した FAQ**（`extract.py`）。playbook のコンソール設定にある抽出ジョブは、セッションがアイドルになる（ここでは 1 分）と Agent Memory サービスを読み取る。メッセージ四つのサポート会話は 310 秒後に、一般的な質問と答えに書き直された未処理の FAQ 提案になった。抽出は "never publishes them" なので、提案は受信箱で待機する。
+
+<p class="shot"><img src="{{ '/assets/img/iris/32-playbook-faq-extraction.webp' | relative_url }}" width="1440" height="1549" alt="notes-on-redis-memory ストアで FAQ の自動抽出を有効にした playbook の設定" loading="lazy" decoding="async"></p>
+
+測定中に FAQ の自動抽出を有効にした画面。その後オフにした。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
 
 <p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="公開済みの FAQ 四件を並べた Playbook レジストリ。うち一件はバージョン 2" loading="lazy" decoding="async"></p>
 
@@ -892,6 +964,12 @@ Memory Inspector เรียกดูเซสชันและหน่วย
 
 MemoryETL (beta): extractor คัดลอก prompt ของประเภทหน่วยความจำที่กำหนดเอง แล้วแปลงเอกสารที่อัปโหลดหรือส่งผ่าน API เป็นหน่วยความจำประเภทนั้น <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
+**ตัวตรวจจับแบบกำหนดเองและการยกเว้นเชิงความหมาย** (`detectors.py`) เพิ่มตัวตรวจจับ `ACCT-[0-9]{6}` ที่ตั้งเป็น **Drop memory** และพรอมต์ยกเว้นเกี่ยวกับรหัสผ่านและรหัสกู้คืนในคอนโซล การเรียก `remember()` โดยตรงที่มีเลขบัญชีถูกจัดเก็บตามต้นฉบับ: "Direct creation ... does not apply the extraction prompt or sensitive-data exclusions." จากบทสนทนา การสกัดเบื้องหลังเก็บความชอบไว้ และตัดเลขบัญชีกับรหัสกู้คืนที่แต่งขึ้นออก คอนโซลเรียกพรอมต์นี้ว่า "Advisory only" ดังนั้นนี่เป็นข้อสังเกต ไม่ใช่การรับประกัน
+
+<p class="shot"><img src="{{ '/assets/img/iris/33-agent-memory-custom-detectors.webp' | relative_url }}" width="1440" height="2110" alt="การตั้งค่าการยกเว้นข้อมูลอ่อนไหวของ Agent Memory ที่มีตัวตรวจจับแบบกำหนดเอง lab-account-id ตั้งเป็น Drop memory และพรอมต์ยกเว้นเชิงความหมาย" loading="lazy" decoding="async"></p>
+
+ตัวตรวจจับแบบกำหนดเองและการยกเว้นเชิงความหมายบนบริการ Agent Memory ของแล็บ <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
 ### Intent Router
 
 **ตรวจสอบบน redis-iris 1.0.1, 2026-11-07** intent สี่รายการ รายการละสามตัวอย่าง เป้าหมายสี่ชนิด และคิวรีภาษาอังกฤษกับเกาหลีแปดรายการ ตัวฝังข้อความคือ OpenAI `text-embedding-3-small` แบบมีผู้ให้บริการจัดการให้ ไม่มีการขอ key ของเราเอง แล็บ: [`iris/03-intent-router`](https://github.com/litkhai/notes-on-redis/tree/main/iris/03-intent-router)
@@ -937,6 +1015,12 @@ Context Surface คือโมเดลข้อมูล: เอนทิต�
 
 upstream ทั้งสองอยู่หลัง endpoint เดียว และเปิดหรือปิดได้แยกกัน <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
+**การเปิดเผยแบบ Full เทียบกับ Search** (`exposure.py`) เมื่อสลับเป็น **Full** ในคอนโซล agent เห็นเครื่องมือ 13 รายการชื่อ `namespace__tool` (10 รายการจาก Context Surface และ 3 รายการจาก DeepWiki) ส่วนใน **Search** จะเห็นเพียง `search_tools` กับ `run_tool` การแคชผลลัพธ์และการบีบอัดไม่มีในคอนโซล Redis Cloud: เอกสารระบุให้ตั้งค่าด้วยโทเคนผู้ดูแลบน Gateway ที่ดูแลเอง และการบีบอัดต้องใช้ฐานข้อมูล `noeviction` ซึ่งฐานข้อมูลฟรีไม่ใช่
+
+<p class="shot"><img src="{{ '/assets/img/iris/31-gateway-full-exposure.webp' | relative_url }}" width="1440" height="1040" alt="การตั้งค่า Context Gateway ที่ตั้งการเปิดเผยเครื่องมือเป็น Full" loading="lazy" decoding="async"></p>
+
+ตั้งการเปิดเผยเครื่องมือเป็น Full เพื่อการวัด แล้วตั้งกลับเป็น Search <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
 ### Agent Playbooks
 
 **ตรวจสอบบน redis-iris 1.0.1, 2026-11-07** เขียน FAQ สี่รายการจากข้อค้นพบของไซต์นี้ เขียนเป็น JSON และซิงก์ด้วย `iris` CLI แล็บ: [`iris/05-agent-playbooks`](https://github.com/litkhai/notes-on-redis/tree/main/iris/05-agent-playbooks)
@@ -952,6 +1036,12 @@ upstream ทั้งสองอยู่หลัง endpoint เดียว 
 FAQ เวอร์ชันที่สองยังเป็นฉบับร่าง และ discovery ยังคงให้บริการเวอร์ชัน 1 จนกว่าจะรัน `faqs publish --version 2` key ก็ใช้ลำดับเดียวกัน: read, write, propose, publish, full คอนโซลแสดง Agent Playbooks และไม่มีรายการ LangCache
 
 **Skill และข้อเสนอ** (`more.py`) Skill คือโฟลเดอร์ที่บีบอัดเป็น zip ซึ่งมี `SKILL.md` และไฟล์อ้างอิง skill นี้ตรวจเวิร์กโหลดเทียบกับขีดจำกัดของแผนฟรีที่วัดได้ หลังเผยแพร่แล้ว `discover` ส่งคืน skill นี้เมื่อถามเรื่องการประเมินขนาดเป็นภาษาอังกฤษ และเอเจนต์โหลดขั้นตอนกับไฟล์อ้างอิงของมันตามต้องการ ข้อเสนอที่ยังเปิดอยู่ถูกแก้ไข ยอมรับเข้าเป็น FAQ ที่ยังไม่เผยแพร่ และ `discover` พบก็ต่อเมื่อหลัง `publish_faq`
+
+**FAQ ที่สกัดจาก Agent Memory** (`extract.py`) งานสกัดในการตั้งค่าคอนโซลของ playbook จะอ่านบริการ Agent Memory เมื่อเซสชันว่างเกินกำหนด (ที่นี่คือ 1 นาที) บทสนทนาฝ่ายสนับสนุนสี่ข้อความกลายเป็นข้อเสนอ FAQ ที่ยังเปิดอยู่หลังจาก 310 วินาที โดยถูกเขียนใหม่เป็นคำถามและคำตอบทั่วไป การสกัด "never publishes them" จึงรออยู่ในกล่องข้อความ
+
+<p class="shot"><img src="{{ '/assets/img/iris/32-playbook-faq-extraction.webp' | relative_url }}" width="1440" height="1549" alt="การตั้งค่า playbook ที่เปิดการสกัด FAQ อัตโนมัติสำหรับสโตร์ notes-on-redis-memory" loading="lazy" decoding="async"></p>
+
+เปิดการสกัด FAQ อัตโนมัติระหว่างการวัด และปิดไว้หลังจากนั้น <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
 <p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="ทะเบียน Playbook ที่มี FAQ ที่เผยแพร่แล้วสี่รายการ หนึ่งในนั้นเป็นเวอร์ชัน 2" loading="lazy" decoding="async"></p>
 
@@ -1092,6 +1182,12 @@ Detektor bawaan: kartu kredit, email, IP, telepon (US, CA, UK, DE, IL, IN, BR), 
 
 MemoryETL (beta): extractor menyalin prompt tipe memori kustom dan mengubah dokumen yang diunggah atau dikirim lewat API menjadi memori bertipe itu. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
 
+**Detektor kustom dan pengecualian semantik** (`detectors.py`). Detektor `ACCT-[0-9]{6}` yang diatur ke **Drop memory** dan prompt pengecualian tentang kata sandi dan kode pemulihan ditambahkan di konsol. `remember()` langsung dengan nomor akun disimpan apa adanya: "Direct creation ... does not apply the extraction prompt or sensitive-data exclusions." Dari sebuah percakapan, ekstraksi latar belakang mempertahankan preferensi dan menghilangkan nomor akun serta kode pemulihan karangan; konsol menyebut prompt itu "Advisory only", jadi ini sebuah pengamatan, bukan jaminan.
+
+<p class="shot"><img src="{{ '/assets/img/iris/33-agent-memory-custom-detectors.webp' | relative_url }}" width="1440" height="2110" alt="Pengaturan pengecualian data sensitif Agent Memory dengan detektor kustom lab-account-id yang diatur ke Drop memory dan prompt pengecualian semantik" loading="lazy" decoding="async"></p>
+
+Detektor kustom dan pengecualian semantik pada layanan Agent Memory milik lab. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
+
 ### Intent Router
 
 **Diverifikasi pada redis-iris 1.0.1, 2026-11-07.** Empat intent dengan masing-masing tiga contoh, target dari empat jenis; delapan kueri berbahasa Inggris dan Korea. Embedder-nya adalah OpenAI `text-embedding-3-small` terkelola; tidak diminta kunci milik sendiri. Lab: [`iris/03-intent-router`](https://github.com/litkhai/notes-on-redis/tree/main/iris/03-intent-router).
@@ -1137,6 +1233,12 @@ Context Surface adalah model data: entitas dipetakan ke templat kunci, bidang di
 
 Kedua upstream berada di balik satu endpoint, masing-masing dapat diaktifkan atau dinonaktifkan. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
 
+**Eksposur Full versus Search** (`exposure.py`). Setelah diganti ke **Full** di konsol, agen melihat 13 alat bernama `namespace__tool` (10 dari Context Surface, 3 dari DeepWiki); pada **Search** agen hanya melihat `search_tools` dan `run_tool`. Caching hasil dan kompresi tidak ada di konsol Redis Cloud: dokumentasi mengaturnya dengan token admin pada Gateway yang dikelola sendiri, dan kompresi memerlukan basis data `noeviction`, yang bukan basis data gratis.
+
+<p class="shot"><img src="{{ '/assets/img/iris/31-gateway-full-exposure.webp' | relative_url }}" width="1440" height="1040" alt="Konfigurasi Context Gateway dengan eksposur alat diatur ke Full" loading="lazy" decoding="async"></p>
+
+Eksposur alat diatur ke Full untuk pengukuran, lalu dikembalikan ke Search. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
+
 ### Agent Playbooks
 
 **Diverifikasi pada redis-iris 1.0.1, 2026-11-07.** Empat FAQ ditulis dari temuan situs ini, disusun sebagai JSON dan disinkronkan dengan CLI `iris`. Lab: [`iris/05-agent-playbooks`](https://github.com/litkhai/notes-on-redis/tree/main/iris/05-agent-playbooks).
@@ -1152,6 +1254,12 @@ Kedua upstream berada di balik satu endpoint, masing-masing dapat diaktifkan ata
 Versi kedua sebuah FAQ tetap berstatus draf dan discovery terus menyajikan versi 1 sampai `faqs publish --version 2` dijalankan. Kunci mengikuti alur yang sama: read, write, propose, publish, full. Konsol menampilkan Agent Playbooks dan tidak ada entri LangCache.
 
 **Skill dan proposal** (`more.py`). Skill adalah folder terkompresi yang berisi `SKILL.md` dan file referensi; skill ini memeriksa beban kerja terhadap batas terukur paket gratis. Setelah dipublikasikan, `discover` mengembalikannya untuk pertanyaan perencanaan kapasitas berbahasa Inggris dan agen memuat langkah serta file referensinya sesuai kebutuhan. Proposal yang masih terbuka diedit, diterima ke dalam FAQ yang belum dipublikasikan, dan baru ditemukan oleh `discover` setelah `publish_faq`.
+
+**FAQ yang diekstrak dari Agent Memory** (`extract.py`). Tugas ekstraksi di pengaturan konsol playbook membaca layanan Agent Memory setelah sebuah sesi tidak aktif (di sini 1 menit). Percakapan dukungan berisi empat pesan berubah menjadi usulan FAQ yang masih terbuka 310 detik kemudian, ditulis ulang sebagai pertanyaan dan jawaban umum; ekstraksi "never publishes them", sehingga usulan itu menunggu di kotak masuk.
+
+<p class="shot"><img src="{{ '/assets/img/iris/32-playbook-faq-extraction.webp' | relative_url }}" width="1440" height="1549" alt="Konfigurasi playbook dengan ekstraksi FAQ otomatis diaktifkan untuk store notes-on-redis-memory" loading="lazy" decoding="async"></p>
+
+Ekstraksi FAQ otomatis aktif selama pengukuran; setelah itu dimatikan. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
 
 <p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="Registri Playbook dengan empat FAQ yang diterbitkan, satu di antaranya versi 2" loading="lazy" decoding="async"></p>
 
@@ -1292,6 +1400,12 @@ Pengesan terbina dalam: kad kredit, e-mel, IP, telefon (US, CA, UK, DE, IL, IN, 
 
 MemoryETL (beta): extractor menyalin prompt jenis memori tersuai dan menukar dokumen yang dimuat naik atau dihantar melalui API kepada memori berjenis itu. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
 
+**Pengesan tersuai dan pengecualian semantik** (`detectors.py`). Pengesan `ACCT-[0-9]{6}` yang ditetapkan kepada **Drop memory** dan prompt pengecualian tentang kata laluan dan kod pemulihan ditambah dalam konsol. `remember()` langsung dengan nombor akaun disimpan seadanya: "Direct creation ... does not apply the extraction prompt or sensitive-data exclusions." Daripada sebuah perbualan, pengekstrakan latar belakang mengekalkan keutamaan dan meninggalkan nombor akaun serta kod pemulihan rekaan; konsol menyebut prompt itu "Advisory only", jadi ini pemerhatian, bukan jaminan.
+
+<p class="shot"><img src="{{ '/assets/img/iris/33-agent-memory-custom-detectors.webp' | relative_url }}" width="1440" height="2110" alt="Tetapan pengecualian data sensitif Agent Memory dengan pengesan tersuai lab-account-id yang ditetapkan kepada Drop memory dan prompt pengecualian semantik" loading="lazy" decoding="async"></p>
+
+Pengesan tersuai dan pengecualian semantik pada perkhidmatan Agent Memory makmal. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
+
 ### Intent Router
 
 **Disahkan pada redis-iris 1.0.1, 2026-11-07.** Empat intent dengan tiga contoh setiap satu, sasaran daripada empat jenis; lapan pertanyaan dalam bahasa Inggeris dan Korea. Embedder ialah OpenAI `text-embedding-3-small` terurus; tiada kunci sendiri diminta. Makmal: [`iris/03-intent-router`](https://github.com/litkhai/notes-on-redis/tree/main/iris/03-intent-router).
@@ -1337,6 +1451,12 @@ Context Surface ialah model data: entiti dipetakan kepada templat kunci, medan d
 
 Kedua-dua upstream berada di sebalik satu endpoint, masing-masing boleh dihidupkan atau dimatikan. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
 
+**Pendedahan Full berbanding Search** (`exposure.py`). Setelah ditukar kepada **Full** dalam konsol, ejen melihat 13 alat bernama `namespace__tool` (10 daripada Context Surface, 3 daripada DeepWiki); dalam **Search** ia hanya melihat `search_tools` dan `run_tool`. Caching hasil dan pemampatan tiada dalam konsol Redis Cloud: dokumentasi menetapkannya dengan token pentadbir pada Gateway yang diurus sendiri, dan pemampatan memerlukan pangkalan data `noeviction`, yang bukan pangkalan data percuma.
+
+<p class="shot"><img src="{{ '/assets/img/iris/31-gateway-full-exposure.webp' | relative_url }}" width="1440" height="1040" alt="Konfigurasi Context Gateway dengan pendedahan alat ditetapkan kepada Full" loading="lazy" decoding="async"></p>
+
+Pendedahan alat ditetapkan kepada Full untuk pengukuran, kemudian dikembalikan kepada Search. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
+
 ### Agent Playbooks
 
 **Disahkan pada redis-iris 1.0.1, 2026-11-07.** Empat FAQ ditulis daripada penemuan tapak ini, disusun sebagai JSON dan diselaraskan dengan CLI `iris`. Makmal: [`iris/05-agent-playbooks`](https://github.com/litkhai/notes-on-redis/tree/main/iris/05-agent-playbooks).
@@ -1352,6 +1472,12 @@ Kedua-dua upstream berada di sebalik satu endpoint, masing-masing boleh dihidupk
 Versi kedua sesuatu FAQ kekal sebagai draf dan discovery terus menyajikan versi 1 sehingga `faqs publish --version 2` dijalankan. Kunci mengikuti aliran kerja yang sama: read, write, propose, publish, full. Konsol menyenaraikan Agent Playbooks dan tiada entri LangCache.
 
 **Skill dan cadangan** (`more.py`). Skill ialah folder termampat yang mengandungi `SKILL.md` dan fail rujukan; skill ini menyemak beban kerja berdasarkan had terukur pelan percuma. Selepas diterbitkan, `discover` mengembalikannya untuk soalan pengiraan saiz dalam bahasa Inggeris dan ejen memuatkan langkah serta fail rujukannya apabila diperlukan. Cadangan yang masih terbuka disunting, diterima ke dalam FAQ yang belum diterbitkan, dan hanya ditemui oleh `discover` selepas `publish_faq`.
+
+**FAQ yang diekstrak daripada Agent Memory** (`extract.py`). Tugas pengekstrakan dalam tetapan konsol playbook membaca perkhidmatan Agent Memory setelah sesuatu sesi tidak aktif (di sini 1 minit). Perbualan sokongan empat mesej bertukar menjadi cadangan FAQ yang masih terbuka 310 saat kemudian, ditulis semula sebagai soalan dan jawapan umum; pengekstrakan "never publishes them", jadi ia menunggu dalam peti masuk.
+
+<p class="shot"><img src="{{ '/assets/img/iris/32-playbook-faq-extraction.webp' | relative_url }}" width="1440" height="1549" alt="Konfigurasi playbook dengan pengekstrakan FAQ automatik diaktifkan untuk store notes-on-redis-memory" loading="lazy" decoding="async"></p>
+
+Pengekstrakan FAQ automatik dihidupkan semasa pengukuran; ia dimatikan selepas itu. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
 
 <p class="shot"><img src="{{ '/assets/img/iris/27-playbook-registry.webp' | relative_url }}" width="1440" height="765" alt="Daftar Playbook dengan empat FAQ yang diterbitkan, satu daripadanya versi 2" loading="lazy" decoding="async"></p>
 
