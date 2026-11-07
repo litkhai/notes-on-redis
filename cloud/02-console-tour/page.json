@@ -1,6 +1,15 @@
 {
- "_note": "Source for docs/cloud.md. Edit here, then run: python3 cloud/02-console-tour/build_page.py. Each block is {type: md|img}; md has en/ko/zh/ja text, img has file plus alt/cap per language.",
+ "_note": "Source for docs/cloud.md. Edit here, then run: python3 scripts/build-lang-page.py cloud/02-console-tour/page.json",
  "title": "Redis Cloud",
+ "permalink": "/cloud/",
+ "out": "docs/cloud.md",
+ "img": "cloud-console",
+ "captured": {
+  "en": "Captured 2026-11-07, Redis Cloud free plan.",
+  "ko": "2026-11-07 캡처, Redis Cloud 무료 플랜.",
+  "zh": "2026-11-07 截图，Redis Cloud 免费计划。",
+  "ja": "2026-11-07 キャプチャ、Redis Cloud 無料プラン。"
+ },
  "blocks": [
   {
    "type": "md",

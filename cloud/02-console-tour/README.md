@@ -7,7 +7,7 @@
 **Verified on Redis Cloud console, free plan, 2026-11-07.**
 
 Source for the site walkthrough at `/cloud/`: the page text in [`page.json`](./page.json) (four
-languages), the generator [`build_page.py`](./build_page.py) that writes `docs/cloud.md`, and the
+languages), the generator [`scripts/build-lang-page.py`](../../scripts/build-lang-page.py) that writes `docs/cloud.md`, and the
 capture manifest [`manifest.json`](./manifest.json) for
 [`scripts/capture-console.mjs`](../../scripts/capture-console.mjs).
 
@@ -19,7 +19,7 @@ npm i playwright@1.48
 cp .env.example .env          # your mask terms; gitignored
 # copy manifest.json and put your database and subscription IDs into the paths, then:
 node ../../scripts/capture-console.mjs manifest.json
-python3 build_page.py
+python3 ../../scripts/build-lang-page.py page.json
 ```
 
 The script attaches to that Chrome, opens its own tab, emulates dark mode and English there
@@ -54,7 +54,7 @@ added to `LEAK_TERMS`) stopped the run with `still visible after masking`.
 **확인: Redis Cloud 콘솔, 무료 플랜, 2026-11-07.**
 
 사이트 `/cloud/` 안내 글의 원천이다. 네 언어 본문 [`page.json`](./page.json),
-`docs/cloud.md`를 만드는 [`build_page.py`](./build_page.py),
+`docs/cloud.md`를 만드는 [`scripts/build-lang-page.py`](../../scripts/build-lang-page.py),
 [`scripts/capture-console.mjs`](../../scripts/capture-console.mjs)용 캡처 매니페스트
 [`manifest.json`](./manifest.json).
 
@@ -66,7 +66,7 @@ npm i playwright@1.48
 cp .env.example .env          # 가릴 문자열. gitignore 대상
 # manifest.json을 복사해 경로에 DB·구독 ID를 넣은 뒤:
 node ../../scripts/capture-console.mjs manifest.json
-python3 build_page.py
+python3 ../../scripts/build-lang-page.py page.json
 ```
 
 스크립트는 그 Chrome에 붙어 자기 탭을 열고, 그 탭에서만 다크 모드와 영어를 흉내 낸다(계정의
