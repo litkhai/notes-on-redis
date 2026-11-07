@@ -1,0 +1,63 @@
+# The docs/ site is served by Vercel at https://redis.litkhai.dev. This keeps
+# litkhai.github.io/notes-on-redis alive: it builds the same pages and publishes
+# one redirect stub per page, each sending to the same path on the new host.
+# docs/ 사이트는 Vercel(https://redis.litkhai.dev)에서 서비스한다. 이 워크플로는
+# 같은 페이지를 빌드한 뒤 페이지마다 새 주소의 같은 경로로 넘겨주는 안내 페이지를
+# 게시해 litkhai.github.io/notes-on-redis 주소를 유지한다.
+#
+# Pages source must be set to "GitHub Actions" in Settings → Pages.
+# Settings → Pages 에서 소스를 "GitHub Actions" 로 설정해야 한다.
+name: Deploy Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "scripts/pages-redirect.py"
+      - ".github/workflows/pages.yml"
+  # Allow running by hand from the Actions tab.
+  # Actions 탭에서 수동 실행 허용.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deploy finish rather than cancelling it mid-flight.
+# 실행 중인 배포는 취소하지 않고 끝까지 진행시킨다.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+
+      - name: Build with Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./docs
+          destination: ./_site
+
+      - name: Generate redirect stubs
+        run: python3 scripts/pages-redirect.py _site _redirect https://redis.litkhai.dev /notes-on-redis
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_redirect
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -9,8 +9,8 @@ way, so paths that never had a page still land on the new host.
 
     python3 scripts/pages-redirect.py SITE_DIR OUT_DIR TARGET PREFIX
 
-    TARGET  https://quantum.litkhai.dev
-    PREFIX  the Pages path the stubs are served under, e.g. /notes-on-quantum
+    TARGET  https://redis.litkhai.dev
+    PREFIX  the Pages path the stubs are served under, e.g. /notes-on-redis
 """
 import html
 import pathlib
