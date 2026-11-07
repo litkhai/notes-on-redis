@@ -1,4 +1,4 @@
-# Redis Hands-On Labs (HOLs)
+# Notes on Redis
 
 **📖 [redis.litkhai.dev](https://redis.litkhai.dev)** — not deployed yet; see [STATUS.md](./STATUS.md)
 
