@@ -34,6 +34,8 @@ Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valke
 
 Only in Valkey: `CLUSTERSCAN`, atomic slot migration (`CLUSTER MIGRATESLOTS`), `COMMANDLOG`, `DELIFEQ`. Only in Redis besides the module families: `BACKUP`, `HOTKEYS`, `HIMPORT`, `DIGEST`, stream additions such as `XACKDEL`. On the bundle, `FT.SEARCH` right after `FT.CREATE` found nothing and found the documents a second later: existing keys are indexed in the background. The throughput rows are measurements on one machine; through Docker's published ports all three stopped at about 83,000 req/s, which is the port-forwarding path.
 
+**Availability, side by side** (`compare/01-valkey-vs-redis-local/ha.py`). The same script ran both engines: a 3 s cluster node timeout promoted a replica after 4.2 s on each, Sentinel named a new master after 4.3 s (Redis) and 4.4 s (Valkey), and AOF with `appendfsync everysec` reloaded about 632,000 keys in 1.3 s on both. Only the binary names differed; the cluster and Sentinel commands are the same.
+
 ### Feature matrix
 
 One table across Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache for Valkey and for Redis OSS, Azure Managed Redis and Memorystore for Valkey, every cell with a source: measured here on 2026-11-07, or vendor documentation read that day, or marked "not confirmed". It lives in the repository so it can grow cell by cell: [`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md).
@@ -155,6 +157,8 @@ Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valke
 | SET/GET, `io-threads 4`, 초당 요청 | 342,427–352,568 | 315,391–342,349 | 미실행 |
 
 Valkey에만 있는 것: `CLUSTERSCAN`, 원자적 슬롯 이전(`CLUSTER MIGRATESLOTS`), `COMMANDLOG`, `DELIFEQ`. 모듈 계열 외에 Redis에만 있는 것: `BACKUP`, `HOTKEYS`, `HIMPORT`, `DIGEST`, `XACKDEL` 같은 스트림 추가 명령. 번들에서는 `FT.CREATE` 직후의 `FT.SEARCH`가 아무것도 찾지 못하고 1초 뒤에 찾았다. 기존 키는 백그라운드로 색인된다. 처리량 행은 기계 한 대에서 잰 값이다. Docker의 공개 포트를 거치면 셋 모두 초당 약 83,000에서 멈췄는데, 이는 포트 포워딩 경로의 한계다.
+
+**가용성 나란히 보기**(`compare/01-valkey-vs-redis-local/ha.py`). 같은 스크립트로 두 엔진을 돌렸다. 클러스터 노드 타임아웃 3초에서 둘 다 4.2초에 복제본이 승격됐고, Sentinel은 4.3초(Redis)와 4.4초(Valkey)에 새 마스터를 지목했으며, `appendfsync everysec`의 AOF는 둘 다 키 약 632,000개를 1.3초에 다시 읽었다. 다른 것은 바이너리 이름뿐이고 클러스터와 Sentinel 명령은 같다.
 
 ### 기능 매트릭스
 
@@ -278,6 +282,8 @@ Redis Open Source 8.x、Redis Cloud / Software、Valkey 9.x、ElastiCache for Va
 
 仅 Valkey 有：`CLUSTERSCAN`、原子槽位迁移（`CLUSTER MIGRATESLOTS`）、`COMMANDLOG`、`DELIFEQ`。除模块系列外仅 Redis 有：`BACKUP`、`HOTKEYS`、`HIMPORT`、`DIGEST`，以及 `XACKDEL` 之类的 stream 新增命令。在 bundle 上，紧接 `FT.CREATE` 之后执行 `FT.SEARCH` 什么也没找到，一秒后才找到文档：已有的键是在后台建立索引的。吞吐量各行是在一台机器上的测量值；通过 Docker 发布的端口，三者都停在约 83,000 req/s，这是端口转发路径的上限。
 
+**可用性并排对比**（`compare/01-valkey-vs-redis-local/ha.py`）。同一个脚本运行了两个引擎：集群节点超时设为 3 秒时，两者都在 4.2 秒后提升了副本；Sentinel 分别在 4.3 秒（Redis）和 4.4 秒（Valkey）后指定了新的 master；使用 `appendfsync everysec` 的 AOF 在两者上都用 1.3 秒重新加载了约 632,000 个键。只有二进制文件的名称不同，集群和 Sentinel 的命令是一样的。
+
 ### 功能矩阵
 
 一张表涵盖 Redis Open Source 8、Redis Cloud、Valkey 9、ElastiCache for Valkey 与 for Redis OSS、Azure Managed Redis 和 Memorystore for Valkey，每个单元格都有来源：2026-11-07 在此实测，或当天读取的厂商文档，或标为“未确认”。它放在仓库中，因此可以逐格扩充：[`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md)。
@@ -399,6 +405,8 @@ Redis Open Source 8.x、Redis Cloud / Software、Valkey 9.x、ElastiCache for Va
 | SET/GET, `io-threads 4`, req/s | 342,427–352,568 | 315,391–342,349 | 未実行 |
 
 Valkey のみにあるもの: `CLUSTERSCAN`、アトミックなスロット移行（`CLUSTER MIGRATESLOTS`）、`COMMANDLOG`、`DELIFEQ`。モジュール群のほかに Redis のみにあるもの: `BACKUP`、`HOTKEYS`、`HIMPORT`、`DIGEST`、`XACKDEL` などのストリーム追加分。bundle では、`FT.CREATE` の直後の `FT.SEARCH` は何も見つけず、1 秒後にはドキュメントを見つけた。既存のキーはバックグラウンドでインデックスされる。スループットの行は 1 台のマシンでの測定値である。Docker の公開ポート経由では、3 つとも約 83,000 req/s で頭打ちになった。これはポート転送経路の上限である。
+
+**可用性の比較**（`compare/01-valkey-vs-redis-local/ha.py`）。同じスクリプトで両方のエンジンを動かした。クラスターのノードタイムアウト 3 秒では、どちらも 4.2 秒でレプリカが昇格し、Sentinel は 4.3 秒（Redis）と 4.4 秒（Valkey）で新しいマスターを指名し、`appendfsync everysec` の AOF は、どちらも約 632,000 個のキーを 1.3 秒で再読み込みした。違ったのはバイナリ名だけで、クラスターと Sentinel のコマンドは同じである。
 
 ### 機能マトリクス
 
@@ -522,6 +530,8 @@ Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valke
 
 มีเฉพาะใน Valkey: `CLUSTERSCAN`, การย้าย slot แบบ atomic (`CLUSTER MIGRATESLOTS`), `COMMANDLOG`, `DELIFEQ` มีเฉพาะใน Redis นอกจากกลุ่มโมดูล: `BACKUP`, `HOTKEYS`, `HIMPORT`, `DIGEST` และคำสั่งที่เพิ่มใน stream เช่น `XACKDEL` บน bundle การรัน `FT.SEARCH` ทันทีหลัง `FT.CREATE` ไม่พบอะไรเลย และพบเอกสารหลังจากผ่านไปหนึ่งวินาที เพราะคีย์ที่มีอยู่แล้วถูกทำดัชนีในเบื้องหลัง แถวของปริมาณงานเป็นผลการวัดบนเครื่องเดียว เมื่อผ่านพอร์ตที่ Docker เปิดให้ ทั้งสามตัวหยุดอยู่ที่ประมาณ 83,000 req/s ซึ่งเป็นเพดานของเส้นทางการส่งต่อพอร์ต
 
+**ความพร้อมใช้งาน เทียบกันแบบเคียงข้างกัน** (`compare/01-valkey-vs-redis-local/ha.py`) รันสคริปต์เดียวกันกับทั้งสองเอนจิน: เมื่อตั้ง node timeout ของคลัสเตอร์ที่ 3 วินาที ทั้งคู่เลื่อนระดับเรพลิกาหลังผ่านไป 4.2 วินาที, Sentinel ระบุ master ใหม่หลังผ่านไป 4.3 วินาที (Redis) และ 4.4 วินาที (Valkey) และ AOF ที่ใช้ `appendfsync everysec` โหลดคีย์ราว 632,000 คีย์กลับเข้ามาใน 1.3 วินาทีเท่ากันทั้งคู่ ที่ต่างกันมีแค่ชื่อไบนารี คำสั่งของคลัสเตอร์และ Sentinel เหมือนกัน
+
 ### ตารางคุณสมบัติ
 
 ตารางเดียวครอบคลุม Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache for Valkey และ for Redis OSS, Azure Managed Redis และ Memorystore for Valkey ทุกเซลล์มีแหล่งที่มา คือวัดจริงที่นี่เมื่อ 2026-11-07 หรือเอกสารของผู้ให้บริการที่อ่านในวันนั้น หรือทำเครื่องหมายว่า "ยังไม่ยืนยัน" ตารางอยู่ในรีโพซิทอรี จึงเพิ่มทีละเซลล์ได้: [`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md)
@@ -644,6 +654,8 @@ Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valke
 
 Hanya ada di Valkey: `CLUSTERSCAN`, migrasi slot atomik (`CLUSTER MIGRATESLOTS`), `COMMANDLOG`, `DELIFEQ`. Hanya ada di Redis selain keluarga modul: `BACKUP`, `HOTKEYS`, `HIMPORT`, `DIGEST`, serta tambahan stream seperti `XACKDEL`. Pada bundle, `FT.SEARCH` tepat setelah `FT.CREATE` tidak menemukan apa pun dan baru menemukan dokumen satu detik kemudian: key yang sudah ada diindeks di latar belakang. Baris throughput adalah hasil pengukuran pada satu mesin; melalui port yang dipublikasikan Docker, ketiganya berhenti di sekitar 83,000 req/s, yaitu batas jalur penerusan port.
 
+**Ketersediaan, berdampingan** (`compare/01-valkey-vs-redis-local/ha.py`). Skrip yang sama dijalankan pada kedua mesin: dengan node timeout klaster 3 dtk, replika dipromosikan setelah 4.2 dtk pada keduanya, Sentinel menunjuk master baru setelah 4.3 dtk (Redis) dan 4.4 dtk (Valkey), dan AOF dengan `appendfsync everysec` memuat ulang sekitar 632,000 key dalam 1.3 dtk pada keduanya. Hanya nama binernya yang berbeda; perintah klaster dan Sentinel sama.
+
 ### Matriks fitur
 
 Satu tabel yang mencakup Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache for Valkey dan for Redis OSS, Azure Managed Redis, dan Memorystore for Valkey, dengan sumber di setiap sel: diukur di sini pada 2026-11-07, atau dokumentasi vendor yang dibaca pada hari itu, atau ditandai "belum terkonfirmasi". Tabel ini disimpan di repositori sehingga dapat bertambah sel demi sel: [`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md).
@@ -765,6 +777,8 @@ Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valke
 | SET/GET, `io-threads 4`, req/s | 342,427–352,568 | 315,391–342,349 | tidak dijalankan |
 
 Hanya ada dalam Valkey: `CLUSTERSCAN`, pemindahan slot atomik (`CLUSTER MIGRATESLOTS`), `COMMANDLOG`, `DELIFEQ`. Hanya ada dalam Redis selain keluarga modul: `BACKUP`, `HOTKEYS`, `HIMPORT`, `DIGEST`, serta tambahan stream seperti `XACKDEL`. Pada bundle, `FT.SEARCH` sejurus selepas `FT.CREATE` tidak menemui apa-apa dan menemui dokumen sesaat kemudian: kunci yang sedia ada diindeks di latar belakang. Baris truput ialah ukuran pada satu mesin; melalui port yang diterbitkan Docker, ketiga-tiganya berhenti pada sekitar 83,000 req/s, iaitu had laluan pemajuan port.
+
+**Ketersediaan, bersebelahan** (`compare/01-valkey-vs-redis-local/ha.py`). Skrip yang sama dijalankan pada kedua-dua enjin: dengan tamat masa nod kluster 3 s, replika dinaikkan taraf selepas 4.2 s pada kedua-duanya, Sentinel menamakan master baharu selepas 4.3 s (Redis) dan 4.4 s (Valkey), dan AOF dengan `appendfsync everysec` memuat semula kira-kira 632,000 kunci dalam 1.3 s pada kedua-duanya. Hanya nama binari yang berbeza; perintah kluster dan Sentinel adalah sama.
 
 ### Matriks ciri
 

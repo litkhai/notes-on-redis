@@ -18,6 +18,8 @@ Official documentation: [RDI overview](https://redis.io/docs/latest/integrate/re
 ./cdc.sh                    # time an UPDATE, INSERT, DELETE and a 1,000-row UPDATE until they show in Redis
 ../03-operator-kind/down.sh
 ./classic.sh                # the same pipeline on the classic processor, then cdc.sh twice
+./least_privilege.sh         # rerun the pipeline as a replication-only Postgres user, then cdc.sh
+./insight.sh                 # Redis Insight 3.8.0 connected to the RDI API
 ```
 
 `up.sh` output as it appeared (2026-11-07):
@@ -188,6 +190,49 @@ Statistics:
 {"id":1002,"name":"customer-1002","country":"KR","credit_limit":2001,"tier":"standard"}
 ```
 
+`least_privilege.sh` and `insight.sh` output as it appeared (2026-11-07):
+
+```text
+== create the user and the replication group
+rdi: superuser=true, replication=true, createdb=true
+rdi_cdc: superuser=false, replication=true, createdb=false
+== what rdi_cdc cannot do
+ERROR:  permission denied to create role
+1000
+== switch the pipeline's source secrets to rdi_cdc and reset it (new snapshot as that user)
+Pipeline default reset.
+snapshot as rdi_cdc done after 30 s
+Sources:
+  Name        Type  Db Type     Connection                              Sync Mode  Connected
+  ----        ----  -------     ----------                              ---------  ---------
+  postgresql  cdc   postgresql  postgres.source.svc.cluster.local:5432  streaming  yes
+
+Statistics:
+  Name                        Incoming  Pending  Inserted  Updated  Deleted  Filtered  Rejected  Last Arrival
+  ----                        --------  -------  --------  -------  -------  --------  --------  ------------
+  postgresql.public.customer  1000      0        1000      0        0        0         0         2026-11-07T13:49:58Z
+
+replication connection as rdi_cdc, streaming
+replication slot debezium active=true
+publication dbz_publication owner rdi
+== UPDATE one row: customer 7 credit_limit -> 9000 + run number (tier gold)
+   visible after 194 ms
+== INSERT one row: customer 1002
+   visible after 2911 ms
+== DELETE one row: customer 2
+   gone after 673 ms
+== UPDATE every row in one transaction (1000 rows): credit_limit + 1, watching customer 1002
+   all updates visible after 807 ms
+== the overhead in these numbers: one kubectl exec of psql that changes nothing
+   125 ms
+== the transformation on the new row
+{"id":1002,"name":"customer-1002","country":"KR","credit_limit":2001,"tier":"standard"}
+
+$ ./insight.sh
+registered nor-rdi-lab RDI version 2.2.1
+open http://127.0.0.1:25540/integrate   (docker rm -f nor-insight-rdi when done)
+```
+
 ### What was observed
 
 - **The chart is small and quick.** The RDI chart installed in 32 s and started three pods: API, operator and reloader. The collector and processor pods appear only when a pipeline is deployed.
@@ -198,11 +243,16 @@ Statistics:
 - **"Connected: no" for the target.** `redis-di describe` showed the target as not connected even while rows were arriving in it. It was not investigated further.
 - **The classic processor runs in one pod.** With `processors.type: classic` the redeploy took 40 s and replaced Flink's job manager and task manager with a single `processor` pod plus `rdi-metrics-exporter`. Change latency stayed in the same range: 0.2–1.1 s over two runs. The statistics counters started again from zero after the switch.
 - **Write-behind is not part of RDI 2.2.** The RDI 2.2 documentation has no write-behind (Redis to a database) section. The write-behind pages that remain describe an older engine that needs RedisGears Python 1.2.6 on the cluster, and Redis Software 8.2.6-25 ships no RedisGears ([`01`](../01-redis-software-docker/README.md)). It could not be run here.
+- **A replication-only Postgres user is enough.** Following the "replication group" steps on RDI's PostgreSQL page, `rdi_cdc` has `LOGIN REPLICATION` and `CREATE` on the database, shares table ownership through `replication_group`, and is not a superuser: `CREATE ROLE` was refused. After switching the source secrets and `redis-di reset`, the 1,000-row snapshot ran again as `rdi_cdc` in 30 s, `pg_stat_replication` showed the stream as `rdi_cdc`, and the change latencies were in the same range as before. The publication `dbz_publication` was still owned by the superuser that created it in the first run.
+- **Redis Insight shows the pipeline.** Redis Insight 3.8.0 registered the RDI API (it read version 2.2.1) and showed the pipeline status, the configuration with secrets as `${...}` placeholders, and the `customer` job, with **Deploy**, **Reset** and **Stop**. Its **Analytics** tab stayed empty for this Flink pipeline.
+
+<img src="../../docs/assets/img/enterprise/06-insight-rdi-pipeline.webp" width="1440" height="900" alt="Redis Insight 3.8.0 Data integration view of the RDI pipeline: status Started, the configuration file with secret placeholders, and the customer job" loading="lazy" decoding="async">
+
+Captured 2026-11-07, headless Chromium on the lab host.
 
 ### Not run / caveats
 
-- The Redis Insight RDI view was not run.
-- Production settings were not used: no TLS, no replica for the RDI database, and the Postgres user is a superuser rather than a user with only replication rights.
+- Not production settings: no TLS and no replica for the RDI database; `up.sh` still starts with the superuser and `least_privilege.sh` switches to `rdi_cdc`.
 - Latency comes from one host with all components on it; it is an order of magnitude, not a benchmark.
 - Managed RDI on Redis Cloud is Pro only ([#12](https://github.com/litkhai/notes-on-redis/issues/12)).
 
@@ -227,11 +277,15 @@ RDI는 관계형 테이블을 Redis로 복사하고 변경 데이터 캡처(CDC)
 ./cdc.sh                    # time an UPDATE, INSERT, DELETE and a 1,000-row UPDATE until they show in Redis
 ../03-operator-kind/down.sh
 ./classic.sh                # the same pipeline on the classic processor, then cdc.sh twice
+./least_privilege.sh         # rerun the pipeline as a replication-only Postgres user, then cdc.sh
+./insight.sh                 # Redis Insight 3.8.0 connected to the RDI API
 ```
 
 출력은 영문 절과 같다(2026-11-07). 파이프라인은 [`pipeline/config.yaml.in`](./pipeline/config.yaml.in)(대상 포트는 실행 때 채움)과 [`pipeline/jobs/customer.yaml`](./pipeline/jobs/customer.yaml)이다.
 
 `classic.sh`의 출력도 영문 절과 같다(2026-11-07).
+
+`least_privilege.sh` and `insight.sh`의 출력도 영문 절과 같다(2026-11-07).
 
 ### 관찰한 것
 
@@ -243,11 +297,16 @@ RDI는 관계형 테이블을 Redis로 복사하고 변경 데이터 캡처(CDC)
 - **대상이 "Connected: no".** 행이 들어오는 동안에도 `redis-di describe`는 대상을 연결 안 됨으로 표시했다. 더 조사하지 않았다.
 - **classic 프로세서는 파드 하나로 돈다.** `processors.type: classic`으로 다시 배포하는 데 40초가 걸렸고, Flink의 job manager와 task manager 대신 `processor` 파드 하나와 `rdi-metrics-exporter`가 떴다. 변경 지연은 두 번 실행에서 0.2–1.1초로 같은 범위였다. 바꾼 뒤 통계 카운터는 0부터 다시 시작했다.
 - **write-behind는 RDI 2.2에 없다.** RDI 2.2 문서에는 write-behind(Redis에서 DB로) 절이 없다. 남아 있는 write-behind 페이지는 클러스터에 RedisGears Python 1.2.6이 필요한 예전 엔진을 설명하는데, Redis Software 8.2.6-25에는 RedisGears가 없다([`01`](../01-redis-software-docker/README.md)). 여기서는 실행할 수 없었다.
+- **복제 전용 Postgres 사용자로 충분하다.** RDI PostgreSQL 페이지의 "replication group" 절차대로 만든 `rdi_cdc`는 `LOGIN REPLICATION`과 DB에 대한 `CREATE` 권한을 갖고, `replication_group`으로 테이블 소유권을 공유하며, 슈퍼유저가 아니다: `CREATE ROLE`은 거절됐다. 원천 시크릿을 바꾸고 `redis-di reset`하자 1,000행 스냅샷이 `rdi_cdc`로 30초에 다시 돌았고, `pg_stat_replication`은 스트림 사용자를 `rdi_cdc`로 보여 줬으며, 변경 지연은 이전과 같은 범위였다. 발행(publication) `dbz_publication`은 첫 실행에서 그것을 만든 슈퍼유저 소유 그대로였다.
+- **Redis Insight가 파이프라인을 보여 준다.** Redis Insight 3.8.0은 RDI API를 등록하고(버전 2.2.1을 읽음) 파이프라인 상태, 시크릿이 `${...}` 자리표시자로 보이는 설정, `customer` 작업을 **Deploy**, **Reset**, **Stop**과 함께 보여 줬다. **Analytics** 탭은 이 Flink 파이프라인에서 비어 있었다.
+
+<img src="../../docs/assets/img/enterprise/06-insight-rdi-pipeline.webp" width="1440" height="900" alt="RDI 파이프라인의 Redis Insight 3.8.0 Data integration 화면: 상태 Started, 시크릿 자리표시자가 든 설정 파일, customer 작업" loading="lazy" decoding="async">
+
+2026-11-07 캡처, 실습 호스트의 headless Chromium.
 
 ### 미실행 / 주의
 
-- Redis Insight의 RDI 화면은 실행하지 않았다.
-- 운영 설정은 쓰지 않았다: TLS 없음, RDI DB에 복제본 없음, Postgres 사용자는 복제 권한만 가진 사용자가 아니라 슈퍼유저.
+- 운영 설정이 아니다: RDI DB에 TLS와 복제본이 없다. `up.sh`는 여전히 슈퍼유저로 시작하고 `least_privilege.sh`가 `rdi_cdc`로 바꾼다.
 - 지연은 모든 구성 요소가 호스트 하나에 있는 상태에서 쟀다. 규모를 보는 값이지 벤치마크가 아니다.
 - Redis Cloud의 관리형 RDI는 Pro 전용이다([#12](https://github.com/litkhai/notes-on-redis/issues/12)).
 

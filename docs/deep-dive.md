@@ -31,6 +31,8 @@ Two threads gave nothing because the main thread stops doing client I/O once hel
 
 **Pipelining and TLS** (`more.sh`). At `-P 16` four I/O threads were already the ceiling: 1.14–1.26 M requests/s on one thread, 2.66–3.42 M on four, no more on eight. With TLS and no pipelining the threads mattered most: about 90,000 requests/s on one thread (a third below plain TCP), about 220,000 on four, 357,000–392,000 on eight, because the I/O threads also do the encryption.
 
+**4 KB values** (`values.sh`): about 111,000, 285,000–307,000 and 443,000 requests/s on 1, 4 and 8 threads, the same shape as with 64-byte values.
+
 ### Persistence
 
 **Verified on Redis 8.10.3, 2026-11-07.** From the docs: "With the default policy of fsync every second, write performance is still great", and "A backup reuses the multi-part AOF format".
@@ -67,6 +69,8 @@ The last row is the trap: with a hostname, the stopped container's name no longe
 
 **A Sentinel-aware client** (`sentinel_client.py`). redis-py's `Sentinel(...).master_for()` wrote to the new master 4.4 s after the old one was killed, with no code change, but returned `ConnectionError`, `TimeoutError` and `MasterNotFoundError` in between, so keep a retry. The old primary, restarted, answered as `master` for 11 s until Sentinel turned it into a replica: a client connecting to it directly can write there and lose those writes.
 
+**Restarts and another client** (`persist.sh`, `sentinel_client.mjs`). A restarted replica resynced partially only with RDB persistence and a graceful shutdown; with AOF, or after SIGKILL, it took a full sync, as the replication page says ("It is not possible to partially sync a replica that restarted via the AOF file"). node-redis's `createSentinel()` threw no errors during a failover: it held a write for 6.1 s until the new master answered, where redis-py raised errors for about 4 s.
+
 ### Cluster
 
 **Verified on Redis 8.10.3, 2026-11-07.** Six nodes, three primaries with one replica each. From the spec: "Each master node in a cluster handles a subset of the 16384 hash slots", with `HASH_SLOT = CRC16(key) mod 16384`; hash tags "force certain keys to be stored in the same hash slot".
@@ -83,6 +87,8 @@ The last row is the trap: with a hostname, the stopped container's name no longe
 The same `CROSSSLOT` refusal is what ElastiCache Serverless returned on the [Compare page]({{ '/compare/' | relative_url }}): plan keys that are used together with a shared hash tag. Docs: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/). Lab: [`deep-dive/04-cluster`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/04-cluster).
 
 **Failover inside the cluster** (`failover.py`). A primary killed under writes: with the default `cluster-node-timeout` of 15 s the replica took over at 19.3 s and the client could not write that primary's keys for about 16 s; with 3 s, 5.3 s and about 4 s. In both runs keys on the other primaries also got one `ClusterDownError` for about 1 s: until the replica takes over, some slots have no owner, and with `cluster-require-full-coverage yes` the whole cluster refuses. Compare the 1.3 s of the Redis Enterprise operator on the [Enterprise page]({{ '/enterprise/' | relative_url }}).
+
+**Network partition** (`partition.py`). A primary cut off the network kept accepting writes from its own side until the 5 s node timeout, then answered `CLUSTERDOWN`; after its replica took over and the node rejoined, those 21 writes were gone and the majority's value stood.
 
 ### Eviction and memory
 
@@ -130,6 +136,8 @@ After `XNACK`, a new `XREADGROUP … >` did not return the entry: `>` only reads
 
 **The remaining options** (`more.sh`). `XNACK` after one delivery: `SILENT` count 0, `FAIL` 1, `FATAL` 9223372036854775807, `RETRYCOUNT 5` 5; `FORCE` adds an entry no one has read to the pending list. `IDMPAUTO` deduplicates by content. `XCFGSET` clears the IDMP history, so a retry sent right after it is accepted; `IDMP-DURATION` and `IDMP-MAXSIZE` bound how long and how many IDs are remembered. With two groups, `XACKDEL KEEPREF` deletes the entry and leaves the other group a reference to nothing, `DELREF` removes that reference, and `ACKED` deletes only when every group has acknowledged.
 
+**IDMP and failover** (`idmp_replica.sh`). The idempotency map replicates: after the primary was killed and the replica promoted, a producer's retry still returned the original entry ID.
+
 ### Functions and ACL
 
 **Verified on Redis 8.10.3, 2026-11-07.** From the functions page: "Functions provide the same core functionality as scripts but are first-class software artifacts of the database." From the ACL page on selectors: "If a command matches either the user permissions or any selector, it is allowed."
@@ -147,6 +155,8 @@ After `XNACK`, a new `XREADGROUP … >` did not return the entry: `>` only reads
 The ACL page still says "command categories, with the exception of +@all, never include module commands." On Redis 8.10.3 that is no longer so: `ACL CAT write` lists 47 JSON, time series and probabilistic commands. An ACL written for Redis 7 can grant or block more after an upgrade. Docs: [Redis functions](https://redis.io/docs/latest/develop/programmability/functions-intro/), [FCALL_RO](https://redis.io/docs/latest/commands/fcall_ro/), [ACL](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/). Lab: [`deep-dive/08-functions-acl`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/08-functions-acl).
 
 **Replicas, dumps, ACL files and the log** (`more.sh`). A library loaded on the primary reached the replica; there `FCALL_RO` ran and `FCALL` of a writing function got `READONLY`. `FUNCTION DUMP` and `FUNCTION RESTORE` moved the library to another server with its flags. `ACL SAVE` and `ACL LOAD` round-tripped an ACL file, `#` comments included (Redis 8.8), and one bad line made the whole `ACL LOAD` fail without changing anything. `ACL LOG` recorded a wrong password, a denied command and a denied key, each with its reason and user.
+
+**ACL users do not replicate** (`acl_replica.sh`). A user created on the primary did not exist on the replica (`WRONGPASS`), although the data did; keep the same ACL file on every server.
 
 </div>
 
@@ -174,6 +184,8 @@ The ACL page still says "command categories, with the exception of +@all, never 
 스레드 둘이 효과가 없던 이유는 보조 스레드가 생기면 메인 스레드가 클라이언트 I/O를 그만두기 때문이다. 문서: [INFO](https://redis.io/docs/latest/commands/info/), [Benchmarks](https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/benchmarks/). 실습: [`deep-dive/01-threading`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/01-threading).
 
 **파이프라이닝과 TLS**(`more.sh`). `-P 16`에서는 I/O 스레드 넷이 이미 상한이었다: 스레드 하나 초당 114만–126만, 넷 266만–342만, 여덟도 그 이상은 아니었다. 파이프라이닝 없는 TLS에서는 스레드가 가장 크게 효과를 냈다: 하나 약 90,000(평문 TCP보다 3분의 1 적음), 넷 약 220,000, 여덟 357,000–392,000. I/O 스레드가 암호화도 맡기 때문이다.
+
+**4 KB 값**(`values.sh`): 스레드 1, 4, 8에서 초당 약 111,000, 285,000–307,000, 443,000. 64바이트 값과 같은 모양이다.
 
 ### 영속성
 
@@ -211,6 +223,8 @@ The ACL page still says "command categories, with the exception of +@all, never 
 
 **Sentinel을 아는 클라이언트**(`sentinel_client.py`). redis-py의 `Sentinel(...).master_for()`는 옛 마스터를 죽인 뒤 4.4초에 코드 변경 없이 새 마스터에 썼다. 그 사이에는 `ConnectionError`, `TimeoutError`, `MasterNotFoundError`를 돌려주므로 재시도는 둔다. 재시작한 옛 주 서버는 Sentinel이 복제본으로 바꿀 때까지 11초 동안 `master`로 답했다. 직접 붙는 클라이언트는 그 사이 거기에 쓰고 그 쓰기를 잃을 수 있다.
 
+**재시작과 다른 클라이언트**(`persist.sh`, `sentinel_client.mjs`). 재시작한 복제본은 RDB 영속성과 정상 종료일 때만 부분 재동기화했다. AOF이거나 SIGKILL 뒤에는 전체 동기화였고, 복제 페이지도 그렇게 적는다("It is not possible to partially sync a replica that restarted via the AOF file"). node-redis의 `createSentinel()`은 장애 조치 중 오류를 던지지 않고 새 마스터가 답할 때까지 쓰기 하나를 6.1초 붙잡았다. redis-py는 약 4초 동안 오류를 냈다.
+
 ### 클러스터
 
 **확인: Redis 8.10.3, 2026-11-07.** 노드 6개, 주 서버 셋에 복제본 하나씩. 명세의 표현: "Each master node in a cluster handles a subset of the 16384 hash slots", `HASH_SLOT = CRC16(key) mod 16384`. 해시 태그는 "force certain keys to be stored in the same hash slot".
@@ -227,6 +241,8 @@ The ACL page still says "command categories, with the exception of +@all, never 
 [Compare 페이지]({{ '/compare/' | relative_url }})의 ElastiCache Serverless가 돌려준 것도 같은 `CROSSSLOT` 거절이다. 함께 쓰는 키는 해시 태그를 공유하도록 설계한다. 문서: [Redis Cluster로 확장](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [클러스터 명세](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/). 실습: [`deep-dive/04-cluster`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/04-cluster).
 
 **클러스터 안의 장애 조치**(`failover.py`). 쓰기 중에 주 서버를 죽였다. 기본 `cluster-node-timeout` 15초에서는 복제본이 19.3초에 넘겨받았고, 클라이언트는 그 주 서버의 키에 약 16초 동안 쓰지 못했다. 3초에서는 5.3초와 약 4초. 두 번 모두 다른 주 서버의 키도 약 1초짜리 `ClusterDownError`를 한 번 받았다. 복제본이 넘겨받기 전까지 주인 없는 슬롯이 생기고, `cluster-require-full-coverage yes`에서는 클러스터 전체가 거절한다. [Enterprise 페이지]({{ '/enterprise/' | relative_url }})의 Redis Enterprise operator 1.3초와 비교해 보자.
+
+**네트워크 분할**(`partition.py`). 네트워크에서 떨어진 주 서버는 노드 타임아웃 5초까지 자기 쪽의 쓰기를 받다가 `CLUSTERDOWN`으로 답했다. 복제본이 넘겨받고 노드가 다시 붙자 그 쓰기 21건은 사라지고 다수 쪽의 값이 남았다.
 
 ### 축출과 메모리
 
@@ -274,6 +290,8 @@ LRU와 LRM은 키를 샘플링하므로 실행마다 수가 달라진다. 이전
 
 **나머지 옵션**(`more.sh`). 한 번 전달한 뒤 `XNACK`: `SILENT` 횟수 0, `FAIL` 1, `FATAL` 9223372036854775807, `RETRYCOUNT 5`는 5. `FORCE`는 아무도 읽지 않은 항목을 대기 목록에 넣는다. `IDMPAUTO`는 내용으로 중복을 거른다. `XCFGSET`은 IDMP 기록을 지우므로 그 직후의 재시도는 받아들여진다. `IDMP-DURATION`과 `IDMP-MAXSIZE`가 ID를 얼마나 오래, 몇 개까지 기억할지 정한다. 그룹이 둘이면 `XACKDEL KEEPREF`는 항목을 지우고 다른 그룹에 없는 항목을 가리키는 참조를 남기고, `DELREF`는 그 참조까지 지우고, `ACKED`는 모든 그룹이 확인했을 때만 지운다.
 
+**IDMP와 장애 조치**(`idmp_replica.sh`). 멱등성 맵은 복제된다. 주 서버를 죽이고 복제본을 승격한 뒤에도 생산자의 재시도는 원래 항목 ID를 돌려받았다.
+
 ### Functions와 ACL
 
 **확인: Redis 8.10.3, 2026-11-07.** 함수 페이지의 표현: "Functions provide the same core functionality as scripts but are first-class software artifacts of the database." ACL 페이지의 셀렉터 설명: "If a command matches either the user permissions or any selector, it is allowed."
@@ -291,6 +309,8 @@ LRU와 LRM은 키를 샘플링하므로 실행마다 수가 달라진다. 이전
 ACL 페이지에는 여전히 "command categories, with the exception of +@all, never include module commands"라고 적혀 있다. Redis 8.10.3에서는 더 이상 그렇지 않다. `ACL CAT write`에 JSON, time series, 확률형 명령 47개가 있다. Redis 7용으로 쓴 ACL은 업그레이드 뒤 더 허락하거나 더 막을 수 있다. 문서: [Redis functions](https://redis.io/docs/latest/develop/programmability/functions-intro/), [FCALL_RO](https://redis.io/docs/latest/commands/fcall_ro/), [ACL](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/). 실습: [`deep-dive/08-functions-acl`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/08-functions-acl).
 
 **복제본, 덤프, ACL 파일, 로그**(`more.sh`). 주 서버에 올린 라이브러리가 복제본에 전달됐다. 거기서 `FCALL_RO`는 돌았고 쓰는 함수의 `FCALL`은 `READONLY`를 받았다. `FUNCTION DUMP`와 `FUNCTION RESTORE`가 라이브러리를 플래그까지 다른 서버로 옮겼다. `ACL SAVE`와 `ACL LOAD`가 `#` 주석까지(Redis 8.8) ACL 파일을 주고받았고, 잘못된 줄 하나가 있으면 `ACL LOAD` 전체가 아무것도 바꾸지 않고 실패했다. `ACL LOG`는 틀린 비밀번호, 거절된 명령, 거절된 키를 사유와 사용자와 함께 남겼다.
+
+**ACL 사용자는 복제되지 않는다**(`acl_replica.sh`). 주 서버에서 만든 사용자는 복제본에 없었다(`WRONGPASS`). 데이터는 복제됐는데도 그렇다. 서버마다 같은 ACL 파일을 둔다.
 
 </div>
 
@@ -318,6 +338,8 @@ ACL 페이지에는 여전히 "command categories, with the exception of +@all, 
 两个线程没有任何提升，因为一旦有了辅助线程，主线程就不再做客户端 I/O。 文档: [INFO](https://redis.io/docs/latest/commands/info/), [Benchmarks](https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/benchmarks/). 实验: [`deep-dive/01-threading`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/01-threading).
 
 **管道化与 TLS**（`more.sh`）。在 `-P 16` 时，四个 I/O 线程已是上限：一个线程为 1.14–1.26 M 请求/秒，四个线程为 2.66–3.42 M，八个线程没有更多。使用 TLS 且不使用管道化时，线程数影响最大：一个线程约 90,000 请求/秒（比普通 TCP 低三分之一），四个线程约 220,000，八个线程 357,000–392,000，因为 I/O 线程还要负责加密。
+
+**4 KB 的值**（`values.sh`）：一个、四个和八个线程分别约为 111,000、285,000–307,000 和 443,000 请求/秒，与 64 字节的值趋势相同。
 
 ### 持久化
 
@@ -355,6 +377,8 @@ ACL 페이지에는 여전히 "command categories, with the exception of +@all, 
 
 **感知 Sentinel 的客户端**（`sentinel_client.py`）。在旧主节点被杀掉 4.4 秒后，redis-py 的 `Sentinel(...).master_for()` 就写入了新的主节点，无需修改任何代码，但期间返回了 `ConnectionError`、`TimeoutError` 和 `MasterNotFoundError`，所以要保留重试。重启后的旧主节点在 Sentinel 把它变成副本之前，有 11 秒仍以 `master` 的身份应答：直接连接它的客户端可以在那里写入，并丢失这些写入。
 
+**重启与另一个客户端**（`persist.sh`、`sentinel_client.mjs`）。重启后的副本只有在使用 RDB 持久化并且正常关闭时才会部分重同步；使用 AOF，或在 SIGKILL 之后，则会进行全量同步，正如复制页面所说（"It is not possible to partially sync a replica that restarted via the AOF file"）。node-redis 的 `createSentinel()` 在故障转移期间没有抛出任何错误：它把一次写入挂起了 6.1 秒，直到新的主节点应答，而 redis-py 则抛出了约 4 秒的错误。
+
 ### 集群
 
 **已在 Redis 8.10.3 上验证，2026-11-07。** 六个节点，三个主节点，每个主节点一个副本。 文档原文（规范）："Each master node in a cluster handles a subset of the 16384 hash slots"，其中 `HASH_SLOT = CRC16(key) mod 16384`；hash tag "force certain keys to be stored in the same hash slot"。
@@ -371,6 +395,8 @@ ACL 페이지에는 여전히 "command categories, with the exception of +@all, 
 ElastiCache Serverless 在 [Compare 页面]({{ '/compare/' | relative_url }}) 上返回的正是同样的 `CROSSSLOT` 拒绝：把需要一起使用的键规划为共用同一个 hash tag。 文档: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/). 实验: [`deep-dive/04-cluster`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/04-cluster).
 
 **集群内的故障转移**（`failover.py`）。在写入过程中杀掉一个主节点：使用默认的 `cluster-node-timeout` 15 秒时，副本在 19.3 秒接管，客户端约有 16 秒无法写入该主节点的键；设为 3 秒时，分别是 5.3 秒和约 4 秒。两次运行中，其他主节点上的键也都遇到过一次约 1 秒的 `ClusterDownError`：在副本接管之前，有些槽没有所属节点，而在 `cluster-require-full-coverage yes` 下整个集群都会拒绝请求。可与 [Enterprise 页面]({{ '/enterprise/' | relative_url }})上 Redis Enterprise operator 的 1.3 秒对比。
+
+**网络分区**（`partition.py`）。与网络断开的主节点在其自身一侧继续接受写入，直到 5 秒的节点超时，然后应答 `CLUSTERDOWN`；在其副本接管、该节点重新加入之后，这 21 次写入丢失了，多数派一侧的值得以保留。
 
 ### 淘汰与内存
 
@@ -418,6 +444,8 @@ LRU 和 LRM 采用采样，所以每次运行的数量会有变化；较早的�
 
 **其余选项**（`more.sh`）。一次投递之后执行 `XNACK`：`SILENT` 的计数为 0，`FAIL` 为 1，`FATAL` 为 9223372036854775807，`RETRYCOUNT 5` 为 5；`FORCE` 会向待处理列表中添加一个无人读取过的条目。`IDMPAUTO` 按内容去重。`XCFGSET` 会清除 IDMP 历史，所以紧接其后发送的重试会被接受；`IDMP-DURATION` 和 `IDMP-MAXSIZE` 限制记住 ID 的时长和数量。对于两个消费者组，`XACKDEL KEEPREF` 删除条目，并让另一个组留下一个指向空无的引用，`DELREF` 移除该引用，而 `ACKED` 只在每个组都已确认时才删除。
 
+**IDMP 与故障转移**（`idmp_replica.sh`）。幂等映射会被复制：主节点被杀掉、副本被提升之后，生产者的重试仍然返回原来的条目 ID。
+
 ### Functions 与 ACL
 
 **已在 Redis 8.10.3 上验证，2026-11-07。** Functions 页面原文："Functions provide the same core functionality as scripts but are first-class software artifacts of the database." ACL 页面中关于 selector 的原文："If a command matches either the user permissions or any selector, it is allowed."
@@ -435,6 +463,8 @@ LRU 和 LRM 采用采样，所以每次运行的数量会有变化；较早的�
 ACL 页面仍然写着 "command categories, with the exception of +@all, never include module commands." 在 Redis 8.10.3 上已不再如此：`ACL CAT write` 列出了 47 个 JSON、时间序列和概率型数据结构的命令。为 Redis 7 编写的 ACL 在升级后可能授予或拦截更多的命令。 文档: [Redis functions](https://redis.io/docs/latest/develop/programmability/functions-intro/), [FCALL_RO](https://redis.io/docs/latest/commands/fcall_ro/), [ACL](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/). 实验: [`deep-dive/08-functions-acl`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/08-functions-acl).
 
 **副本、转储、ACL 文件与日志**（`more.sh`）。在主节点上加载的库传到了副本；在副本上 `FCALL_RO` 可以运行，而对写入型函数执行 `FCALL` 得到 `READONLY`。`FUNCTION DUMP` 和 `FUNCTION RESTORE` 把库连同其标志移到了另一台服务器。`ACL SAVE` 和 `ACL LOAD` 完整往返了一个 ACL 文件，包括 `#` 注释（Redis 8.8），而且只要有一行错误，整个 `ACL LOAD` 就会失败，且不改变任何东西。`ACL LOG` 记录了错误密码、被拒绝的命令和被拒绝的键，每条都带有原因和用户。
+
+**ACL 用户不会被复制**（`acl_replica.sh`）。在主节点上创建的用户在副本上并不存在（`WRONGPASS`），尽管数据是存在的；请在每台服务器上使用同一个 ACL 文件。
 
 </div>
 
@@ -462,6 +492,8 @@ ACL 页面仍然写着 "command categories, with the exception of +@all, never i
 2 スレッドでは何も得られなかった。ヘルパーがあるとメインスレッドがクライアント I/O をやめるためである。 ドキュメント: [INFO](https://redis.io/docs/latest/commands/info/), [Benchmarks](https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/benchmarks/). ラボ: [`deep-dive/01-threading`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/01-threading).
 
 **パイプライン処理と TLS**（`more.sh`）。`-P 16` では I/O スレッド 4 本がすでに上限だった：1 スレッドで 1.14–1.26 M リクエスト/秒、4 スレッドで 2.66–3.42 M、8 スレッドでもそれ以上は伸びなかった。TLS を使いパイプライン処理をしない場合は、スレッド数の影響が最も大きかった：1 スレッドで約 90,000 リクエスト/秒（通常の TCP より 3 分の 1 低い）、4 スレッドで約 220,000、8 スレッドで 357,000–392,000。I/O スレッドが暗号化も担当するためである。
+
+**4 KB の値**（`values.sh`）：1、4、8 スレッドでそれぞれ約 111,000、285,000–307,000、443,000 リクエスト/秒で、64 バイトの値のときと同じ傾向だった。
 
 ### 永続化
 
@@ -499,6 +531,8 @@ ACL 页面仍然写着 "command categories, with the exception of +@all, never i
 
 **Sentinel 対応クライアント**（`sentinel_client.py`）。redis-py の `Sentinel(...).master_for()` は、古いプライマリを停止させてから 4.4 秒後に、コードを変更しなくても新しいプライマリへ書き込んだ。ただしその間は `ConnectionError`、`TimeoutError`、`MasterNotFoundError` が返るので、リトライは残しておくこと。再起動した古いプライマリは、Sentinel がレプリカに変えるまでの 11 秒間 `master` として応答した：そこへ直接接続しているクライアントは書き込めてしまい、その書き込みを失う。
 
+**再起動と別のクライアント**（`persist.sh`、`sentinel_client.mjs`）。再起動したレプリカが部分再同期できたのは、RDB 永続化を使い、かつ正常にシャットダウンした場合だけだった。AOF を使った場合や SIGKILL の後はフル同期になり、レプリケーションのページにもこうある（"It is not possible to partially sync a replica that restarted via the AOF file"）。node-redis の `createSentinel()` はフェイルオーバー中にエラーを出さなかった。新しいプライマリが応答するまで書き込みを 6.1 秒保留したが、redis-py は約 4 秒間エラーを返した。
+
 ### クラスター
 
 **Redis 8.10.3 で検証、2026-11-07。** 6 ノード、プライマリ 3 台、それぞれレプリカ 1 台。 仕様より："Each master node in a cluster handles a subset of the 16384 hash slots"。`HASH_SLOT = CRC16(key) mod 16384` である。ハッシュタグは "force certain keys to be stored in the same hash slot"。
@@ -515,6 +549,8 @@ ACL 页面仍然写着 "command categories, with the exception of +@all, never i
 [Compare ページ]({{ '/compare/' | relative_url }})で ElastiCache Serverless が返したのも同じ `CROSSSLOT` の拒否だった。一緒に使うキーは、共通のハッシュタグを付けて設計すること。 ドキュメント: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/). ラボ: [`deep-dive/04-cluster`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/04-cluster).
 
 **クラスター内のフェイルオーバー**（`failover.py`）。書き込み中にプライマリを停止した場合：既定の `cluster-node-timeout` 15 秒ではレプリカが 19.3 秒で引き継ぎ、クライアントはそのプライマリのキーに約 16 秒間書き込めなかった。3 秒にすると 5.3 秒と約 4 秒だった。どちらの実行でも、他のプライマリのキーにも約 1 秒間の `ClusterDownError` が 1 回出た：レプリカが引き継ぐまでは持ち主のいないスロットがあり、`cluster-require-full-coverage yes` ではクラスター全体が要求を拒否するためである。[Enterprise ページ]({{ '/enterprise/' | relative_url }})にある Redis Enterprise operator の 1.3 秒と比べてほしい。
+
+**ネットワーク分断**（`partition.py`）。ネットワークから切り離されたプライマリは、5 秒のノードタイムアウトまで自分側からの書き込みを受け付け続け、その後 `CLUSTERDOWN` を返した。レプリカが引き継ぎ、ノードが復帰した後には、その 21 件の書き込みは失われ、過半数側の値が残った。
 
 ### エビクションとメモリ
 
@@ -562,6 +598,8 @@ LRU と LRM はキーをサンプリングするため、件数は実行ごと�
 
 **残りのオプション**（`more.sh`）。1 回配信した後の `XNACK`：`SILENT` のカウントは 0、`FAIL` は 1、`FATAL` は 9223372036854775807、`RETRYCOUNT 5` は 5。`FORCE` は誰も読んでいないエントリを保留リストに追加する。`IDMPAUTO` は内容で重複を排除する。`XCFGSET` は IDMP の履歴を消すので、その直後に送ったリトライは受理される。`IDMP-DURATION` と `IDMP-MAXSIZE` は、ID を記憶する期間と個数を制限する。2 つのグループがある場合、`XACKDEL KEEPREF` はエントリを削除し、もう一方のグループには何も指さない参照が残る。`DELREF` はその参照を取り除き、`ACKED` はすべてのグループが確認応答したときだけ削除する。
 
+**IDMP とフェイルオーバー**（`idmp_replica.sh`）。冪等性マップはレプリケートされる。プライマリを停止してレプリカを昇格させた後も、プロデューサーのリトライは元のエントリ ID を返した。
+
 ### Functions と ACL
 
 **Redis 8.10.3 で検証、2026-11-07。** Functions のページより："Functions provide the same core functionality as scripts but are first-class software artifacts of the database." ACL のページの selector の項より："If a command matches either the user permissions or any selector, it is allowed."
@@ -579,6 +617,8 @@ LRU と LRM はキーをサンプリングするため、件数は実行ごと�
 ACL のページには今も "command categories, with the exception of +@all, never include module commands." とある。Redis 8.10.3 ではもうそうではない。`ACL CAT write` は JSON、時系列、確率的データ構造の 47 個のコマンドを列挙する。Redis 7 向けに書いた ACL は、アップグレード後に許可や拒否の対象が増えることがある。 ドキュメント: [Redis functions](https://redis.io/docs/latest/develop/programmability/functions-intro/), [FCALL_RO](https://redis.io/docs/latest/commands/fcall_ro/), [ACL](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/). ラボ: [`deep-dive/08-functions-acl`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/08-functions-acl).
 
 **レプリカ、ダンプ、ACL ファイル、ログ**（`more.sh`）。プライマリにロードしたライブラリはレプリカに届いた。レプリカでは `FCALL_RO` が実行でき、書き込みを行う関数の `FCALL` は `READONLY` になった。`FUNCTION DUMP` と `FUNCTION RESTORE` は、ライブラリをフラグごと別のサーバーに移した。`ACL SAVE` と `ACL LOAD` は、`#` コメントを含めて ACL ファイルを往復できた（Redis 8.8）。また、1 行でも不正な行があると `ACL LOAD` 全体が失敗し、何も変更されなかった。`ACL LOG` は、誤ったパスワード、拒否されたコマンド、拒否されたキーを、それぞれの理由とユーザーとともに記録した。
+
+**ACL ユーザーはレプリケートされない**（`acl_replica.sh`）。プライマリで作成したユーザーはレプリカには存在せず（`WRONGPASS`）、データは存在していた。すべてのサーバーで同じ ACL ファイルを使うこと。
 
 </div>
 
@@ -606,6 +646,8 @@ ACL のページには今も "command categories, with the exception of +@all, n
 สองเธรดไม่ได้ผลอะไรเลย เพราะเมื่อมีเธรดช่วยแล้ว เธรดหลักจะหยุดทำ I/O ของไคลเอนต์ เอกสาร: [INFO](https://redis.io/docs/latest/commands/info/), [Benchmarks](https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/benchmarks/). แล็บ: [`deep-dive/01-threading`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/01-threading).
 
 **Pipelining และ TLS** (`more.sh`) ที่ `-P 16` เธรด I/O สี่ตัวก็ถึงเพดานแล้ว: 1.14–1.26 M คำขอ/วินาทีบนเธรดเดียว 2.66–3.42 M บนสี่เธรด และไม่เพิ่มอีกบนแปดเธรด เมื่อใช้ TLS โดยไม่ใช้ pipelining จำนวนเธรดส่งผลมากที่สุด: ประมาณ 90,000 คำขอ/วินาทีบนเธรดเดียว (ต่ำกว่า TCP ธรรมดาหนึ่งในสาม) ประมาณ 220,000 บนสี่เธรด และ 357,000–392,000 บนแปดเธรด เพราะเธรด I/O ต้องเข้ารหัสด้วย
+
+**ค่าขนาด 4 KB** (`values.sh`) ประมาณ 111,000, 285,000–307,000 และ 443,000 คำขอ/วินาทีบน 1, 4 และ 8 เธรด ตามลำดับ รูปแบบเดียวกับค่าขนาด 64 ไบต์
 
 ### การคงอยู่ของข้อมูล
 
@@ -643,6 +685,8 @@ ACL のページには今も "command categories, with the exception of +@all, n
 
 **ไคลเอนต์ที่รู้จัก Sentinel** (`sentinel_client.py`) `Sentinel(...).master_for()` ของ redis-py เขียนไปยัง primary ตัวใหม่ได้หลังจากฆ่า primary ตัวเก่า 4.4 วินาที โดยไม่ต้องแก้โค้ด แต่ระหว่างนั้นคืน `ConnectionError`, `TimeoutError` และ `MasterNotFoundError` จึงควรคง retry ไว้ primary ตัวเก่าที่รีสตาร์ตตอบเป็น `master` อยู่ 11 วินาทีจนกว่า Sentinel จะเปลี่ยนให้เป็น replica: ไคลเอนต์ที่เชื่อมต่อกับมันโดยตรงอาจเขียนลงไปและสูญเสียการเขียนเหล่านั้น
 
+**การรีสตาร์ตและไคลเอนต์อีกตัว** (`persist.sh`, `sentinel_client.mjs`) replica ที่รีสตาร์ตทำ partial resync ได้เฉพาะเมื่อใช้การคงอยู่ของข้อมูลแบบ RDB และปิดระบบอย่างเรียบร้อย ส่วนเมื่อใช้ AOF หรือหลัง SIGKILL จะต้องทำ full sync ตามที่หน้า replication ระบุไว้ ("It is not possible to partially sync a replica that restarted via the AOF file") `createSentinel()` ของ node-redis ไม่โยนข้อผิดพลาดใด ๆ ระหว่าง failover โดยพักการเขียนไว้ 6.1 วินาทีจนกว่า primary ตัวใหม่จะตอบ ขณะที่ redis-py ส่งข้อผิดพลาดประมาณ 4 วินาที
+
 ### Cluster
 
 **ตรวจสอบบน Redis 8.10.3, 2026-11-07** หกโหนด primary สามตัว แต่ละตัวมี replica หนึ่งตัว จากสเปก: "Each master node in a cluster handles a subset of the 16384 hash slots" โดย `HASH_SLOT = CRC16(key) mod 16384` และ hash tag "force certain keys to be stored in the same hash slot"
@@ -659,6 +703,8 @@ ACL のページには今も "command categories, with the exception of +@all, n
 ElastiCache Serverless ก็ตอบปฏิเสธด้วย `CROSSSLOT` แบบเดียวกันนี้บน[หน้า Compare]({{ '/compare/' | relative_url }}): ให้วางแผนคีย์ที่ใช้ร่วมกันโดยใช้ hash tag ร่วมกัน เอกสาร: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/). แล็บ: [`deep-dive/04-cluster`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/04-cluster).
 
 **Failover ภายในคลัสเตอร์** (`failover.py`) เมื่อฆ่า primary ระหว่างที่กำลังเขียน: ด้วยค่าเริ่มต้น `cluster-node-timeout` 15 วินาที replica เข้ารับช่วงที่ 19.3 วินาที และไคลเอนต์เขียนคีย์ของ primary ตัวนั้นไม่ได้ประมาณ 16 วินาที ส่วนเมื่อตั้งเป็น 3 วินาที คือ 5.3 วินาทีและประมาณ 4 วินาที ในทั้งสองการรัน คีย์บน primary ตัวอื่นก็พบ `ClusterDownError` หนึ่งครั้งประมาณ 1 วินาทีเช่นกัน: จนกว่า replica จะเข้ารับช่วง บาง slot ไม่มีเจ้าของ และเมื่อ `cluster-require-full-coverage yes` ทั้งคลัสเตอร์จะปฏิเสธคำขอ เปรียบเทียบกับ 1.3 วินาทีของ Redis Enterprise operator ใน[หน้า Enterprise]({{ '/enterprise/' | relative_url }})
+
+**network partition** (`partition.py`) primary ที่ถูกตัดออกจากเครือข่ายยังคงรับการเขียนจากฝั่งของตัวเองต่อไปจนถึง node timeout 5 วินาที แล้วจึงตอบ `CLUSTERDOWN` หลังจาก replica เข้ารับช่วงและโหนดกลับเข้าร่วม การเขียน 21 รายการนั้นหายไป และค่าของฝั่งเสียงข้างมากยังคงอยู่
 
 ### Eviction และหน่วยความจำ
 
@@ -706,6 +752,8 @@ LRU และ LRM สุ่มตัวอย่างคีย์ จำนว�
 
 **ตัวเลือกที่เหลือ** (`more.sh`) `XNACK` หลังส่งมอบหนึ่งครั้ง: `SILENT` ให้ count เป็น 0, `FAIL` เป็น 1, `FATAL` เป็น 9223372036854775807, `RETRYCOUNT 5` เป็น 5; `FORCE` เพิ่มเอนทรีที่ยังไม่มีใครอ่านเข้าไปใน pending list `IDMPAUTO` กรองรายการซ้ำตามเนื้อหา `XCFGSET` ล้างประวัติ IDMP ดังนั้นการลองใหม่ที่ส่งทันทีหลังจากนั้นจึงถูกยอมรับ; `IDMP-DURATION` และ `IDMP-MAXSIZE` จำกัดว่าจำ ID ไว้นานแค่ไหนและกี่รายการ เมื่อมีสองกลุ่ม `XACKDEL KEEPREF` ลบเอนทรีและทิ้งให้อีกกลุ่มมีการอ้างอิงที่ไม่ชี้ไปยังอะไรเลย `DELREF` ลบการอ้างอิงนั้น และ `ACKED` ลบเฉพาะเมื่อทุกกลุ่มได้ acknowledge แล้ว
 
+**IDMP และ failover** (`idmp_replica.sh`) idempotency map ถูก replicate: หลังจากฆ่า primary และเลื่อน replica ขึ้นมา การลองใหม่ของ producer ยังคงคืน ID ของเอนทรีเดิม
+
 ### Functions และ ACL
 
 **ตรวจสอบบน Redis 8.10.3, 2026-11-07** จากหน้า functions: "Functions provide the same core functionality as scripts but are first-class software artifacts of the database." จากหน้า ACL เรื่อง selector: "If a command matches either the user permissions or any selector, it is allowed."
@@ -723,6 +771,8 @@ LRU และ LRM สุ่มตัวอย่างคีย์ จำนว�
 หน้า ACL ยังคงเขียนว่า "command categories, with the exception of +@all, never include module commands." บน Redis 8.10.3 ไม่เป็นเช่นนั้นอีกต่อไป: `ACL CAT write` แสดงคำสั่งของ JSON, time series และ probabilistic 47 คำสั่ง ACL ที่เขียนไว้สำหรับ Redis 7 อาจอนุญาตหรือบล็อกมากขึ้นหลังอัปเกรด เอกสาร: [Redis functions](https://redis.io/docs/latest/develop/programmability/functions-intro/), [FCALL_RO](https://redis.io/docs/latest/commands/fcall_ro/), [ACL](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/). แล็บ: [`deep-dive/08-functions-acl`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/08-functions-acl).
 
 **Replica, dump, ไฟล์ ACL และ log** (`more.sh`) ไลบรารีที่โหลดบน primary ไปถึง replica; ที่นั่น `FCALL_RO` รันได้ ส่วน `FCALL` ของฟังก์ชันที่เขียนได้รับ `READONLY` `FUNCTION DUMP` และ `FUNCTION RESTORE` ย้ายไลบรารีไปยังเซิร์ฟเวอร์อื่นพร้อม flag `ACL SAVE` และ `ACL LOAD` ทำงานไปกลับกับไฟล์ ACL ได้ รวมถึงคอมเมนต์ `#` (Redis 8.8) และบรรทัดที่ผิดเพียงบรรทัดเดียวทำให้ `ACL LOAD` ทั้งคำสั่งล้มเหลวโดยไม่เปลี่ยนอะไรเลย `ACL LOG` บันทึกรหัสผ่านผิด คำสั่งที่ถูกปฏิเสธ และคีย์ที่ถูกปฏิเสธ พร้อมเหตุผลและผู้ใช้ของแต่ละรายการ
+
+**ผู้ใช้ ACL ไม่ถูก replicate** (`acl_replica.sh`) ผู้ใช้ที่สร้างบน primary ไม่มีอยู่บน replica (`WRONGPASS`) ทั้งที่ข้อมูลมีอยู่ ให้ใช้ไฟล์ ACL เดียวกันบนทุกเซิร์ฟเวอร์
 
 </div>
 
@@ -750,6 +800,8 @@ Satu bagian per mekanisme, masing-masing berisi mekanisme dalam bahasa sederhana
 Dua thread tidak memberi hasil apa pun karena thread utama berhenti melakukan I/O klien begitu ada thread pembantu. Dokumentasi: [INFO](https://redis.io/docs/latest/commands/info/), [Benchmarks](https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/benchmarks/). Lab: [`deep-dive/01-threading`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/01-threading).
 
 **Pipelining dan TLS** (`more.sh`). Pada `-P 16`, empat thread I/O sudah menjadi batasnya: 1.14–1.26 M request/detik pada satu thread, 2.66–3.42 M pada empat, dan tidak bertambah pada delapan. Dengan TLS tanpa pipelining, jumlah thread paling berpengaruh: sekitar 90,000 request/detik pada satu thread (sepertiga lebih rendah daripada TCP biasa), sekitar 220,000 pada empat, 357,000–392,000 pada delapan, karena thread I/O juga mengerjakan enkripsi.
+
+**Nilai 4 KB** (`values.sh`): sekitar 111,000, 285,000–307,000 dan 443,000 request/detik pada 1, 4 dan 8 thread, dengan pola yang sama seperti nilai 64 byte.
 
 ### Persistensi
 
@@ -787,6 +839,8 @@ Baris terakhir adalah jebakannya: dengan hostname, nama container yang dihentika
 
 **Klien yang sadar Sentinel** (`sentinel_client.py`). `Sentinel(...).master_for()` dari redis-py menulis ke primary baru 4.4 detik setelah primary lama dimatikan, tanpa perubahan kode, tetapi di antaranya mengembalikan `ConnectionError`, `TimeoutError` dan `MasterNotFoundError`, jadi pertahankan retry. Primary lama yang dihidupkan kembali menjawab sebagai `master` selama 11 detik sampai Sentinel mengubahnya menjadi replica: klien yang terhubung langsung ke sana dapat menulis dan kehilangan tulisan tersebut.
 
+**Restart dan klien lain** (`persist.sh`, `sentinel_client.mjs`). Replica yang di-restart hanya melakukan partial resync dengan persistensi RDB dan shutdown yang normal; dengan AOF, atau setelah SIGKILL, replica melakukan full sync, seperti yang dikatakan halaman replikasi ("It is not possible to partially sync a replica that restarted via the AOF file"). `createSentinel()` dari node-redis tidak melempar error apa pun selama failover: ia menahan sebuah penulisan selama 6.1 detik sampai primary baru menjawab, sedangkan redis-py mengeluarkan error selama sekitar 4 detik.
+
 ### Cluster
 
 **Diverifikasi pada Redis 8.10.3, 2026-11-07.** Enam node, tiga primary dengan satu replica masing-masing. Dari spesifikasi: "Each master node in a cluster handles a subset of the 16384 hash slots", dengan `HASH_SLOT = CRC16(key) mod 16384`; hash tag "force certain keys to be stored in the same hash slot".
@@ -803,6 +857,8 @@ Baris terakhir adalah jebakannya: dengan hostname, nama container yang dihentika
 Penolakan `CROSSSLOT` yang sama juga dikembalikan ElastiCache Serverless pada [halaman Compare]({{ '/compare/' | relative_url }}): rencanakan key yang digunakan bersama dengan hash tag yang sama. Dokumentasi: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/). Lab: [`deep-dive/04-cluster`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/04-cluster).
 
 **Failover di dalam cluster** (`failover.py`). Sebuah primary dimatikan saat ada penulisan: dengan `cluster-node-timeout` default 15 detik, replica mengambil alih pada 19.3 detik dan klien tidak dapat menulis key milik primary itu selama sekitar 16 detik; dengan 3 detik, hasilnya 5.3 detik dan sekitar 4 detik. Pada kedua run, key di primary lain juga mendapat satu `ClusterDownError` selama sekitar 1 detik: sebelum replica mengambil alih, sebagian slot tidak punya pemilik, dan dengan `cluster-require-full-coverage yes` seluruh cluster menolak permintaan. Bandingkan dengan 1.3 detik pada operator Redis Enterprise di [halaman Enterprise]({{ '/enterprise/' | relative_url }}).
+
+**Partisi jaringan** (`partition.py`). Sebuah primary yang terputus dari jaringan tetap menerima penulisan dari sisinya sendiri sampai node timeout 5 detik, lalu menjawab `CLUSTERDOWN`; setelah replica-nya mengambil alih dan node itu bergabung kembali, 21 penulisan tersebut hilang dan nilai milik mayoritas yang bertahan.
 
 ### Eviction dan memori
 
@@ -850,6 +906,8 @@ Setelah `XNACK`, `XREADGROUP … >` yang baru tidak mengembalikan entri itu: `>`
 
 **Opsi lainnya** (`more.sh`). `XNACK` setelah satu pengiriman: count `SILENT` 0, `FAIL` 1, `FATAL` 9223372036854775807, `RETRYCOUNT 5` 5; `FORCE` menambahkan entri yang belum dibaca siapa pun ke pending list. `IDMPAUTO` mendeduplikasi berdasarkan isi. `XCFGSET` menghapus riwayat IDMP, sehingga percobaan ulang yang dikirim tepat sesudahnya diterima; `IDMP-DURATION` dan `IDMP-MAXSIZE` membatasi berapa lama dan berapa banyak ID yang diingat. Dengan dua group, `XACKDEL KEEPREF` menghapus entri dan meninggalkan referensi ke ketiadaan bagi group lainnya, `DELREF` menghapus referensi itu, dan `ACKED` hanya menghapus bila setiap group telah mengakui.
 
+**IDMP dan failover** (`idmp_replica.sh`). Idempotency map direplikasi: setelah primary dimatikan dan replica dipromosikan, retry dari producer tetap mengembalikan ID entri yang asli.
+
 ### Functions dan ACL
 
 **Diverifikasi pada Redis 8.10.3, 2026-11-07.** Dari halaman functions: "Functions provide the same core functionality as scripts but are first-class software artifacts of the database." Dari halaman ACL tentang selector: "If a command matches either the user permissions or any selector, it is allowed."
@@ -867,6 +925,8 @@ Setelah `XNACK`, `XREADGROUP … >` yang baru tidak mengembalikan entri itu: `>`
 Halaman ACL masih menyatakan "command categories, with the exception of +@all, never include module commands." Pada Redis 8.10.3 hal itu tidak lagi berlaku: `ACL CAT write` mencantumkan 47 perintah JSON, time series, dan probabilistik. ACL yang ditulis untuk Redis 7 dapat mengizinkan atau memblokir lebih banyak setelah upgrade. Dokumentasi: [Redis functions](https://redis.io/docs/latest/develop/programmability/functions-intro/), [FCALL_RO](https://redis.io/docs/latest/commands/fcall_ro/), [ACL](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/). Lab: [`deep-dive/08-functions-acl`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/08-functions-acl).
 
 **Replica, dump, file ACL, dan log** (`more.sh`). Library yang dimuat di primary sampai ke replica; di sana `FCALL_RO` berjalan dan `FCALL` untuk fungsi yang menulis mendapat `READONLY`. `FUNCTION DUMP` dan `FUNCTION RESTORE` memindahkan library ke server lain beserta flag-nya. `ACL SAVE` dan `ACL LOAD` bolak-balik dengan file ACL, termasuk komentar `#` (Redis 8.8), dan satu baris yang salah membuat seluruh `ACL LOAD` gagal tanpa mengubah apa pun. `ACL LOG` mencatat password yang salah, perintah yang ditolak, dan key yang ditolak, masing-masing dengan alasan dan user-nya.
+
+**User ACL tidak direplikasi** (`acl_replica.sh`). User yang dibuat di primary tidak ada di replica (`WRONGPASS`), padahal datanya ada; gunakan file ACL yang sama di setiap server.
 
 </div>
 
@@ -894,6 +954,8 @@ Satu bahagian bagi setiap mekanisme, masing-masing mengandungi mekanisme dalam b
 Dua thread tidak memberi apa-apa kerana thread utama berhenti melakukan I/O klien sebaik sahaja thread pembantu wujud. Dokumentasi: [INFO](https://redis.io/docs/latest/commands/info/), [Benchmarks](https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/benchmarks/). Makmal: [`deep-dive/01-threading`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/01-threading).
 
 **Pipelining dan TLS** (`more.sh`). Pada `-P 16`, empat thread I/O sudah menjadi had atasnya: 1.14–1.26 M permintaan/saat pada satu thread, 2.66–3.42 M pada empat, dan tidak bertambah pada lapan. Dengan TLS tanpa pipelining, bilangan thread paling berpengaruh: kira-kira 90,000 permintaan/saat pada satu thread (satu pertiga lebih rendah daripada TCP biasa), kira-kira 220,000 pada empat, 357,000–392,000 pada lapan, kerana thread I/O turut melakukan penyulitan.
+
+**Nilai 4 KB** (`values.sh`): kira-kira 111,000, 285,000–307,000 dan 443,000 permintaan/saat pada 1, 4 dan 8 thread, dengan corak yang sama seperti nilai 64 bait.
 
 ### Kegigihan data
 
@@ -931,6 +993,8 @@ Baris terakhir ialah perangkapnya: dengan nama hos, nama container yang dihentik
 
 **Klien yang peka Sentinel** (`sentinel_client.py`). `Sentinel(...).master_for()` daripada redis-py menulis ke primary baharu 4.4 saat selepas primary lama dimatikan, tanpa perubahan kod, tetapi di antaranya mengembalikan `ConnectionError`, `TimeoutError` dan `MasterNotFoundError`, jadi kekalkan percubaan semula. Primary lama yang dimulakan semula menjawab sebagai `master` selama 11 saat sehingga Sentinel menukarnya menjadi replica: klien yang bersambung terus kepadanya boleh menulis di situ dan kehilangan tulisan tersebut.
 
+**Mulakan semula dan klien lain** (`persist.sh`, `sentinel_client.mjs`). Replica yang dimulakan semula hanya melakukan partial resync dengan kegigihan data RDB dan penutupan yang teratur; dengan AOF, atau selepas SIGKILL, ia melakukan full sync, seperti yang dinyatakan halaman replikasi ("It is not possible to partially sync a replica that restarted via the AOF file"). `createSentinel()` daripada node-redis tidak melemparkan sebarang ralat semasa failover: ia menahan satu penulisan selama 6.1 saat sehingga primary baharu menjawab, manakala redis-py mengeluarkan ralat selama kira-kira 4 saat.
+
 ### Cluster
 
 **Disahkan pada Redis 8.10.3, 2026-11-07.** Enam nod, tiga primary dengan satu replica setiap satu. Daripada spesifikasi: "Each master node in a cluster handles a subset of the 16384 hash slots", dengan `HASH_SLOT = CRC16(key) mod 16384`; hash tag "force certain keys to be stored in the same hash slot".
@@ -947,6 +1011,8 @@ Baris terakhir ialah perangkapnya: dengan nama hos, nama container yang dihentik
 Penolakan `CROSSSLOT` yang sama juga dikembalikan oleh ElastiCache Serverless pada [halaman Compare]({{ '/compare/' | relative_url }}): rancang kunci yang digunakan bersama dengan hash tag yang dikongsi. Dokumentasi: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/). Makmal: [`deep-dive/04-cluster`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/04-cluster).
 
 **Failover di dalam cluster** (`failover.py`). Sebuah primary dimatikan semasa penulisan: dengan `cluster-node-timeout` lalai 15 saat, replica mengambil alih pada 19.3 saat dan klien tidak dapat menulis kunci milik primary itu selama kira-kira 16 saat; dengan 3 saat, hasilnya 5.3 saat dan kira-kira 4 saat. Dalam kedua-dua larian, kunci pada primary lain juga mendapat satu `ClusterDownError` selama kira-kira 1 saat: sebelum replica mengambil alih, sesetengah slot tiada pemilik, dan dengan `cluster-require-full-coverage yes` seluruh cluster menolak permintaan. Bandingkan dengan 1.3 saat bagi operator Redis Enterprise pada [halaman Enterprise]({{ '/enterprise/' | relative_url }}).
+
+**Partition rangkaian** (`partition.py`). Sebuah primary yang terputus daripada rangkaian terus menerima penulisan dari sisinya sendiri sehingga node timeout 5 saat, kemudian menjawab `CLUSTERDOWN`; selepas replica-nya mengambil alih dan nod itu menyertai semula, 21 penulisan itu hilang dan nilai pihak majoriti kekal.
 
 ### Eviction dan memori
 
@@ -994,6 +1060,8 @@ Selepas `XNACK`, `XREADGROUP … >` yang baharu tidak mengembalikan entri itu: `
 
 **Pilihan selebihnya** (`more.sh`). `XNACK` selepas satu penghantaran: kiraan `SILENT` 0, `FAIL` 1, `FATAL` 9223372036854775807, `RETRYCOUNT 5` 5; `FORCE` menambah entri yang belum dibaca sesiapa ke dalam pending list. `IDMPAUTO` menyahduplikasi mengikut kandungan. `XCFGSET` memadam sejarah IDMP, jadi percubaan semula yang dihantar sejurus selepasnya diterima; `IDMP-DURATION` dan `IDMP-MAXSIZE` mengehadkan berapa lama dan berapa banyak ID yang diingat. Dengan dua group, `XACKDEL KEEPREF` memadam entri dan meninggalkan rujukan kepada ketiadaan bagi group yang lain, `DELREF` membuang rujukan itu, dan `ACKED` hanya memadam apabila setiap group telah mengakui.
 
+**IDMP dan failover** (`idmp_replica.sh`). Idempotency map direplikasi: selepas primary dimatikan dan replica dinaikkan taraf, percubaan semula producer masih memulangkan ID entri yang asal.
+
 ### Functions dan ACL
 
 **Disahkan pada Redis 8.10.3, 2026-11-07.** Daripada halaman functions: "Functions provide the same core functionality as scripts but are first-class software artifacts of the database." Daripada halaman ACL tentang selector: "If a command matches either the user permissions or any selector, it is allowed."
@@ -1011,5 +1079,7 @@ Selepas `XNACK`, `XREADGROUP … >` yang baharu tidak mengembalikan entri itu: `
 Halaman ACL masih menyatakan "command categories, with the exception of +@all, never include module commands." Pada Redis 8.10.3 perkara itu tidak lagi benar: `ACL CAT write` menyenaraikan 47 arahan JSON, time series dan probabilistik. ACL yang ditulis untuk Redis 7 boleh membenarkan atau menyekat lebih banyak selepas peningkatan. Dokumentasi: [Redis functions](https://redis.io/docs/latest/develop/programmability/functions-intro/), [FCALL_RO](https://redis.io/docs/latest/commands/fcall_ro/), [ACL](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/). Makmal: [`deep-dive/08-functions-acl`](https://github.com/litkhai/notes-on-redis/tree/main/deep-dive/08-functions-acl).
 
 **Replica, dump, fail ACL dan log** (`more.sh`). Pustaka yang dimuatkan pada primary sampai ke replica; di sana `FCALL_RO` berjalan dan `FCALL` bagi fungsi yang menulis mendapat `READONLY`. `FUNCTION DUMP` dan `FUNCTION RESTORE` memindahkan pustaka ke pelayan lain bersama bendera-nya. `ACL SAVE` dan `ACL LOAD` pergi-balik dengan fail ACL, termasuk ulasan `#` (Redis 8.8), dan satu baris yang salah menyebabkan seluruh `ACL LOAD` gagal tanpa mengubah apa-apa. `ACL LOG` merekod kata laluan yang salah, perintah yang ditolak dan kunci yang ditolak, masing-masing dengan sebab dan penggunanya.
+
+**Pengguna ACL tidak direplikasi** (`acl_replica.sh`). Pengguna yang dicipta pada primary tidak wujud pada replica (`WRONGPASS`), walaupun datanya wujud; gunakan fail ACL yang sama pada setiap pelayan.
 
 </div>

@@ -49,6 +49,8 @@ The proxy is what makes a sharded database look like one Redis to a plain client
 
 **Modules and TLS** (`tls.py`). The cluster ships JSON, Bloom, Search and time series in several versions each, and no RedisGears. A database with `tls_mode: enabled` closed plain TCP connections; a client connected only with the cluster's proxy certificate (`GET /v1/cluster/certificates`) as its CA, and a PING round trip on that connection took 0.13 ms.
 
+**LDAP and mutual TLS** (`ldap_mtls.py`). With an OpenLDAP container, a user in the mapped LDAP group could read a database and was refused writes; a wrong password and a user in no mapped group were refused, the latter with the unhelpful `problem with LDAP service`. A database with `enforce_client_authentication: enabled` accepted only the registered client certificate.
+
 <p class="shot"><img src="{{ '/assets/img/enterprise/01-rs-databases.webp' | relative_url }}" width="1440" height="765" alt="Cluster Manager UI databases list with db-b, 4 shards" loading="lazy" decoding="async"></p>
 
 Cluster Manager UI: the databases list after re-sharding. <small>Captured 2026-11-07, Redis Software 8.2.6-25.</small>
@@ -78,6 +80,8 @@ Database settings: sharding, OSS Cluster API off, proxy policy, capabilities and
 
 **On a cgroup v1 host, pin an older kind node image.** Kubernetes 1.35 and later refuse cgroup v1 by default (`failCgroupV1`), so kind's default v1.37.0 image failed on this Ubuntu 20.04 host; v1.34.11 works. Docs: [Redis Enterprise for Kubernetes](https://redis.io/docs/latest/operate/kubernetes/), [Install with Helm](https://redis.io/docs/latest/operate/kubernetes/deployment/helm/). Lab: [`enterprise/03-operator-kind`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/03-operator-kind).
 
+**TLS on a REDB** (`tls.sh`). `tlsMode: enabled` made the database refuse plain TCP; clients connected with the cluster's proxy certificate from the REC API as their CA.
+
 ### Lab: RDI from Postgres
 
 **Verified on RDI 2.2.1 (Debezium 3.5.0, Flink processor), Postgres 17.11, Redis Enterprise 8.2.6-25 on kind, 2026-11-07.** From the docs: "Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time." The source is 1,000 made-up customers in Postgres. One job adds a `tier` field from `credit_limit`, drops `email`, and writes JSON under `customer:<id>`. RDI keeps its state in the non-clustered `rdi-state` database from the operator lab.
@@ -92,6 +96,12 @@ Database settings: sharding, OSS Cluster API off, proxy policy, capabilities and
 The latencies include about 0.11 s of `kubectl exec` and come from one host, so read them as an order of magnitude. With no processor type set, the pipeline ran on Flink, the default since RDI 2.0. `redis-di describe` showed the target as "Connected: no" while rows were arriving; that was not investigated. Docs: [RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). Lab: [`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).
 
 **Classic processor and write-behind** (`classic.sh`). With `processors.type: classic` the same pipeline ran in one `processor` pod instead of Flink's job and task managers, with changes visible in 0.2–1.1 s. Write-behind (Redis to a database) is not in the RDI 2.2 documentation; the older write-behind engine needs RedisGears Python 1.2.6, which Redis Software 8.2.6 does not ship, so it could not be run.
+
+**Least privilege and Redis Insight** (`least_privilege.sh`, `insight.sh`). The pipeline re-snapshotted and streamed as a replication-only Postgres user (`LOGIN REPLICATION`, table ownership shared through a group), which could not create roles. Redis Insight 3.8.0 connected to the RDI API and showed the pipeline, its configuration with secret placeholders, and the job; its Analytics tab stayed empty for this Flink pipeline.
+
+<p class="shot"><img src="{{ '/assets/img/enterprise/06-insight-rdi-pipeline.webp' | relative_url }}" width="1440" height="900" alt="Redis Insight Data integration view of the RDI pipeline with its configuration file" loading="lazy" decoding="async"></p>
+
+Redis Insight 3.8.0 connected to RDI 2.2.1 on kind; captured with headless Chromium. <small>Captured 2026-11-07, Redis Software 8.2.6-25.</small>
 
 ### Not run yet
 
@@ -142,6 +152,8 @@ Redis Software와 Redis Cloud Pro가 Redis Open Source에 더해 주는 것 — 
 
 **모듈과 TLS**(`tls.py`). 클러스터에는 JSON, Bloom, Search, time series가 버전 여러 개씩 들어 있고 RedisGears는 없다. `tls_mode: enabled`인 DB는 평문 TCP 연결을 끊었고, 클라이언트는 클러스터 프록시 인증서(`GET /v1/cluster/certificates`)를 CA로 줬을 때만 연결됐다. 그 연결에서 PING 왕복은 0.13 ms.
 
+**LDAP과 상호 TLS**(`ldap_mtls.py`). OpenLDAP 컨테이너로 시험했다. 매핑된 LDAP 그룹의 사용자는 DB를 읽을 수 있었고 쓰기는 거절됐다. 틀린 비밀번호와 매핑된 그룹이 없는 사용자는 거절됐는데, 후자는 원인을 알기 어려운 `problem with LDAP service`를 받았다. `enforce_client_authentication: enabled`인 DB는 등록한 클라이언트 인증서만 받아들였다.
+
 <p class="shot"><img src="{{ '/assets/img/enterprise/01-rs-databases.webp' | relative_url }}" width="1440" height="765" alt="샤드 4개인 db-b가 있는 Cluster Manager UI의 DB 목록" loading="lazy" decoding="async"></p>
 
 Cluster Manager UI: 재샤딩 뒤의 DB 목록. <small>2026-11-07 캡처, Redis Software 8.2.6-25.</small>
@@ -171,6 +183,8 @@ DB 설정: 샤딩, OSS Cluster API 꺼짐, 프록시 정책, 기능, 내구성�
 
 **cgroup v1 호스트에서는 이전 kind 노드 이미지를 고정한다.** Kubernetes 1.35부터 기본으로 cgroup v1을 거부하므로(`failCgroupV1`) kind의 기본 v1.37.0 이미지는 이 Ubuntu 20.04 호스트에서 실패했다. v1.34.11은 동작한다. 문서: [Redis Enterprise for Kubernetes](https://redis.io/docs/latest/operate/kubernetes/), [Install with Helm](https://redis.io/docs/latest/operate/kubernetes/deployment/helm/). 실습: [`enterprise/03-operator-kind`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/03-operator-kind).
 
+**REDB의 TLS**(`tls.sh`). `tlsMode: enabled`이면 DB가 평문 TCP를 거절했고, 클라이언트는 REC API에서 받은 클러스터 프록시 인증서를 CA로 줘서 연결했다.
+
 ### 실습: Postgres에서 RDI
 
 **확인: RDI 2.2.1(Debezium 3.5.0, Flink 프로세서), Postgres 17.11, kind 위 Redis Enterprise 8.2.6-25, 2026-11-07.** 문서의 표현: "Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time." 원천은 Postgres의 가상 고객 1,000명이다. 작업 하나가 `credit_limit`에서 `tier` 필드를 만들고 `email`을 빼고 `customer:<id>`에 JSON으로 쓴다. RDI는 operator 실습의 클러스터가 아닌(non-clustered) `rdi-state` DB에 상태를 둔다.
@@ -185,6 +199,12 @@ DB 설정: 샤딩, OSS Cluster API 꺼짐, 프록시 정책, 기능, 내구성�
 지연에는 `kubectl exec` 약 0.11초가 들어 있고 호스트 하나에서 쟀으므로 규모로만 읽는다. 프로세서 종류를 정하지 않으면 RDI 2.0부터의 기본값인 Flink로 돈다. 행이 들어오는 동안에도 `redis-di describe`는 대상을 "Connected: no"로 표시했다. 조사하지 않았다. 문서: [RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). 실습: [`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).
 
 **classic 프로세서와 write-behind**(`classic.sh`). `processors.type: classic`이면 같은 파이프라인이 Flink의 job·task manager 대신 `processor` 파드 하나로 돌았고, 변경은 0.2–1.1초 안에 보였다. write-behind(Redis에서 DB로)는 RDI 2.2 문서에 없다. 예전 write-behind 엔진은 RedisGears Python 1.2.6이 필요한데 Redis Software 8.2.6에는 없어서 실행할 수 없었다.
+
+**최소 권한과 Redis Insight**(`least_privilege.sh`, `insight.sh`). 파이프라인은 복제 전용 Postgres 사용자(`LOGIN REPLICATION`, 그룹으로 테이블 소유권 공유)로 스냅샷을 다시 뜨고 스트리밍했고, 그 사용자는 역할을 만들 수 없었다. Redis Insight 3.8.0은 RDI API에 연결해 파이프라인, 시크릿 자리표시자가 든 설정, 작업을 보여 줬다. Analytics 탭은 이 Flink 파이프라인에서 비어 있었다.
+
+<p class="shot"><img src="{{ '/assets/img/enterprise/06-insight-rdi-pipeline.webp' | relative_url }}" width="1440" height="900" alt="설정 파일이 보이는 RDI 파이프라인의 Redis Insight Data integration 화면" loading="lazy" decoding="async"></p>
+
+kind 위 RDI 2.2.1에 연결한 Redis Insight 3.8.0. headless Chromium으로 캡처. <small>2026-11-07 캡처, Redis Software 8.2.6-25.</small>
 
 ### 아직 실행하지 않은 것
 
@@ -235,6 +255,8 @@ Redis Software 和 Redis Cloud Pro 在 Redis Open Source 之上增加了什么�
 
 **模块与 TLS**（`tls.py`）。集群自带 JSON、Bloom、Search 和 time series，每个都有多个版本，没有 RedisGears。`tls_mode: enabled` 的数据库关闭了明文 TCP 连接；客户端只有把集群的代理证书（`GET /v1/cluster/certificates`）作为 CA 才能连上，该连接上一次 PING 往返耗时 0.13 ms。
 
+**LDAP 与双向 TLS**（`ldap_mtls.py`）。用 OpenLDAP 容器测试：映射的 LDAP 组中的用户可以读取数据库，写入被拒绝；错误密码和不在任何映射组中的用户都被拒绝，后者收到的是难以判断原因的 `problem with LDAP service`。设置了 `enforce_client_authentication: enabled` 的数据库只接受已注册的客户端证书。
+
 <p class="shot"><img src="{{ '/assets/img/enterprise/01-rs-databases.webp' | relative_url }}" width="1440" height="765" alt="Cluster Manager UI 的数据库列表，其中 db-b 有 4 个分片" loading="lazy" decoding="async"></p>
 
 Cluster Manager UI：重新分片之后的数据库列表。 <small>2026-11-07 截取，Redis Software 8.2.6-25。</small>
@@ -264,6 +286,8 @@ Cluster Manager UI：重新分片之后的数据库列表。 <small>2026-11-07 �
 
 **在 cgroup v1 主机上，请固定较旧的 kind 节点镜像。** Kubernetes 1.35 及更高版本默认拒绝 cgroup v1（`failCgroupV1`），因此 kind 默认的 v1.37.0 镜像在这台 Ubuntu 20.04 主机上失败；v1.34.11 可以正常工作。 文档：[Redis Enterprise for Kubernetes](https://redis.io/docs/latest/operate/kubernetes/), [Install with Helm](https://redis.io/docs/latest/operate/kubernetes/deployment/helm/). 实验：[`enterprise/03-operator-kind`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/03-operator-kind).
 
+**REDB 上的 TLS**（`tls.sh`）。设置 `tlsMode: enabled` 后，数据库拒绝明文 TCP；客户端把从 REC API 获取的集群代理证书作为 CA 来连接。
+
 ### 实验：从 Postgres 到 RDI
 
 **在 RDI 2.2.1（Debezium 3.5.0、Flink processor）、Postgres 17.11、kind 上的 Redis Enterprise 8.2.6-25 上验证，2026-11-07。** 文档中写道："Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time." 数据源是 Postgres 中 1,000 条虚构的客户记录。一个 job 根据 `credit_limit` 添加 `tier` 字段，丢弃 `email`，并把 JSON 写到 `customer:<id>` 之下。RDI 将其状态保存在 operator 实验中的非集群数据库 `rdi-state` 里。
@@ -278,6 +302,12 @@ Cluster Manager UI：重新分片之后的数据库列表。 <small>2026-11-07 �
 这些延迟包含约 0.11 秒的 `kubectl exec`，且来自同一台主机，因此只应视为数量级。未设置 processor 类型时，管道在 Flink 上运行，这是自 RDI 2.0 起的默认值。管道在接收行的同时，`redis-di describe` 却把目标显示为 "Connected: no"；对此没有深入调查。 文档：[RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). 实验：[`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).
 
 **classic 处理器与 write-behind**（`classic.sh`）。设置 `processors.type: classic` 后，同一条管道在一个 `processor` pod 中运行，而不是 Flink 的 job 和 task manager，变更在 0.2–1.1 秒内可见。write-behind（从 Redis 写到数据库）不在 RDI 2.2 文档中；旧的 write-behind 引擎需要 RedisGears Python 1.2.6，而 Redis Software 8.2.6 并未提供，所以无法运行。
+
+**最小权限与 Redis Insight**（`least_privilege.sh`、`insight.sh`）。管道以仅有复制权限的 Postgres 用户（`LOGIN REPLICATION`，通过组共享表的所有权）重新做了快照并持续流式同步，该用户无法创建角色。Redis Insight 3.8.0 连接到 RDI API，显示了管道、带有密钥占位符的配置以及作业；Analytics 标签页在这条 Flink 管道上一直是空的。
+
+<p class="shot"><img src="{{ '/assets/img/enterprise/06-insight-rdi-pipeline.webp' | relative_url }}" width="1440" height="900" alt="Redis Insight 中 RDI 管道的 Data integration 视图，显示其配置文件" loading="lazy" decoding="async"></p>
+
+Redis Insight 3.8.0 连接到 kind 上的 RDI 2.2.1；用 headless Chromium 截图。 <small>2026-11-07 截取，Redis Software 8.2.6-25。</small>
 
 ### 尚未运行
 
@@ -328,6 +358,8 @@ Redis Software と Redis Cloud Pro が Redis Open Source に加えるもの — 
 
 **モジュールと TLS**（`tls.py`）。クラスターには JSON、Bloom、Search、time series がそれぞれ複数のバージョンで入っていて、RedisGears はない。`tls_mode: enabled` のデータベースは平文の TCP 接続を切断し、クライアントはクラスターのプロキシ証明書（`GET /v1/cluster/certificates`）を CA として渡したときだけ接続できた。その接続での PING の往復は 0.13 ms だった。
 
+**LDAP と相互 TLS**（`ldap_mtls.py`）。OpenLDAP コンテナーで試した。マッピングされた LDAP グループのユーザーはデータベースを読めて、書き込みは拒否された。間違ったパスワードと、どのマッピング済みグループにも属さないユーザーは拒否され、後者は原因の分かりにくい `problem with LDAP service` を受け取った。`enforce_client_authentication: enabled` のデータベースは、登録済みのクライアント証明書だけを受け付けた。
+
 <p class="shot"><img src="{{ '/assets/img/enterprise/01-rs-databases.webp' | relative_url }}" width="1440" height="765" alt="シャード 4 つの db-b がある Cluster Manager UI のデータベース一覧" loading="lazy" decoding="async"></p>
 
 Cluster Manager UI: リシャーディング後のデータベース一覧。 <small>2026-11-07 取得、Redis Software 8.2.6-25。</small>
@@ -357,6 +389,8 @@ Cluster Manager UI: リシャーディング後のデータベース一覧。 <s
 
 **cgroup v1 のホストでは、古い kind ノードイメージを固定すること。** Kubernetes 1.35 以降はデフォルトで cgroup v1 を拒否する（`failCgroupV1`）ため、kind のデフォルトである v1.37.0 イメージはこの Ubuntu 20.04 ホストで失敗した。v1.34.11 なら動作する。 ドキュメント: [Redis Enterprise for Kubernetes](https://redis.io/docs/latest/operate/kubernetes/), [Install with Helm](https://redis.io/docs/latest/operate/kubernetes/deployment/helm/). ラボ: [`enterprise/03-operator-kind`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/03-operator-kind).
 
+**REDB の TLS**（`tls.sh`）。`tlsMode: enabled` にするとデータベースは平文の TCP を拒否し、クライアントは REC API から取得したクラスターのプロキシ証明書を CA として渡して接続した。
+
 ### ラボ: Postgres からの RDI
 
 **RDI 2.2.1（Debezium 3.5.0、Flink processor）、Postgres 17.11、kind 上の Redis Enterprise 8.2.6-25 で確認、2026-11-07。** ドキュメントより: "Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time." ソースは Postgres 上の 1,000 件の架空の顧客。1 つのジョブが `credit_limit` から `tier` フィールドを追加し、`email` を削除して、`customer:<id>` の下に JSON を書き込む。RDI は自身の状態を、operator ラボの非クラスターデータベース `rdi-state` に保持する。
@@ -371,6 +405,12 @@ Cluster Manager UI: リシャーディング後のデータベース一覧。 <s
 レイテンシには約 0.11 秒の `kubectl exec` が含まれ、1 台のホストでの結果なので、桁の目安として読むこと。processor の種類を指定しなかった場合、パイプラインは RDI 2.0 以降のデフォルトである Flink 上で動いた。行が届いている間も、`redis-di describe` はターゲットを "Connected: no" と表示した。これは調べていない。 ドキュメント: [RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). ラボ: [`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).
 
 **classic プロセッサーと write-behind**（`classic.sh`）。`processors.type: classic` にすると、同じパイプラインが Flink の job・task manager の代わりに `processor` pod 一つで動き、変更は 0.2–1.1 秒で見えた。write-behind（Redis からデータベースへ）は RDI 2.2 のドキュメントにない。以前の write-behind エンジンには RedisGears Python 1.2.6 が必要だが、Redis Software 8.2.6 には含まれていないため、実行できなかった。
+
+**最小権限と Redis Insight**（`least_privilege.sh`、`insight.sh`）。パイプラインは、レプリケーション専用の Postgres ユーザー（`LOGIN REPLICATION`、グループでテーブルの所有権を共有）でスナップショットを取り直してストリーミングし、そのユーザーはロールを作成できなかった。Redis Insight 3.8.0 は RDI API に接続して、パイプライン、シークレットのプレースホルダーを含む設定、ジョブを表示した。Analytics タブは、この Flink パイプラインでは空のままだった。
+
+<p class="shot"><img src="{{ '/assets/img/enterprise/06-insight-rdi-pipeline.webp' | relative_url }}" width="1440" height="900" alt="設定ファイルが見える RDI パイプラインの Redis Insight Data integration 画面" loading="lazy" decoding="async"></p>
+
+kind 上の RDI 2.2.1 に接続した Redis Insight 3.8.0。headless Chromium でキャプチャ。 <small>2026-11-07 取得、Redis Software 8.2.6-25。</small>
 
 ### 未実行
 
@@ -421,6 +461,8 @@ proxy คือสิ่งที่ทำให้ฐานข้อมูล�
 
 **โมดูลและ TLS** (`tls.py`) คลัสเตอร์มาพร้อม JSON, Bloom, Search และ time series อย่างละหลายเวอร์ชัน และไม่มี RedisGears ฐานข้อมูลที่ตั้ง `tls_mode: enabled` ตัดการเชื่อมต่อ TCP แบบข้อความล้วน ไคลเอนต์เชื่อมต่อได้เฉพาะเมื่อใช้ใบรับรองพร็อกซีของคลัสเตอร์ (`GET /v1/cluster/certificates`) เป็น CA และ PING ไปกลับบนการเชื่อมต่อนั้นใช้เวลา 0.13 ms
 
+**LDAP และ mutual TLS** (`ldap_mtls.py`) ทดสอบด้วยคอนเทนเนอร์ OpenLDAP ผู้ใช้ในกลุ่ม LDAP ที่แมปไว้อ่านฐานข้อมูลได้แต่เขียนถูกปฏิเสธ รหัสผ่านที่ผิดและผู้ใช้ที่ไม่อยู่ในกลุ่มที่แมปไว้ถูกปฏิเสธ โดยกรณีหลังได้รับข้อความ `problem with LDAP service` ที่บอกสาเหตุได้ยาก ฐานข้อมูลที่ตั้ง `enforce_client_authentication: enabled` ยอมรับเฉพาะใบรับรองไคลเอนต์ที่ลงทะเบียนไว้
+
 <p class="shot"><img src="{{ '/assets/img/enterprise/01-rs-databases.webp' | relative_url }}" width="1440" height="765" alt="รายการฐานข้อมูลใน Cluster Manager UI โดย db-b มี 4 shard" loading="lazy" decoding="async"></p>
 
 Cluster Manager UI: รายการฐานข้อมูลหลัง re-sharding <small>จับภาพเมื่อ 2026-11-07, Redis Software 8.2.6-25</small>
@@ -450,6 +492,8 @@ Cluster Manager UI: รายการฐานข้อมูลหลัง re
 
 **บนโฮสต์ที่ใช้ cgroup v1 ให้ตรึงอิมเมจโหนด kind รุ่นเก่า** Kubernetes 1.35 ขึ้นไปปฏิเสธ cgroup v1 โดยค่าเริ่มต้น (`failCgroupV1`) อิมเมจ v1.37.0 ที่เป็นค่าเริ่มต้นของ kind จึงล้มเหลวบนโฮสต์ Ubuntu 20.04 เครื่องนี้; v1.34.11 ใช้ได้ เอกสาร: [Redis Enterprise for Kubernetes](https://redis.io/docs/latest/operate/kubernetes/), [Install with Helm](https://redis.io/docs/latest/operate/kubernetes/deployment/helm/). แล็บ: [`enterprise/03-operator-kind`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/03-operator-kind).
 
+**TLS บน REDB** (`tls.sh`) เมื่อตั้ง `tlsMode: enabled` ฐานข้อมูลปฏิเสธ TCP แบบข้อความล้วน ไคลเอนต์เชื่อมต่อโดยใช้ใบรับรองพร็อกซีของคลัสเตอร์จาก REC API เป็น CA
+
 ### แล็บ: RDI จาก Postgres
 
 **ตรวจสอบบน RDI 2.2.1 (Debezium 3.5.0, Flink processor), Postgres 17.11, Redis Enterprise 8.2.6-25 บน kind, 2026-11-07** จากเอกสาร: "Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time." แหล่งข้อมูลคือลูกค้าสมมติ 1,000 รายใน Postgres งาน (job) หนึ่งเพิ่มฟิลด์ `tier` จาก `credit_limit` ตัด `email` ออก และเขียน JSON ไว้ใต้ `customer:<id>` RDI เก็บสถานะของตัวเองไว้ในฐานข้อมูลที่ไม่ใช่คลัสเตอร์ชื่อ `rdi-state` จากแล็บ operator
@@ -464,6 +508,12 @@ Cluster Manager UI: รายการฐานข้อมูลหลัง re
 ค่าความหน่วงรวม `kubectl exec` ราว 0.11 วินาทีและมาจากโฮสต์เดียว จึงควรอ่านเป็นลำดับขนาดเท่านั้น เมื่อไม่ได้ตั้งชนิด processor ไปป์ไลน์รันบน Flink ซึ่งเป็นค่าเริ่มต้นตั้งแต่ RDI 2.0 `redis-di describe` แสดงเป้าหมายเป็น "Connected: no" ทั้งที่แถวกำลังเข้ามา เรื่องนี้ไม่ได้ตรวจสอบ เอกสาร: [RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). แล็บ: [`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).
 
 **classic processor และ write-behind** (`classic.sh`) เมื่อตั้ง `processors.type: classic` ไปป์ไลน์เดียวกันรันใน `processor` pod ตัวเดียว แทน job และ task manager ของ Flink โดยเห็นการเปลี่ยนแปลงภายใน 0.2–1.1 วินาที write-behind (จาก Redis ไปยังฐานข้อมูล) ไม่อยู่ในเอกสาร RDI 2.2 เอนจิน write-behind รุ่นเก่าต้องใช้ RedisGears Python 1.2.6 ซึ่ง Redis Software 8.2.6 ไม่ได้ให้มา จึงรันไม่ได้
+
+**สิทธิ์ขั้นต่ำและ Redis Insight** (`least_privilege.sh`, `insight.sh`) ไปป์ไลน์สร้างสแนปช็อตใหม่และสตรีมต่อได้ด้วยผู้ใช้ Postgres ที่มีสิทธิ์ replication เท่านั้น (`LOGIN REPLICATION` โดยใช้กรรมสิทธิ์ตารางร่วมกันผ่านกลุ่ม) ซึ่งผู้ใช้นี้สร้าง role ไม่ได้ Redis Insight 3.8.0 เชื่อมต่อกับ RDI API และแสดงไปป์ไลน์ การตั้งค่าที่มีตัวแทนค่าลับ (placeholder) และงาน (job) ส่วนแท็บ Analytics ว่างเปล่าสำหรับไปป์ไลน์ Flink นี้
+
+<p class="shot"><img src="{{ '/assets/img/enterprise/06-insight-rdi-pipeline.webp' | relative_url }}" width="1440" height="900" alt="มุมมอง Data integration ของ Redis Insight แสดงไปป์ไลน์ RDI พร้อมไฟล์การตั้งค่า" loading="lazy" decoding="async"></p>
+
+Redis Insight 3.8.0 เชื่อมต่อกับ RDI 2.2.1 บน kind จับภาพด้วย headless Chromium <small>จับภาพเมื่อ 2026-11-07, Redis Software 8.2.6-25</small>
 
 ### ยังไม่ได้รัน
 
@@ -514,6 +564,8 @@ Proxy-lah yang membuat database ter-shard tampak sebagai satu Redis bagi klien b
 
 **Modul dan TLS** (`tls.py`). Klaster menyertakan JSON, Bloom, Search, dan time series dalam beberapa versi masing-masing, serta tidak ada RedisGears. Basis data dengan `tls_mode: enabled` menutup koneksi TCP polos; klien hanya bisa terhubung dengan sertifikat proxy klaster (`GET /v1/cluster/certificates`) sebagai CA-nya, dan satu kali bolak-balik PING pada koneksi itu memakan waktu 0.13 ms.
 
+**LDAP dan mutual TLS** (`ldap_mtls.py`). Diuji dengan kontainer OpenLDAP: pengguna dalam grup LDAP yang dipetakan bisa membaca database dan ditolak saat menulis; kata sandi yang salah dan pengguna yang tidak berada di grup yang dipetakan ditolak, dan yang terakhir menerima pesan `problem with LDAP service` yang sulit dipahami penyebabnya. Database dengan `enforce_client_authentication: enabled` hanya menerima sertifikat klien yang terdaftar.
+
 <p class="shot"><img src="{{ '/assets/img/enterprise/01-rs-databases.webp' | relative_url }}" width="1440" height="765" alt="Daftar database Cluster Manager UI dengan db-b, 4 shard" loading="lazy" decoding="async"></p>
 
 Cluster Manager UI: daftar database setelah re-sharding. <small>Ditangkap 2026-11-07, Redis Software 8.2.6-25.</small>
@@ -543,6 +595,8 @@ Pengaturan database: sharding, OSS Cluster API nonaktif, kebijakan proxy, kapabi
 
 **Pada host cgroup v1, kunci image node kind yang lebih lama.** Kubernetes 1.35 ke atas menolak cgroup v1 secara bawaan (`failCgroupV1`), sehingga image bawaan kind v1.37.0 gagal di host Ubuntu 20.04 ini; v1.34.11 berfungsi. Dokumentasi: [Redis Enterprise for Kubernetes](https://redis.io/docs/latest/operate/kubernetes/), [Install with Helm](https://redis.io/docs/latest/operate/kubernetes/deployment/helm/). Lab: [`enterprise/03-operator-kind`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/03-operator-kind).
 
+**TLS pada REDB** (`tls.sh`). Dengan `tlsMode: enabled`, database menolak TCP polos; klien terhubung dengan sertifikat proxy klaster dari REC API sebagai CA-nya.
+
 ### Lab: RDI dari Postgres
 
 **Diverifikasi pada RDI 2.2.1 (Debezium 3.5.0, Flink processor), Postgres 17.11, Redis Enterprise 8.2.6-25 di kind, 2026-11-07.** Dari dokumentasi: "Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time." Sumbernya adalah 1.000 pelanggan fiktif di Postgres. Satu job menambahkan field `tier` dari `credit_limit`, membuang `email`, dan menulis JSON di bawah `customer:<id>`. RDI menyimpan state-nya di database non-klaster `rdi-state` dari lab operator.
@@ -557,6 +611,12 @@ Pengaturan database: sharding, OSS Cluster API nonaktif, kebijakan proxy, kapabi
 Latensi itu sudah termasuk sekitar 0,11 dtk untuk `kubectl exec` dan berasal dari satu host, jadi bacalah sebagai orde besarnya saja. Tanpa tipe processor yang ditetapkan, pipeline berjalan di Flink, yang menjadi bawaan sejak RDI 2.0. `redis-di describe` menampilkan target sebagai "Connected: no" saat baris sedang berdatangan; hal itu tidak diselidiki. Dokumentasi: [RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). Lab: [`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).
 
 **Prosesor classic dan write-behind** (`classic.sh`). Dengan `processors.type: classic`, pipeline yang sama berjalan dalam satu pod `processor`, bukan job dan task manager milik Flink, dengan perubahan terlihat dalam 0.2–1.1 detik. Write-behind (dari Redis ke basis data) tidak ada dalam dokumentasi RDI 2.2; mesin write-behind yang lama membutuhkan RedisGears Python 1.2.6, yang tidak disertakan Redis Software 8.2.6, sehingga tidak bisa dijalankan.
+
+**Hak akses minimum dan Redis Insight** (`least_privilege.sh`, `insight.sh`). Pipeline membuat ulang snapshot dan melakukan streaming sebagai pengguna Postgres khusus replikasi (`LOGIN REPLICATION`, kepemilikan tabel dibagi lewat grup), yang tidak bisa membuat role. Redis Insight 3.8.0 terhubung ke RDI API dan menampilkan pipeline, konfigurasinya dengan placeholder rahasia, serta job-nya; tab Analytics tetap kosong untuk pipeline Flink ini.
+
+<p class="shot"><img src="{{ '/assets/img/enterprise/06-insight-rdi-pipeline.webp' | relative_url }}" width="1440" height="900" alt="Tampilan Data integration di Redis Insight untuk pipeline RDI beserta file konfigurasinya" loading="lazy" decoding="async"></p>
+
+Redis Insight 3.8.0 terhubung ke RDI 2.2.1 di kind; ditangkap dengan headless Chromium. <small>Ditangkap 2026-11-07, Redis Software 8.2.6-25.</small>
 
 ### Belum dijalankan
 
@@ -607,6 +667,8 @@ Proxy yang menjadikan pangkalan data ter-shard kelihatan seperti satu Redis kepa
 
 **Modul dan TLS** (`tls.py`). Kluster menyertakan JSON, Bloom, Search dan time series dalam beberapa versi setiap satu, dan tiada RedisGears. Pangkalan data dengan `tls_mode: enabled` menutup sambungan TCP biasa; klien hanya berjaya bersambung dengan sijil proksi kluster (`GET /v1/cluster/certificates`) sebagai CA-nya, dan satu pusingan PING pada sambungan itu mengambil masa 0.13 ms.
 
+**LDAP dan mutual TLS** (`ldap_mtls.py`). Diuji dengan kontena OpenLDAP: pengguna dalam kumpulan LDAP yang dipetakan boleh membaca pangkalan data dan ditolak semasa menulis; kata laluan yang salah dan pengguna yang tidak berada dalam kumpulan yang dipetakan ditolak, dan yang terakhir menerima mesej `problem with LDAP service` yang sukar difahami puncanya. Pangkalan data dengan `enforce_client_authentication: enabled` hanya menerima sijil klien yang didaftarkan.
+
 <p class="shot"><img src="{{ '/assets/img/enterprise/01-rs-databases.webp' | relative_url }}" width="1440" height="765" alt="Senarai pangkalan data Cluster Manager UI dengan db-b, 4 shard" loading="lazy" decoding="async"></p>
 
 Cluster Manager UI: senarai pangkalan data selepas re-sharding. <small>Ditangkap 2026-11-07, Redis Software 8.2.6-25.</small>
@@ -636,6 +698,8 @@ Tetapan pangkalan data: sharding, OSS Cluster API dimatikan, dasar proxy, keupay
 
 **Pada hos cgroup v1, tetapkan imej nod kind yang lebih lama.** Kubernetes 1.35 dan ke atas menolak cgroup v1 secara lalai (`failCgroupV1`), jadi imej lalai kind v1.37.0 gagal pada hos Ubuntu 20.04 ini; v1.34.11 berfungsi. Dokumen: [Redis Enterprise for Kubernetes](https://redis.io/docs/latest/operate/kubernetes/), [Install with Helm](https://redis.io/docs/latest/operate/kubernetes/deployment/helm/). Makmal: [`enterprise/03-operator-kind`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/03-operator-kind).
 
+**TLS pada REDB** (`tls.sh`). Dengan `tlsMode: enabled`, pangkalan data menolak TCP biasa; klien bersambung dengan sijil proksi kluster daripada REC API sebagai CA-nya.
+
 ### Makmal: RDI daripada Postgres
 
 **Disahkan pada RDI 2.2.1 (Debezium 3.5.0, Flink processor), Postgres 17.11, Redis Enterprise 8.2.6-25 pada kind, 2026-11-07.** Daripada dokumen: "Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time." Sumbernya ialah 1,000 pelanggan rekaan dalam Postgres. Satu job menambah medan `tier` daripada `credit_limit`, menggugurkan `email`, dan menulis JSON di bawah `customer:<id>`. RDI menyimpan keadaannya dalam pangkalan data bukan kluster `rdi-state` daripada makmal operator.
@@ -650,6 +714,12 @@ Tetapan pangkalan data: sharding, OSS Cluster API dimatikan, dasar proxy, keupay
 Kependaman itu termasuk kira-kira 0.11 s untuk `kubectl exec` dan datang daripada satu hos, jadi bacalah sebagai anggaran magnitud sahaja. Tanpa jenis processor ditetapkan, saluran paip berjalan pada Flink, iaitu lalai sejak RDI 2.0. `redis-di describe` menunjukkan sasaran sebagai "Connected: no" semasa baris sedang tiba; perkara itu tidak disiasat. Dokumen: [RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). Makmal: [`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).
 
 **Pemproses classic dan write-behind** (`classic.sh`). Dengan `processors.type: classic`, pipeline yang sama berjalan dalam satu pod `processor`, bukan job dan task manager milik Flink, dengan perubahan kelihatan dalam 0.2–1.1 saat. Write-behind (daripada Redis ke pangkalan data) tiada dalam dokumentasi RDI 2.2; enjin write-behind yang lama memerlukan RedisGears Python 1.2.6, yang tidak disertakan oleh Redis Software 8.2.6, jadi ia tidak dapat dijalankan.
+
+**Keistimewaan minimum dan Redis Insight** (`least_privilege.sh`, `insight.sh`). Pipeline mengambil semula snapshot dan melakukan penstriman sebagai pengguna Postgres khusus replikasi (`LOGIN REPLICATION`, pemilikan jadual dikongsi melalui kumpulan), yang tidak dapat mencipta role. Redis Insight 3.8.0 bersambung ke RDI API dan memaparkan pipeline, konfigurasinya dengan placeholder rahsia, serta job-nya; tab Analytics kekal kosong untuk pipeline Flink ini.
+
+<p class="shot"><img src="{{ '/assets/img/enterprise/06-insight-rdi-pipeline.webp' | relative_url }}" width="1440" height="900" alt="Paparan Data integration Redis Insight bagi pipeline RDI beserta fail konfigurasinya" loading="lazy" decoding="async"></p>
+
+Redis Insight 3.8.0 bersambung ke RDI 2.2.1 pada kind; ditangkap dengan headless Chromium. <small>Ditangkap 2026-11-07, Redis Software 8.2.6-25.</small>
 
 ### Belum dijalankan
 

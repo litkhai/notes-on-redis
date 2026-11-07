@@ -15,6 +15,7 @@ Official documentation: [Streams](https://redis.io/docs/latest/develop/data-type
 ```bash
 ./lab.sh   # starts and removes its own container
 ./more.sh  # XNACK modes, RETRYCOUNT, FORCE, IDMPAUTO, XCFGSET, XACKDEL with two groups
+./idmp_replica.sh  # is the IDMP map replicated, and does a retry after failover deduplicate?
 ```
 
 Output as it appeared (2026-11-07):
@@ -274,6 +275,37 @@ OK
    XLEN t after g2 also acknowledged: 0
 ```
 
+`idmp_replica.sh` output as it appeared (2026-11-07):
+
+```text
+[nor-idmp-p]> XADD pay IDMP svc-a req-1 * amount 100
+"1794057927354-0"
+
+[nor-idmp-p]> XADD pay IDMP svc-a req-1 * amount 100
+"1794057927354-0"
+
+== on the replica
+[nor-idmp-r]> XLEN pay
+(integer) 1
+
+[nor-idmp-r]> XINFO STREAM pay (idmp fields)
+idmp-duration	100
+idmp-maxsize	100
+
+== the primary dies; the replica is promoted; the producer retries req-1, then sends req-2
+[nor-idmp-r]> REPLICAOF NO ONE
+OK
+
+[nor-idmp-r]> XADD pay IDMP svc-a req-1 * amount 100
+"1794057927354-0"
+
+[nor-idmp-r]> XADD pay IDMP svc-a req-2 * amount 50
+"1794057928397-0"
+
+[nor-idmp-r]> XLEN pay
+(integer) 2
+```
+
 ### What was observed
 
 - **XAUTOCLAIM.** `c1` read 0-1 to 0-3 and never acknowledged them. After 100 ms idle, `XAUTOCLAIM … c2 100` moved all three to `c2`; the delivery count went from 1 to 2. Without it those entries stay with a dead consumer forever.
@@ -285,10 +317,11 @@ OK
 - **IDMPAUTO works from the content.** The same producer sending the same fields twice got the same ID; different fields got a new one.
 - **`XCFGSET` forgets.** "Calling `XCFGSET` clears all existing producer IDMP maps", and it did: a retry sent right after it was accepted as new. With `IDMP-DURATION 1` the same idempotent ID was accepted again after 2 s, and with `IDMP-MAXSIZE 2` the oldest of three IDs was forgotten.
 - **XACKDEL with two groups.** `KEEPREF` (the default) deleted the entry although the other group had not acknowledged it; that group kept a pending reference to an entry that no longer exists, and `XCLAIM` on it returned nothing. `DELREF` removed that reference too. `ACKED` returned 2 (acknowledged, not deleted) until the second group acknowledged as well, and only then deleted the entry.
+- **IDMP survives a failover.** The replica had one entry after two identical `XADD … IDMP svc-a req-1`, with the same `idmp-duration` and `idmp-maxsize`. After the primary was killed and the replica promoted, the producer's retry of `req-1` returned the original entry ID and only `req-2` added an entry (`XLEN` 2): the idempotency map is replicated with the stream.
 
 ### Not run / caveats
 
-- IDMP across a primary and its replica was not looked at.
+- The promotion was done by hand (`REPLICAOF NO ONE`), not by Sentinel or Cluster.
 
 | | |
 |---|---|
@@ -308,11 +341,14 @@ OK
 ```bash
 ./lab.sh   # starts and removes its own container
 ./more.sh  # XNACK modes, RETRYCOUNT, FORCE, IDMPAUTO, XCFGSET, XACKDEL with two groups
+./idmp_replica.sh  # is the IDMP map replicated, and does a retry after failover deduplicate?
 ```
 
 출력은 영문 절과 같다(2026-11-07).
 
 `more.sh`의 출력도 영문 절과 같다(2026-11-07).
+
+`idmp_replica.sh`의 출력도 영문 절과 같다(2026-11-07).
 
 ### 관찰한 것
 
@@ -325,10 +361,11 @@ OK
 - **IDMPAUTO는 내용으로 판단한다.** 같은 생산자가 같은 필드를 두 번 보내면 같은 ID, 필드가 다르면 새 ID였다.
 - **`XCFGSET`은 잊어버린다.** "Calling `XCFGSET` clears all existing producer IDMP maps"라고 하고, 실제로 그 직후의 재시도는 새 항목으로 받아들여졌다. `IDMP-DURATION 1`이면 2초 뒤 같은 멱등 ID가 다시 받아들여졌고, `IDMP-MAXSIZE 2`면 세 ID 중 가장 오래된 것이 잊혔다.
 - **두 그룹에서의 XACKDEL.** `KEEPREF`(기본값)는 다른 그룹이 확인하지 않았는데도 항목을 지웠다. 그 그룹에는 이미 없는 항목을 가리키는 대기 참조가 남았고, 그것에 `XCLAIM`하면 아무것도 돌아오지 않았다. `DELREF`는 그 참조까지 지웠다. `ACKED`는 두 번째 그룹도 확인할 때까지 2(확인함, 지우지 않음)를 돌려주고, 그다음에야 항목을 지웠다.
+- **IDMP는 장애 조치를 견딘다.** 같은 `XADD … IDMP svc-a req-1` 두 번 뒤 복제본에는 항목이 하나였고 `idmp-duration`, `idmp-maxsize`도 같았다. 주 서버를 죽이고 복제본을 승격한 뒤, 생산자가 `req-1`을 재시도하자 원래 항목 ID가 돌아왔고 `req-2`만 항목을 더했다(`XLEN` 2). 멱등성 맵은 스트림과 함께 복제된다.
 
 ### 미실행 / 주의
 
-- 주 서버와 복제본 사이의 IDMP는 보지 않았다.
+- 승격은 Sentinel이나 Cluster가 아니라 손으로(`REPLICAOF NO ONE`) 했다.
 
 | | |
 |---|---|

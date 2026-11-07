@@ -21,6 +21,7 @@ cp .env.example .env   # paste the URL from the console's Connect drawer (eye ic
 .venv/bin/python limits.py conns
 .venv/bin/python limits.py memory
 .venv/bin/python limits.py cleanup
+.venv/bin/python long_window.py 600   # ten minutes from ONE connection (the Iris services hold most of the 30)
 ```
 
 Output as it appeared (2026-11-07, 04:47–04:51 UTC):
@@ -66,6 +67,33 @@ deleted keys: 2826 dbsize: 0
 
 `long_ops.py` printed twelve samples; the middle ones (104,440–108,780 INCR/s) are omitted above.
 
+`long_window.py` output as it appeared (2026-11-07):
+
+```text
+connected clients before: 26 of 30
+t=  30s     22250 INCR/s
+t=  60s     21657 INCR/s
+t=  90s     21330 INCR/s
+t= 120s     21663 INCR/s
+t= 150s     21443 INCR/s
+t= 180s     21663 INCR/s
+t= 210s     21377 INCR/s
+t= 240s     20743 INCR/s
+t= 270s     13947 INCR/s
+t= 300s     14757 INCR/s
+t= 330s     21033 INCR/s
+t= 360s     17117 INCR/s
+t= 390s     20250 INCR/s
+t= 420s     16773 INCR/s
+t= 450s     15823 INCR/s
+t= 481s      9563 INCR/s
+t= 511s     12107 INCR/s
+t= 541s     18110 INCR/s
+t= 571s     19363 INCR/s
+t= 601s     19853 INCR/s
+total 11,124,700 INCR in 600 s; per-sample min 9,563, max 22,250 INCR/s; errors none
+```
+
 ### What was observed
 
 - **Connections:** the 31st connection is refused with `max number of clients reached`.
@@ -80,11 +108,12 @@ deleted keys: 2826 dbsize: 0
   against, not enforced, at least on this day. A single connection without pipelining is
   bound by the 2.6 ms round trip (249 ops/s), not by the plan.
 - `CONFIG GET` returns nothing: configuration is managed by the service, not the client.
+- **No throttling over ten minutes either.** One connection with pipelines of 100 sustained 9,563–22,250 INCR/s for 600 s, 11.1 million in all, with no error. The dips between 240 s and 520 s coincided with a kind cluster being built on the same host, so they say more about the client than the plan. The 100 ops/s on the pricing page was not enforced.
 
 ### Not run / caveats
 
 - The free plan cannot use TLS; the numbers are for plain TCP from one host in Korea.
-- Throttling may exist over longer windows or be introduced later; only 60 s was tested.
+- Throttling may still appear over hours or be introduced later; 60 s and 600 s were tested.
 - The database is kept for the Iris labs; the test keys were deleted.
 
 | | |
@@ -115,6 +144,8 @@ cp .env.example .env   # 콘솔 Connect 패널의 URL을 붙여 넣는다(눈 �
 
 출력은 영문 절과 같다(2026-11-07, 04:47–04:51 UTC). 같은 출력을 두 번 싣지 않는다.
 
+`long_window.py`의 출력도 영문 절과 같다(2026-11-07).
+
 ### 관찰한 것
 
 - **커넥션:** 31번째 연결이 `max number of clients reached`로 거절된다. `INFO clients`는
@@ -127,11 +158,12 @@ cp .env.example .env   # 콘솔 Connect 패널의 URL을 붙여 넣는다(눈 �
   경고와 함께 "61,806 / 100 Ops/sec"를 표시했다. 적어도 이날 100 ops/s는 강제가 아니라
   비교 표시용이었다. 파이프라인 없는 연결 하나는 플랜이 아니라 2.6 ms 왕복에 묶인다(249 ops/s).
 - `CONFIG GET`은 아무것도 돌려주지 않는다. 설정은 클라이언트가 아니라 서비스가 관리한다.
+- **10분 동안에도 제한은 없었다.** 연결 하나에 파이프라인 100으로 600초 동안 초당 9,563–22,250 INCR, 모두 1,110만 건을 오류 없이 처리했다. 240초에서 520초 사이의 하락은 같은 호스트에서 kind 클러스터를 만들던 시간과 겹쳐, 플랜보다 클라이언트 쪽 사정으로 보인다. 가격 페이지의 100 ops/s는 적용되지 않았다.
 
 ### 미실행 / 주의
 
 - 무료 플랜은 TLS를 쓸 수 없다. 수치는 한국의 호스트 하나에서 평문 TCP로 잰 것이다.
-- 더 긴 구간에서 제한이 있거나 나중에 생길 수 있다. 60초만 시험했다.
+- 몇 시간 단위에서 제한이 있거나 나중에 생길 수 있다. 60초와 600초를 시험했다.
 - DB는 Iris 실습에 쓰려고 남겨 둔다. 시험 키는 지웠다.
 
 | | |

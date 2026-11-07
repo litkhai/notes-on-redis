@@ -23,6 +23,10 @@ curl -sk -X POST https://127.0.0.1:19443/v1/bootstrap/create_cluster -H 'Content
 sleep 60                           # the cluster finishes bootstrapping in the background
 ../../cloud/01-free-database/.venv/bin/python lab.py
 ../../cloud/01-free-database/.venv/bin/python tls.py           # modules shipped with the cluster, and a database with TLS on its endpoint
+docker run -d --name nor-ldap --network nor-rs_default -e LDAP_ORGANISATION=lab -e LDAP_DOMAIN=example.org \
+  -e LDAP_ADMIN_PASSWORD=ldap-lab-pw osixia/openldap:1.5.0
+sleep 15; docker exec -i nor-ldap ldapadd -x -D cn=admin,dc=example,dc=org -w ldap-lab-pw < ldap-seed.ldif
+../../cloud/01-free-database/.venv/bin/python ldap_mtls.py     # role-based LDAP for a database, and a database that requires a client certificate
 ```
 
 Output as it appeared (2026-11-07):
@@ -105,6 +109,29 @@ Output as it appeared (2026-11-07):
    db-tls deleted
 ```
 
+`ldap_mtls.py` output as it appeared (2026-11-07):
+
+```text
+== role-based LDAP for a database
+   PUT /v1/cluster/ldap -> 200
+   redis ACL lab-read -> 200
+   role lab-reader -> 200
+   LDAP mapping cn=redis-readers -> role lab-reader -> 200
+   database db-ldap -> 200 
+   alice (in cn=redis-readers)        -> GET b'q3'; SET refused: User ldap_mapping:1 has no permissions to run the 'set' comm
+   alice, wrong password              -> AuthenticationError: invalid username-password pair
+   bob (no mapped group)              -> ResponseError: problem with LDAP service
+
+== mutual TLS: the database requires a client certificate
+   database db-mtls -> 200 
+   tls_mode enabled, enforce_client_authentication enabled
+   TLS, no client certificate                     -> ConnectionError: Error while reading from localhost:12007 : (1, '[SSL: TLSV13_ALERT_CERTIFICATE_R
+   TLS, a certificate the database does not know  -> ConnectionError: Error while reading from localhost:12007 : (1, '[SSL: TLSV1_ALERT_UNKNOWN_CA] tl
+   TLS, the registered client certificate         -> SET ok, GET b'v'
+
+both databases deleted
+```
+
 ### What was observed
 
 - **Trial terms, read from `/v1/license`:** features `trial` and `bigstore`, 30 days from cluster creation (2026-11-07 to 2026-12-07), at most 4 shards. A fifth shard was refused: "License permits 4 total shards, but there are 5 total shards in use."
@@ -118,10 +145,12 @@ Output as it appeared (2026-11-07):
 - **Modules shipped with 8.2.6-25.** `GET /v1/modules` lists JSON, Bloom (`bf`), Search and time series, several versions of each so databases of older Redis versions keep working. **RedisGears is not there**, so the old RDI write-behind, which needs RedisGears Python 1.2.6, cannot run on this release (see [`02-rdi`](../02-rdi/README.md)).
 - **TLS on a database endpoint.** A database created with `tls_mode: enabled` and `enforce_client_authentication: disabled` closed plain TCP connections at once. A redis-py client with `ssl=True` connected only when given the cluster's proxy certificate from `GET /v1/cluster/certificates` as its CA; with the system store it failed `CERTIFICATE_VERIFY_FAILED`. Hostname checking was off because the self-signed certificate names the cluster, not `localhost`. A PING round trip on one TLS connection took 0.13 ms.
 - **The bootstrap command in an earlier version of this README was broken.** Its JSON was in double quotes inside double quotes, so the shell stripped them. It is fixed above.
+- **LDAP users reach a database through a role.** The chain is: cluster LDAP settings (`PUT /v1/cluster/ldap` with a bind user, a user query `(cn=%u)` and a group query `(member=%D)`, `data_plane` on), a Redis ACL `+@read ~*`, a role, an LDAP mapping from `cn=redis-readers` to that role, and the database's `roles_permissions` joining role and ACL. `alice`, in the group, could `GET` and was refused `SET` under the user name `ldap_mapping:1`. A wrong password got `invalid username-password pair`. `bob`, who exists in LDAP but is in no mapped group, got the less helpful `problem with LDAP service`.
+- **Mutual TLS checks the client too.** A database with `enforce_client_authentication: enabled` and one registered client certificate refused a TLS client with no certificate (`CERTIFICATE_REQUIRED`) and one with a certificate it did not know (`UNKNOWN_CA`), and accepted the registered one.
 
 ### Not run / caveats
 
-- LDAP, mutual TLS (client certificates) and Active-Active need more setup or more than one node; not run.
+- Active-Active needs more than one cluster; not run. LDAP ran over plain `ldap://`, not LDAPS.
 - Redis Flex (RAM + SSD) needs local NVMe configuration; not run.
 
 | | |
@@ -155,6 +184,8 @@ sleep 60                           # the cluster finishes bootstrapping in the b
 
 `tls.py`의 출력도 영문 절과 같다(2026-11-07).
 
+`ldap_mtls.py`의 출력도 영문 절과 같다(2026-11-07).
+
 ### 관찰한 것
 
 - **체험 조건(`/v1/license`에서 읽음):** 기능 `trial`, `bigstore`, 클러스터 생성부터 30일(2026-11-07–2026-12-07), 최대 4샤드. 5번째 샤드는 "License permits 4 total shards, but there are 5 total shards in use."로 거절됐다.
@@ -168,10 +199,12 @@ sleep 60                           # the cluster finishes bootstrapping in the b
 - **8.2.6-25에 들어 있는 모듈.** `GET /v1/modules`는 JSON, Bloom(`bf`), Search, time series를 버전 여러 개씩 보여 준다. 이전 Redis 버전의 DB가 계속 돌게 하려는 것이다. **RedisGears는 없다.** 그래서 RedisGears Python 1.2.6이 필요한 예전 RDI write-behind는 이 릴리스에서 돌 수 없다([`02-rdi`](../02-rdi/README.md) 참고).
 - **DB 엔드포인트의 TLS.** `tls_mode: enabled`, `enforce_client_authentication: disabled`로 만든 DB는 평문 TCP 연결을 바로 끊었다. `ssl=True`인 redis-py 클라이언트는 `GET /v1/cluster/certificates`의 클러스터 프록시 인증서를 CA로 줬을 때만 연결됐고, 시스템 인증서 저장소로는 `CERTIFICATE_VERIFY_FAILED`로 실패했다. 자체 서명 인증서에 `localhost`가 아니라 클러스터 이름이 들어 있어 호스트 이름 검사는 껐다. TLS 연결 하나에서 PING 왕복은 0.13 ms.
 - **이 README 이전 버전의 부트스트랩 명령은 깨져 있었다.** JSON을 큰따옴표 안에 큰따옴표로 넣어서 셸이 따옴표를 지웠다. 위에서 고쳤다.
+- **LDAP 사용자는 역할을 거쳐 DB에 닿는다.** 연결 고리는 이렇다: 클러스터 LDAP 설정(바인드 사용자, 사용자 조회 `(cn=%u)`, 그룹 조회 `(member=%D)`, `data_plane` 켬을 담은 `PUT /v1/cluster/ldap`), Redis ACL `+@read ~*`, 역할 하나, `cn=redis-readers`에서 그 역할로의 LDAP 매핑, 역할과 ACL을 잇는 DB의 `roles_permissions`. 그룹에 든 `alice`는 `GET`이 됐고 `SET`은 `ldap_mapping:1`이라는 사용자 이름으로 거절됐다. 틀린 비밀번호는 `invalid username-password pair`. LDAP에는 있지만 매핑된 그룹이 없는 `bob`은 원인을 알기 어려운 `problem with LDAP service`를 받았다.
+- **상호 TLS는 클라이언트도 확인한다.** `enforce_client_authentication: enabled`이고 클라이언트 인증서 하나를 등록한 DB는 인증서 없는 TLS 클라이언트(`CERTIFICATE_REQUIRED`)와 모르는 인증서의 클라이언트(`UNKNOWN_CA`)를 거절하고, 등록한 인증서는 받아들였다.
 
 ### 미실행 / 주의
 
-- LDAP, 상호 TLS(클라이언트 인증서), Active-Active는 설정이 더 필요하거나 노드가 더 있어야 해서 실행하지 않았다.
+- Active-Active는 클러스터가 여럿 필요해 실행하지 않았다. LDAP은 LDAPS가 아니라 평문 `ldap://`로 돌렸다.
 - Redis Flex(RAM + SSD)는 로컬 NVMe 설정이 필요해 실행하지 않았다.
 
 | | |
