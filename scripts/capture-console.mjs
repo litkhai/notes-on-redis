@@ -40,6 +40,8 @@ const PATTERNS = [
   "[\\w.-]+\\.db\\.redis\\.io(:\\d+)?",                              // Redis Cloud endpoints
   "redis-\\d+\\.[\\w.-]+\\.(redislabs|redis-cloud)\\.com(:\\d+)?",
   "[\\w.-]+\\.cache\\.amazonaws\\.com(:\\d+)?",                      // ElastiCache endpoints
+  "[\\w.-]+\\.ultra\\.redis\\.io",                                 // Iris service endpoints
+  "st_[0-9a-f]{32}", "mem-[0-9a-f]{24}", "\\b[0-9a-f]{32}\\b",           // Iris store, memory and key ids
   "\\b\\d{1,3}(\\.\\d{1,3}){3}\\b",                                  // IPv4
   "\\b\\d{4}-?\\d{4}-?\\d{4}\\b",                                    // AWS account IDs
   "\\b(vpc|subnet|sg|eni|igw|rtb|acl|i)-[0-9a-f]{8,17}\\b", "arn:aws[\\w:/.*-]+",
