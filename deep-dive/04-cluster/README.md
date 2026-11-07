@@ -18,6 +18,7 @@ docker compose up -d
 ../../cloud/01-free-database/.venv/bin/python failover.py 15000   # kill a primary under writes; default cluster-node-timeout
 ../../cloud/01-free-database/.venv/bin/python failover.py 3000    # the same with a 3 s timeout
 docker compose down
+../../cloud/01-free-database/.venv/bin/python partition.py         # cut a primary off the network and write on both sides (5 s node timeout)
 ```
 
 Output as it appeared (2026-11-07):
@@ -89,6 +90,19 @@ after restarting the old primary (0.7 s until it rejoined as a replica):
    10.231.78.11:6379@16379 myself,slave
 ```
 
+`partition.py` output as it appeared (2026-11-07):
+
+```text
+cluster-node-timeout 5000 ms; victim nor-cl-node1 (10.231.78.11) owns 'p:0'
+0.0 s  nor-cl-node1 disconnected from nor-cluster_cl
+8.0 s  a replica took over (seen from nor-cl-node4)
+isolated old primary (docker exec): 21 writes accepted, last at 6.2 s; 78 refused from 6.6 s ['CLUSTERDOWN The cluster is down']
+majority side (cluster client)  : 82 writes accepted, last at 30.1 s; 2 refused from 0.2 s ['TimeoutError']
+   highest value on the isolated node: 21; on the majority: 82
+reconnected; nor-cl-node1 became a slave after 0.1 s
+'p:0' through the cluster now: 82 (the isolated node's 21 writes are gone)
+```
+
 ### What was observed
 
 - **Slots.** `user:1` → 10778 and `user:2` → 6777; `{user:1}:cart` and `{user:1}:orders` both hash only `user:1` and land in 10778 with it.
@@ -98,10 +112,11 @@ after restarting the old primary (0.7 s until it rejoined as a replica):
 - **The whole cluster refuses writes for a moment.** Keys on the primaries that stayed up got one `ClusterDownError`, about 1 s long, in both runs: between the node being flagged FAIL and its replica taking over, some slots have no owner, and with the default `cluster-require-full-coverage yes` every node answers `CLUSTERDOWN`.
 - **The old primary comes back as a replica.** Restarted, it rejoined as a replica of the node that replaced it, within 1–8 s.
 - **Atomic slot migration.** `CLUSTER MIGRATION IMPORT 0 999` on the destination moved 1,000 slots from node 1 to node 2 in 44 ms by the task's own start and end times, with `write_pause_ms 0`, while `redis-benchmark --cluster` wrote at about 200,000 requests/s and reported no errors (it follows redirects itself). Slot 0's keys were on node 2 afterwards and `redis-cli --cluster check` agreed on 899,737 keys across three masters.
+- **A partitioned primary keeps taking writes for a while, and loses them.** With a 5 s node timeout, the primary cut off the network still accepted 21 increments from a client on its own side until 6.2 s, then answered `CLUSTERDOWN The cluster is down`. Its replica took over at 8.0 s and the majority side carried on to 82. Reconnected, the old primary became a replica at once and the key read 82: the 21 writes on the isolated side were gone. Unlike the SIGKILL runs, nothing here failed loudly on the minority side until the timeout.
 
 ### Not run / caveats
 
-- Failover was measured on one host with SIGKILL; a network partition behaves differently, and was not run.
+- Both failover tests ran on one host; real networks add their own delays.
 - The migration moved a small dataset on one host; large slots and cross-host links will take longer.
 
 | | |
@@ -125,9 +140,12 @@ docker compose up -d
 ../../cloud/01-free-database/.venv/bin/python failover.py 15000   # kill a primary under writes; default cluster-node-timeout
 ../../cloud/01-free-database/.venv/bin/python failover.py 3000    # the same with a 3 s timeout
 docker compose down
+../../cloud/01-free-database/.venv/bin/python partition.py         # cut a primary off the network and write on both sides (5 s node timeout)
 ```
 
 출력은 영문 절과 같다(2026-11-07). `failover.py`의 출력도 마찬가지다.
+
+`partition.py`의 출력도 영문 절과 같다(2026-11-07).
 
 ### 관찰한 것
 
@@ -138,10 +156,11 @@ docker compose down
 - **잠깐 동안 클러스터 전체가 쓰기를 거절한다.** 살아 있는 주 서버의 키도 두 번 모두 약 1초짜리 `ClusterDownError`를 한 번 받았다. 노드가 FAIL로 표시된 뒤 복제본이 넘겨받기 전까지 주인 없는 슬롯이 생기고, 기본값 `cluster-require-full-coverage yes`에서는 모든 노드가 `CLUSTERDOWN`으로 답한다.
 - **옛 주 서버는 복제본으로 돌아온다.** 재시작하면 자기를 대신한 노드의 복제본으로 1–8초 안에 다시 들어왔다.
 - **원자적 슬롯 이전.** 대상 노드에서 `CLUSTER MIGRATION IMPORT 0 999`가 슬롯 1,000개를 노드 1에서 노드 2로 옮겼다. 작업 자체의 시작·끝 시각으로 44 ms, `write_pause_ms 0`. 그동안 `redis-benchmark --cluster`가 초당 약 200,000으로 쓰며 오류를 보고하지 않았다(리디렉션을 스스로 따라감). 이전 뒤 슬롯 0의 키는 노드 2에 있었고, `redis-cli --cluster check`는 주 서버 셋에 키 899,737개로 일치했다.
+- **분할된 주 서버는 한동안 쓰기를 받다가 그 쓰기를 잃는다.** 노드 타임아웃 5초에서, 네트워크에서 떨어진 주 서버는 자기 쪽 클라이언트의 증가를 6.2초까지 21건 받았고 그 뒤 `CLUSTERDOWN The cluster is down`으로 답했다. 복제본이 8.0초에 넘겨받았고 다수 쪽은 82까지 이어 갔다. 다시 연결하자 옛 주 서버는 곧바로 복제본이 됐고 키 값은 82였다. 고립된 쪽의 쓰기 21건은 사라졌다. SIGKILL 실행과 달리, 소수 쪽에서는 타임아웃 전까지 아무것도 크게 실패하지 않았다.
 
 ### 미실행 / 주의
 
-- 장애 조치는 호스트 하나에서 SIGKILL로 쟀다. 네트워크 분할은 다르게 동작하며, 실행하지 않았다.
+- 두 장애 조치 시험 모두 호스트 하나에서 돌렸다. 실제 네트워크는 자체 지연을 더한다.
 - 이전한 데이터는 작고 호스트도 하나였다. 큰 슬롯과 호스트 간 연결은 더 오래 걸린다.
 
 | | |

@@ -172,6 +172,8 @@ The account menu switches between accounts and opens the user profile. <small>Ca
 
 One connection without pipelining reached 249 ops/s, which is the round trip, not the plan. The ops/s figure looks like a sizing guide that the console reports against, not a throttle; that may change without notice, so do not build on the overage.
 
+**Ten minutes** (`long_window.py`). One connection with pipelines of 100 kept 9,563–22,250 INCR/s for 600 s with no error: the 100 ops/s on the pricing page was not enforced over the longer window either.
+
 ### Lab: the REST API on the free plan
 
 **Verified on the Redis Cloud REST API v1, free plan, 2026-11-07.** Turn on **Enable API**, create a user key, and send the account key (`x-api-key`) and the user key (`x-api-secret-key`) on every call. From the docs: "All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously".
@@ -365,6 +367,8 @@ Settings: 계정 정보, 사업자 연락처, MFA 강제(기본 꺼짐), TLS 클
 | 100 ops/s | 이번 실행에서는 걸리지 않음: 8개 연결, 파이프라인 100으로 60초 동안 초당 약 104,000 INCR, 오류 없음. 콘솔은 61,806 / 100과 경고를 표시 |
 
 파이프라인 없이 연결 하나로는 249 ops/s였다. 이것은 플랜이 아니라 왕복 시간 때문이다. ops/s 수치는 제한이 아니라 콘솔이 비교해 보여 주는 크기 기준으로 보인다. 예고 없이 바뀔 수 있으니 초과 처리량에 기대어 설계하지 말 것.
+
+**10분**(`long_window.py`). 연결 하나에 파이프라인 100으로 600초 동안 초당 9,563–22,250 INCR를 오류 없이 유지했다. 더 긴 구간에서도 가격 페이지의 100 ops/s는 적용되지 않았다.
 
 ### 실습: 무료 플랜의 REST API
 
@@ -560,6 +564,8 @@ Settings：账户信息、业务联系人、MFA enforcement（默认关闭）、
 
 不使用 pipeline 的单个连接达到 249 ops/s，这是往返时间决定的，与计划无关。ops/s 的数值更像是控制台用来对照显示的规格参考，而不是限流；这一点可能会在没有通知的情况下改变，所以不要依赖超出限额的行为。
 
+**十分钟**（`long_window.py`）。一个连接使用 100 的 pipeline，在 600 秒内持续每秒 9,563–22,250 次 INCR，没有出现任何错误：在更长的时间窗口里，定价页面上的 100 ops/s 同样没有被强制执行。
+
 ### 实验：免费计划上的 REST API
 
 **已在 Redis Cloud REST API v1 上验证（免费计划），2026-11-07。** 打开 **Enable API**，创建用户密钥，并在每次调用中同时发送账户密钥（`x-api-key`）和用户密钥（`x-api-secret-key`）。文档中写道："All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously"。
@@ -753,6 +759,8 @@ Settings：アカウント情報、ビジネス連絡先、MFA enforcement（デ
 | 100 ops/s | この実行では適用されなかった：8 接続、100 件の pipeline で 60 秒間、約 104,000 INCR/s、エラーなし。コンソールは 61,806 / 100 と警告を表示した |
 
 pipeline を使わない 1 接続では 249 ops/s で、これは往復時間によるもので、プランによるものではありません。ops/s の値は、コンソールが比較表示する目安のサイズ指標であって、スロットルではないようです。予告なく変わる可能性があるため、超過を前提に作らないでください。
+
+**10 分間**（`long_window.py`）。1 本の接続でパイプライン 100 を使い、600 秒間にわたって毎秒 9,563–22,250 回の INCR をエラーなしで維持した。より長い区間でも、料金ページの 100 ops/s は適用されなかった。
 
 ### ラボ：無料プランでの REST API
 
@@ -948,6 +956,8 @@ Settings: ข้อมูลบัญชี ผู้ติดต่อทาง
 
 การเชื่อมต่อเดียวที่ไม่ใช้ pipeline ได้ 249 ops/s ซึ่งเป็นผลจากเวลาไป-กลับ ไม่ใช่จากแผน ตัวเลข ops/s ดูเป็นแนวทางกำหนดขนาดที่คอนโซลใช้รายงานเทียบ ไม่ใช่ตัวจำกัดอัตรา ซึ่งอาจเปลี่ยนโดยไม่แจ้งล่วงหน้า จึงไม่ควรสร้างระบบโดยพึ่งการใช้เกินขีดจำกัด
 
+**สิบนาที** (`long_window.py`) การเชื่อมต่อเดียวที่ใช้ pipeline ขนาด 100 รักษาอัตรา 9,563–22,250 INCR ต่อวินาทีได้นาน 600 วินาทีโดยไม่มีข้อผิดพลาด: ขีดจำกัด 100 ops/s ในหน้าราคาก็ไม่ได้ถูกบังคับใช้ในช่วงเวลาที่ยาวขึ้นเช่นกัน
+
 ### Lab: REST API บนแผนฟรี
 
 **ตรวจสอบบน Redis Cloud REST API v1 (แผนฟรี) เมื่อ 2026-11-07** เปิด **Enable API** สร้าง user key แล้วส่ง account key (`x-api-key`) และ user key (`x-api-secret-key`) ในทุกการเรียก เอกสารระบุว่า: "All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously"
@@ -1142,6 +1152,8 @@ Menu akun beralih antar akun dan membuka profil pengguna. <small>Diambil pada 20
 
 Satu koneksi tanpa pipeline mencapai 249 ops/s, yang ditentukan oleh round trip, bukan oleh paket. Angka ops/s tampaknya merupakan panduan ukuran yang dilaporkan konsol, bukan pembatas laju; hal ini dapat berubah tanpa pemberitahuan, jadi jangan membangun sesuatu di atas kelebihan tersebut.
 
+**Sepuluh menit** (`long_window.py`). Satu koneksi dengan pipeline 100 mempertahankan 9,563–22,250 INCR/dtk selama 600 dtk tanpa error: batas 100 ops/s di halaman harga juga tidak diberlakukan pada jendela waktu yang lebih panjang.
+
 ### Lab: REST API pada paket gratis
 
 **Diverifikasi pada Redis Cloud REST API v1, paket gratis, 2026-11-07.** Aktifkan **Enable API**, buat user key, lalu kirim account key (`x-api-key`) dan user key (`x-api-secret-key`) pada setiap panggilan. Dari dokumentasi: "All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously".
@@ -1335,6 +1347,8 @@ Menu akaun bertukar antara akaun dan membuka profil pengguna. <small>Ditangkap p
 | 100 ops/s | Tidak dikuatkuasakan dalam larian ini: kira-kira 104,000 INCR/s selama 60 saat pada 8 sambungan dengan pipeline 100, tiada ralat; konsol menunjukkan 61,806 / 100 dan satu amaran |
 
 Satu sambungan tanpa pipeline mencapai 249 ops/s, iaitu round trip, bukan pelan. Angka ops/s kelihatan seperti panduan saiz yang dilaporkan oleh konsol, bukan pendikit; ini mungkin berubah tanpa notis, jadi jangan membina sesuatu berdasarkan lebihan itu.
+
+**Sepuluh minit** (`long_window.py`). Satu sambungan dengan pipeline 100 mengekalkan 9,563–22,250 INCR/s selama 600 s tanpa ralat: had 100 ops/s pada halaman harga juga tidak dikuatkuasakan pada tempoh yang lebih panjang.
 
 ### Makmal: REST API pada pelan percuma
 

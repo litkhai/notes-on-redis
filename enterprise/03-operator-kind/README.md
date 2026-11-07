@@ -17,6 +17,7 @@ Official documentation: [Redis Enterprise for Kubernetes](https://redis.io/docs/
 ./failover.sh    # delete the pod with the target database's primary shard while a client writes
 ../02-rdi/up.sh  # optional: RDI on the same cluster
 ./down.sh        # delete the kind cluster and everything in it
+./tls.sh         # a REDB with tlsMode enabled, the proxy certificate from the REC API, connections with and without TLS
 ```
 
 `up.sh` output as it appeared (2026-11-07):
@@ -70,6 +71,18 @@ db:2       target      endpoint:2:1           node:2      single      No
 Running
 ```
 
+`tls.sh` output as it appeared (2026-11-07):
+
+```text
+secure: active, port 17341, spec.tlsMode enabled
+proxy certificate: subject=CN = rec.rec.svc.cluster.local, OU = redisdb, O = RedisLabs Enterprise Cluster X509v3 Subject Alternative Name:      DNS:rec.rec.svc.cluster.local, DNS:*.rec.rec.svc.cluster.local 
+plain TCP:                            I/O error 
+TLS, proxy cert as CA, name secure:  PONG 
+TLS, proxy cert as CA, full name:    PONG 
+TLS, no CA:                          Could not connect to Redis at secure:17341: SSL_connect failed: certificate verify failed command terminated with exit code 1 
+secure deleted
+```
+
 ### What was observed
 
 - **kind on a cgroup v1 host needs an older node image.** kind v0.33.0's default image, Kubernetes v1.37.0, failed in `kubeadm init`. Its kubelet refused to start with "kubelet is configured to not run on a host using cgroup v1" (`failCgroupV1: true`). The host is Ubuntu 20.04 on cgroup v1. kind's v1.34.11 image works, and `kind.yaml` pins it.
@@ -78,11 +91,12 @@ Running
 - **The trial licence is enforced at admission.** The third database would have made five shards, and `kubectl apply` was refused straight away by the operator's admission webhook: "License permits 4 total shards, but there are 5 total shards in use."
 - **Deleting the pod with the primary shard.** The replica on another node became primary. The client saw 4 refused connections over 1.3 s and no lost or repeated increments: the counter equalled the number of successful writes. The database endpoint (proxy policy `single`) moved to the node of the new primary. The operator recreated the pod, and it was Ready after 73–82 s, rejoining as replica.
 - **The same test, three runs.** Two runs on this cluster both showed 1.3 s of refused connections. One run on an earlier cluster showed no failed writes at all; the endpoint placement was not recorded for it.
+- **TLS on an operator database is one field.** A REDB with `tlsMode: enabled` refused plain TCP (`I/O error`) and answered `PONG` over TLS with the cluster's proxy certificate, fetched from the REC API (`GET /v1/cluster/certificates`), as the CA. The certificate names `rec.rec.svc.cluster.local` and `*.rec.rec.svc.cluster.local`, not the database's service name; redis-cli still connected as `secure`, because it checks the chain but not the hostname. Without the CA it failed `certificate verify failed`.
 
 ### Not run / caveats
 
 - One host: all three "nodes" share its disk and network, so the failover numbers say nothing about real node loss.
-- Active-Active, Redis Flex and TLS between client and database were not run.
+- Active-Active and Redis Flex were not run.
 - The trial licence lasts 30 days from the cluster's creation and allows four shards; a cluster rebuilt with `up.sh` starts a new trial.
 
 | | |
@@ -105,9 +119,12 @@ Running
 ./failover.sh    # delete the pod with the target database's primary shard while a client writes
 ../02-rdi/up.sh  # optional: RDI on the same cluster
 ./down.sh        # delete the kind cluster and everything in it
+./tls.sh         # a REDB with tlsMode enabled, the proxy certificate from the REC API, connections with and without TLS
 ```
 
 출력은 영문 절과 같다(2026-11-07).
+
+`tls.sh`의 출력도 영문 절과 같다(2026-11-07).
 
 ### 관찰한 것
 
@@ -117,11 +134,12 @@ Running
 - **체험 라이선스는 admission 단계에서 막힌다.** 세 번째 DB는 샤드를 다섯으로 만들었을 것이고, operator의 admission webhook이 `kubectl apply`를 바로 거절했다: "License permits 4 total shards, but there are 5 total shards in use."
 - **주 샤드가 있는 파드 지우기.** 다른 노드의 복제본이 주 샤드가 됐다. 클라이언트는 1.3초 동안 연결 거절 4번을 겪었고, 잃거나 중복된 증가는 없었다: 카운터 값이 성공한 쓰기 수와 같았다. DB 엔드포인트(프록시 정책 `single`)는 새 주 샤드의 노드로 옮겨 갔다. operator가 파드를 다시 만들었고 73–82초 뒤 Ready가 되어 복제본으로 돌아왔다.
 - **같은 시험 세 번.** 이 클러스터에서 두 번은 모두 1.3초의 연결 거절. 이전 클러스터에서 한 번은 쓰기 실패가 전혀 없었다. 그때의 엔드포인트 위치는 기록하지 않았다.
+- **operator DB의 TLS는 필드 하나다.** `tlsMode: enabled`인 REDB는 평문 TCP를 거절했고(`I/O error`), REC API(`GET /v1/cluster/certificates`)에서 받은 클러스터 프록시 인증서를 CA로 주자 TLS로 `PONG`을 답했다. 인증서에는 DB의 서비스 이름이 아니라 `rec.rec.svc.cluster.local`과 `*.rec.rec.svc.cluster.local`이 들어 있다. redis-cli는 체인만 확인하고 호스트 이름은 확인하지 않아 `secure`로도 연결됐다. CA 없이는 `certificate verify failed`로 실패했다.
 
 ### 미실행 / 주의
 
 - 호스트 하나다. "노드" 셋이 디스크와 네트워크를 공유하므로 장애 조치 숫자는 실제 노드 손실에 대해 말해 주지 않는다.
-- Active-Active, Redis Flex, 클라이언트와 DB 사이 TLS는 실행하지 않았다.
+- Active-Active와 Redis Flex는 실행하지 않았다.
 - 체험 라이선스는 클러스터 생성부터 30일, 샤드 넷. `up.sh`로 다시 만든 클러스터는 새 체험으로 시작한다.
 
 | | |

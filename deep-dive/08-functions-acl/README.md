@@ -15,6 +15,7 @@ Official documentation: [Redis functions](https://redis.io/docs/latest/develop/p
 ```bash
 ./lab.sh   # starts and removes its own container
 ./more.sh  # functions on a replica, FUNCTION DUMP/RESTORE, an ACL file, ACL LOG
+./acl_replica.sh   # do ACL users created on a primary reach its replica?
 ```
 
 Output as it appeared (2026-11-07):
@@ -203,6 +204,26 @@ OK
    count 1 reason auth context toplevel object AUTH username reporter
 ```
 
+`acl_replica.sh` output as it appeared (2026-11-07):
+
+```text
+[nor-aclr-p]> ACL SETUSER reporter on >pw ~report:* +@read
+OK
+
+[nor-aclr-p]> SET report:1 x
+OK
+
+[nor-aclr-r]> ACL USERS
+1) "default"
+
+[nor-aclr-r]> GET report:1
+"x"
+
+[nor-aclr-r]> GET report:1 as reporter
+AUTH failed: WRONGPASS invalid username-password pair or user is disabled.
+x
+```
+
 ### What was observed
 
 - **Functions.** `sell` decremented stock to 0, then refused with its own `sold out` error. `stock` is registered with `no-writes` and runs under `FCALL_RO`. `FCALL_RO sell` is refused: `Can not execute a script with write flag using *_ro command`. That is what lets read-only functions run on replicas.
@@ -214,10 +235,11 @@ OK
 - **FUNCTION DUMP moves libraries between servers.** A 189-byte dump from the primary restored into an unrelated server with both functions and their flags. A corrupt payload was refused: `DUMP payload version or checksum are wrong`.
 - **ACL files.** `ACL SAVE` wrote the users with SHA-256 password hashes. A hand-added user under a `#` comment line loaded with `ACL LOAD`; comment lines are accepted since Redis 8.8. A line with an unknown command made `ACL LOAD` fail as a whole: "no change to the previously active ACL rules was performed".
 - **ACL LOG says who was refused and why.** One wrong password, one denied command and one denied key produced three entries with reasons `auth`, `command` (`set`) and `key` (`secret:1`), all for `reporter`.
+- **ACL users are not replicated.** `reporter`, created on the primary, did not exist on the replica: `ACL USERS` listed only `default`, and logging in as `reporter` failed with `WRONGPASS`, while the data itself had replicated. Each server needs the same users, through the same ACL file or the same `ACL SETUSER` commands. (redis-cli printed the auth error and then ran the command as the default user, which is why `x` still appears.)
 
 ### Not run / caveats
 
-- Comment lines in the ACL file are stripped on load and not written back by `ACL SAVE` (ACL page); keep hand-written notes elsewhere. Whether ACL users reach a replica was not tested.
+- Comment lines in the ACL file are stripped on load and not written back by `ACL SAVE` (ACL page); keep hand-written notes elsewhere.
 
 | | |
 |---|---|
@@ -237,11 +259,14 @@ OK
 ```bash
 ./lab.sh   # starts and removes its own container
 ./more.sh  # functions on a replica, FUNCTION DUMP/RESTORE, an ACL file, ACL LOG
+./acl_replica.sh   # do ACL users created on a primary reach its replica?
 ```
 
 출력은 영문 절과 같다(2026-11-07).
 
 `more.sh`의 출력도 영문 절과 같다(2026-11-07).
+
+`acl_replica.sh`의 출력도 영문 절과 같다(2026-11-07).
 
 ### 관찰한 것
 
@@ -254,10 +279,11 @@ OK
 - **FUNCTION DUMP로 서버 사이에 라이브러리를 옮긴다.** 주 서버의 189바이트 덤프가 상관없는 서버에 두 함수와 플래그까지 그대로 복원됐다. 깨진 페이로드는 거절됐다: `DUMP payload version or checksum are wrong`.
 - **ACL 파일.** `ACL SAVE`는 사용자를 SHA-256 비밀번호 해시와 함께 썼다. `#` 주석 줄 아래 손으로 추가한 사용자는 `ACL LOAD`로 올라왔다. 주석 줄은 Redis 8.8부터 허용된다. 모르는 명령이 든 줄이 있으면 `ACL LOAD` 전체가 실패했다: "no change to the previously active ACL rules was performed".
 - **ACL LOG는 누가 왜 거절됐는지 알려 준다.** 틀린 비밀번호, 거절된 명령, 거절된 키 한 번씩이 사유 `auth`, `command`(`set`), `key`(`secret:1`)인 항목 셋으로 남았다. 모두 `reporter`였다.
+- **ACL 사용자는 복제되지 않는다.** 주 서버에서 만든 `reporter`는 복제본에 없었다. `ACL USERS`에는 `default`뿐이었고 `reporter` 로그인은 `WRONGPASS`로 실패했다. 데이터는 복제됐는데도 그렇다. 서버마다 같은 ACL 파일이나 같은 `ACL SETUSER` 명령으로 같은 사용자를 둬야 한다. (redis-cli는 인증 오류를 출력한 뒤 기본 사용자로 명령을 실행해서 `x`가 여전히 보인다.)
 
 ### 미실행 / 주의
 
-- ACL 파일의 주석 줄은 읽을 때 지워지고 `ACL SAVE`로 다시 써지지 않는다(ACL 페이지). 손으로 쓴 메모는 다른 곳에 둔다. ACL 사용자가 복제본에 전달되는지는 시험하지 않았다.
+- ACL 파일의 주석 줄은 읽을 때 지워지고 `ACL SAVE`로 다시 써지지 않는다(ACL 페이지). 손으로 쓴 메모는 다른 곳에 둔다.
 
 | | |
 |---|---|

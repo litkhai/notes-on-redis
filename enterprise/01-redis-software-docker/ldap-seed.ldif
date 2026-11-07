@@ -1,0 +1,25 @@
+# Made-up directory for ldap_mtls.py: alice is in cn=redis-readers, bob is in no group.
+dn: ou=users,dc=example,dc=org
+objectClass: organizationalUnit
+ou: users
+
+dn: ou=groups,dc=example,dc=org
+objectClass: organizationalUnit
+ou: groups
+
+dn: cn=alice,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+cn: alice
+sn: lab
+userPassword: alice-pw
+
+dn: cn=bob,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+cn: bob
+sn: lab
+userPassword: bob-pw
+
+dn: cn=redis-readers,ou=groups,dc=example,dc=org
+objectClass: groupOfNames
+cn: redis-readers
+member: cn=alice,ou=users,dc=example,dc=org

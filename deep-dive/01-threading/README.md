@@ -15,6 +15,7 @@ Official documentation: [INFO](https://redis.io/docs/latest/commands/info/), [Be
 ```bash
 ./run.sh      # starts nor-dd-thr four times; the benchmark runs in the server's network namespace
 ./more.sh     # io-threads 1/4/8 with pipelining (-P 16) and with TLS
+./values.sh    # io-threads 1/4/8 with 4 KB values
 ```
 
 Output as it appeared (2026-11-07):
@@ -91,6 +92,20 @@ io_thread_7:clients=0,reads=1692519,writes=1692291
    GET: 357142.88 requests per second, p50=0.767 msec
 ```
 
+`values.sh` output as it appeared (2026-11-07):
+
+```text
+== io-threads 1, 4096-byte values
+   SET: 110840.16 requests per second, p50=3.375 msec
+   GET: 110889.34 requests per second, p50=3.439 msec
+== io-threads 4, 4096-byte values
+   SET: 285144.00 requests per second, p50=1.167 msec
+   GET: 307219.66 requests per second, p50=1.191 msec
+== io-threads 8, 4096-byte values
+   SET: 443066.03 requests per second, p50=0.567 msec
+   GET: 442477.88 requests per second, p50=0.559 msec
+```
+
 ### What was observed
 
 - `io-threads 2` was no faster than 1 (126,072–131,596 vs 134,523–136,097 requests/s). `INFO threads` shows why: thread 0, the main thread, handled no client I/O and the single extra thread took everything.
@@ -99,10 +114,11 @@ io_thread_7:clients=0,reads=1692519,writes=1692291
 - These are numbers from one 24-core host with the client on the same machine (12 benchmark threads), not a general scaling law.
 - **With pipelining, four threads were the ceiling.** At `-P 16`, one thread did 1.14–1.26 M requests/s, four did 2.66–3.42 M, and eight no more than four (2.40–3.42 M). Pipelining already cuts the per-request I/O, so the main thread becomes the limit sooner.
 - **With TLS the threads matter most.** Without pipelining, TLS on one thread did about 90,000 requests/s, a third less than plain TCP (about 135,000). Four threads gave about 220,000 and eight 357,000–392,000, because the I/O threads also do the encryption.
+- **Larger values scale the same way.** With 4,096-byte values and no pipelining, one thread did about 111,000 requests/s, four 285,000–307,000 and eight about 443,000: per request a little below the 64-byte runs, with the same shape across thread counts.
 
 ### Not run / caveats
 
-- Larger values were not tried; TLS used a self-signed certificate and no client certificates.
+- TLS used a self-signed certificate and no client certificates.
 - Redis 8.0's I/O threading rewrite is described in the release notes; this lab only measures 8.10.3.
 
 | | |
@@ -123,11 +139,14 @@ io_thread_7:clients=0,reads=1692519,writes=1692291
 ```bash
 ./run.sh      # starts nor-dd-thr four times; the benchmark runs in the server's network namespace
 ./more.sh     # io-threads 1/4/8 with pipelining (-P 16) and with TLS
+./values.sh    # io-threads 1/4/8 with 4 KB values
 ```
 
 출력은 영문 절과 같다(2026-11-07).
 
 `more.sh`의 출력도 영문 절과 같다(2026-11-07).
+
+`values.sh`의 출력도 영문 절과 같다(2026-11-07).
 
 ### 관찰한 것
 
@@ -137,10 +156,11 @@ io_thread_7:clients=0,reads=1692519,writes=1692291
 - 24코어 호스트 하나에서 클라이언트(벤치마크 스레드 12개)도 같은 기계에 둔 수치다. 일반적인 확장 법칙이 아니다.
 - **파이프라이닝을 켜면 스레드 넷이 상한이었다.** `-P 16`에서 스레드 하나가 초당 114만–126만, 넷이 266만–342만, 여덟은 넷보다 많지 않았다(240만–342만). 파이프라이닝이 이미 요청당 I/O를 줄여서 메인 스레드가 더 빨리 한계가 된다.
 - **TLS에서는 스레드가 가장 크게 효과를 낸다.** 파이프라이닝 없이 스레드 하나의 TLS는 초당 약 90,000으로 평문 TCP(약 135,000)보다 3분의 1 적었다. 넷이면 약 220,000, 여덟이면 357,000–392,000. I/O 스레드가 암호화도 맡기 때문이다.
+- **큰 값도 같은 모양으로 늘어난다.** 4,096바이트 값, 파이프라이닝 없이 스레드 하나가 초당 약 111,000, 넷이 285,000–307,000, 여덟이 약 443,000. 요청 수로는 64바이트 실행보다 조금 낮지만 스레드 수에 따른 모양은 같다.
 
 ### 미실행 / 주의
 
-- 큰 값은 시험하지 않았다. TLS는 자체 서명 인증서로, 클라이언트 인증서 없이 쟀다.
+- TLS는 자체 서명 인증서로, 클라이언트 인증서 없이 쟀다.
 - 8.0의 I/O 스레딩 재작성은 릴리스 노트에 있다. 이 실습은 8.10.3만 잰다.
 
 | | |

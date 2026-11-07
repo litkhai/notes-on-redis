@@ -1,0 +1,10 @@
+# A database that accepts TLS connections only (one shard, the fourth the trial licence allows).
+apiVersion: app.redislabs.com/v1alpha1
+kind: RedisEnterpriseDatabase
+metadata:
+  name: secure
+spec:
+  memorySize: 100MB
+  shardCount: 1
+  replication: false
+  tlsMode: enabled

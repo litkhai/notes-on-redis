@@ -20,6 +20,7 @@ for c in nor-cmp-redis nor-cmp-valkey nor-cmp-bundle; do   # client in each serv
   docker run --rm --network container:$c redis:8.10.3 \
     redis-benchmark -q -t set,get -n 2000000 -c 200 -P 1 -d 64 --threads 8
 done
+../../cloud/01-free-database/.venv/bin/python ha.py     # cluster and Sentinel failover, AOF, the same script for both engines
 ```
 
 Full output, including every command name that differs: [`results/`](./results).
@@ -48,6 +49,19 @@ valkey-9.1.3: 1000000 keys, used_memory +57.5 MB = 57.5 B/key (dataset 24.3 MB, 
 valkey-bundle-9.1: 1000000 keys, used_memory +57.5 MB = 57.5 B/key (dataset 24.5 MB, allocator jemalloc-5.3.0)
 ```
 
+`ha.py` output as it appeared (2026-11-07):
+
+```text
+== redis (redis:8.10.3, 8.10.3)
+   cluster, node timeout 3 s: replica promoted after 4.2 s; failed writes 3, longest failing stretch 0.0 s, slowest single write 4.0 s
+   Sentinel, down-after 3 s: new master named after 4.3 s
+   AOF everysec: 606428.12 SET/s (pipeline 16); 631990 keys; restart to loaded 1.3 s; keys after restart 631990
+== valkey (valkey/valkey:9.1.3, 9.1.3)
+   cluster, node timeout 3 s: replica promoted after 4.2 s; failed writes 4, longest failing stretch 0.0 s, slowest single write 4.0 s
+   Sentinel, down-after 3 s: new master named after 4.4 s
+   AOF everysec: 568181.81 SET/s (pipeline 16); 632364 keys; restart to loaded 1.3 s; keys after restart 632364
+```
+
 ### What was observed
 
 - **Identity.** Valkey reports `redis_version:7.2.4` (the fork point) next to `valkey_version:9.1.3`.
@@ -74,11 +88,14 @@ valkey-bundle-9.1: 1000000 keys, used_memory +57.5 MB = 57.5 B/key (dataset 24.5
   124,766–126,783 requests/s. With `--io-threads 4` on both and 400 clients: Redis
   342,427–352,568, Valkey 315,391–342,349. Through the published host ports all three stopped at
   about 78,000–84,000, which is the port-forwarding path, not the servers.
+- **Failover behaves the same.** With the same script, a 3 s `cluster-node-timeout` promoted a replica after 4.2 s on both engines, and the cluster client saw 3 and 4 failed writes and one write that took 4.0 s on each. Sentinel named a new master after 4.3 s on Redis and 4.4 s on Valkey. Valkey 9.1 kept the Redis OSS 7.2 commands for this: `valkey-cli --cluster create`, `valkey-server --sentinel`, the same `CLUSTER NODES` and `SENTINEL get-master-addr-by-name`.
+- **AOF with `appendfsync everysec`.** Redis wrote about 606,000 SET/s with a pipeline of 16 and Valkey about 568,000; with one run each on a shared host, read that as close, not as a ranking. Both reloaded about 632,000 keys in 1.3 s after a restart, with no key lost.
+- **One script, two binaries.** Only the binary names changed (`redis-*` and `valkey-*`); redis-py talked to both without a setting.
 
 ### Not run / caveats
 
 - One host, client and servers sharing CPUs; small differences here are within run-to-run noise.
-- No persistence, replication or cluster mode; those belong to the deep-dive labs.
+- The availability tests ran once per engine on one host; real clusters add network delays.
 - Search was probed with one text field, one numeric field and one vector index, not for relevance or speed.
 
 | | |
@@ -107,6 +124,8 @@ done
 
 출력은 영문 절과 같다. 서로 다른 명령 이름 전체는 [`results/`](./results)에 있다.
 
+`ha.py`의 출력도 영문 절과 같다(2026-11-07).
+
 ### 관찰한 것
 
 - **정체.** Valkey는 `valkey_version:9.1.3`과 함께 `redis_version:7.2.4`(포크 시점)를 보고한다. 두 이미지 모두
@@ -128,11 +147,14 @@ done
   Redis 초당 119,197–124,797, Valkey 120,992–122,978, 번들 124,766–126,783. 양쪽 모두 `--io-threads 4`, 클라이언트 400:
   Redis 342,427–352,568, Valkey 315,391–342,349. 호스트 포트를 거치면 셋 모두 약 78,000–84,000에서 멈췄다.
   서버가 아니라 포트 포워딩 경로의 한계다.
+- **장애 조치는 똑같이 동작한다.** 같은 스크립트에서 `cluster-node-timeout` 3초면 두 엔진 모두 4.2초에 복제본이 승격됐고, 클러스터 클라이언트는 각각 실패한 쓰기 3건과 4건, 4.0초 걸린 쓰기 한 건을 봤다. Sentinel은 Redis에서 4.3초, Valkey에서 4.4초에 새 마스터를 지목했다. Valkey 9.1은 이 부분에서 Redis OSS 7.2의 명령을 그대로 유지한다: `valkey-cli --cluster create`, `valkey-server --sentinel`, 같은 `CLUSTER NODES`와 `SENTINEL get-master-addr-by-name`.
+- **`appendfsync everysec`의 AOF.** 파이프라인 16으로 Redis는 초당 약 606,000, Valkey는 약 568,000 SET. 공유 호스트에서 한 번씩 돌린 값이라 순위가 아니라 비슷한 수준으로 읽는다. 둘 다 재시작 뒤 키 약 632,000개를 1.3초에 다시 읽었고 잃은 키는 없었다.
+- **스크립트 하나, 바이너리 둘.** 바뀐 것은 바이너리 이름(`redis-*`와 `valkey-*`)뿐이고, redis-py는 설정 없이 둘 다와 통신했다.
 
 ### 미실행 / 주의
 
 - 호스트 하나에서 클라이언트와 서버가 CPU를 나눠 썼다. 작은 차이는 실행마다의 흔들림 안에 있다.
-- 영속성, 복제, 클러스터 모드는 없다. 딥다이브 실습에서 다룬다.
+- 가용성 시험은 엔진마다 한 번, 호스트 하나에서 돌렸다. 실제 클러스터는 네트워크 지연이 더해진다.
 - Search는 텍스트 필드 하나, 숫자 필드 하나, 벡터 인덱스 하나로만 시험했다. 정확도나 속도는 보지 않았다.
 
 | | |

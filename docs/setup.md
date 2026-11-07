@@ -23,6 +23,8 @@ docker exec -it nor-redis8 redis-cli PING        # PONG
 
 `redis:latest`, `redis:8` and `redis:8.10.3` had the same digest on 2026-11-07; the compose file pins `8.10.3`. The image has no config file: its entrypoint adds `--loadmodule` for every module in `/usr/local/lib/redis/modules/`, so Search, JSON, Time series and Bloom are there from the start, and vector sets are built in.
 
+**More clients** (`go/`, `java/`). go-redis 9.23.0 (needs Go 1.26) and Jedis 8.0.2 connected to both servers with a `redis://` URL; go-redis negotiated RESP3. Jedis with `RedisProtocol.RESP3` and a `CacheConfig` sent one GET for 1,001 reads, like redis-py's client-side cache.
+
 ### Redis Insight
 
 <p class="shot"><img src="{{ '/assets/img/setup/01-insight-databases.webp' | relative_url }}" width="1440" height="765" alt="Redis Insight database list with local-redis-8 registered" loading="lazy" decoding="async"></p>
@@ -100,6 +102,8 @@ With 4 client threads the io-threads 4 numbers were the same in every run: the c
 
 redis-py 8.1.0 negotiated RESP3, so `FT.SEARCH` replies arrived as maps rather than the flat lists older examples parse. Docs: [Vector search](https://redis.io/docs/latest/develop/ai/search-and-query/vectors/), [FT.HYBRID](https://redis.io/docs/latest/commands/ft.hybrid/), [Vector sets](https://redis.io/docs/latest/develop/data-types/vector-sets/). Lab: [`local/03-search-vector`](https://github.com/litkhai/notes-on-redis/tree/main/local/03-search-vector).
 
+**More search features** (`extras.py`). `FT.AGGREGATE` grouped and computed; synonyms made "switchover" find the failover notes once the background rescan finished; `FT.SPELLCHECK` suggested `failover`, `eviction` and `replica` for misspellings; `FLOAT16`, `INT8` and `SVS-VAMANA` with `LVQ8` returned the same top 3 as `FLOAT32`. Korean questions found the right English notes only with a multilingual model, and not for every question.
+
 ### Not covered yet
 
 Redis Insight desktop (the Docker image is the same application) and clients other than redis-py and node-redis.
@@ -122,6 +126,8 @@ docker exec -it nor-redis8 redis-cli PING        # PONG
 ```
 
 2026-11-07에 `redis:latest`, `redis:8`, `redis:8.10.3`은 같은 digest였다. compose 파일은 `8.10.3`으로 고정한다. 이미지에는 설정 파일이 없다. 진입점이 `/usr/local/lib/redis/modules/`의 모듈마다 `--loadmodule`을 붙이므로 Search, JSON, Time series, Bloom이 처음부터 있고, 벡터 셋은 서버에 내장돼 있다.
+
+**다른 클라이언트**(`go/`, `java/`). go-redis 9.23.0(Go 1.26 필요)과 Jedis 8.0.2가 `redis://` URL로 두 서버에 붙었고, go-redis는 RESP3로 협상했다. `RedisProtocol.RESP3`와 `CacheConfig`를 준 Jedis는 redis-py의 클라이언트 캐시처럼 읽기 1,001번에 GET 1번만 보냈다.
 
 ### Redis Insight
 
@@ -200,6 +206,8 @@ Workbench는 명령을 실행하고 Search 결과를 표로 보여 준다. 검�
 
 redis-py 8.1.0은 RESP3로 협상했고, 그래서 `FT.SEARCH` 응답이 예전 예제가 파싱하는 평평한 목록이 아니라 맵으로 왔다. 문서: [Vector search](https://redis.io/docs/latest/develop/ai/search-and-query/vectors/), [FT.HYBRID](https://redis.io/docs/latest/commands/ft.hybrid/), [Vector sets](https://redis.io/docs/latest/develop/data-types/vector-sets/). 실습: [`local/03-search-vector`](https://github.com/litkhai/notes-on-redis/tree/main/local/03-search-vector).
 
+**검색 부가 기능**(`extras.py`). `FT.AGGREGATE`는 묶고 계산했다. 동의어는 백그라운드 재검사가 끝나자 "switchover"로 장애 조치 메모를 찾게 했다. `FT.SPELLCHECK`는 오타에 `failover`, `eviction`, `replica`를 제안했다. `FLOAT16`, `INT8`, `LVQ8`의 `SVS-VAMANA`도 `FLOAT32`와 같은 상위 3개를 돌려줬다. 한국어 질문은 다국어 모델일 때만, 그것도 일부 질문만 맞는 영어 메모를 찾았다.
+
 ### 아직 다루지 않은 것
 
 Redis Insight 데스크톱(Docker 이미지가 같은 애플리케이션)과 redis-py·node-redis 외의 클라이언트.
@@ -222,6 +230,8 @@ docker exec -it nor-redis8 redis-cli PING        # PONG
 ```
 
 2026-11-07 当天 `redis:latest`、`redis:8` 和 `redis:8.10.3` 的 digest 相同；compose 文件固定为 `8.10.3`。镜像中没有配置文件：入口脚本会为 `/usr/local/lib/redis/modules/` 中的每个模块添加 `--loadmodule`，因此 Search、JSON、Time series 和 Bloom 一开始就可用，而 Vector set 是内置的。
+
+**更多客户端**（`go/`、`java/`）。go-redis 9.23.0（需要 Go 1.26）和 Jedis 8.0.2 都通过 `redis://` URL 连接到两台服务器；go-redis 协商使用了 RESP3。使用 `RedisProtocol.RESP3` 和 `CacheConfig` 的 Jedis，对 1,001 次读取只发送了一次 GET，与 redis-py 的客户端缓存一样。
 
 ### Redis Insight
 
@@ -300,6 +310,8 @@ Workbench 可以运行命令，并把 Search 结果显示为表格；它自带�
 
 redis-py 8.1.0 协商使用了 RESP3，因此 `FT.SEARCH` 的回复以 map 形式到达，而不是旧示例所解析的扁平列表。文档：[Vector search](https://redis.io/docs/latest/develop/ai/search-and-query/vectors/)、[FT.HYBRID](https://redis.io/docs/latest/commands/ft.hybrid/)、[Vector sets](https://redis.io/docs/latest/develop/data-types/vector-sets/)。实验：[`local/03-search-vector`](https://github.com/litkhai/notes-on-redis/tree/main/local/03-search-vector)。
 
+**更多搜索功能**（`extras.py`）。`FT.AGGREGATE` 完成了分组和计算；同义词让 "switchover" 在后台重新扫描完成后能找到 failover 笔记；`FT.SPELLCHECK` 针对拼写错误建议了 `failover`、`eviction` 和 `replica`；`FLOAT16`、`INT8` 以及带 `LVQ8` 的 `SVS-VAMANA` 返回的前 3 名与 `FLOAT32` 相同。韩语问题只有使用多语言模型才能找到正确的英文笔记，而且并非每个问题都能找到。
+
 ### 尚未涵盖
 
 Redis Insight 桌面版（Docker 镜像是同一个应用），以及 redis-py 和 node-redis 之外的客户端。
@@ -322,6 +334,8 @@ docker exec -it nor-redis8 redis-cli PING        # PONG
 ```
 
 2026-11-07 時点で `redis:latest`、`redis:8`、`redis:8.10.3` は同じ digest だった。compose ファイルは `8.10.3` に固定している。イメージには設定ファイルがない。エントリポイントが `/usr/local/lib/redis/modules/` 内のモジュールごとに `--loadmodule` を追加するため、Search、JSON、Time series、Bloom は最初から使え、Vector set は組み込みである。
+
+**さらに多くのクライアント**（`go/`、`java/`）。go-redis 9.23.0（Go 1.26 が必要）と Jedis 8.0.2 は、どちらも `redis://` URL で両方のサーバーに接続できた。go-redis は RESP3 をネゴシエートした。`RedisProtocol.RESP3` と `CacheConfig` を指定した Jedis は、redis-py のクライアントサイドキャッシュと同じく、1,001 回の読み取りに対して GET を 1 回だけ送った。
 
 ### Redis Insight
 
@@ -400,6 +414,8 @@ Workbench はコマンドを実行し、Search の結果を表として表示す
 
 redis-py 8.1.0 は RESP3 をネゴシエートしたため、`FT.SEARCH` の応答は、古い例がパースするフラットなリストではなくマップで届いた。ドキュメント：[Vector search](https://redis.io/docs/latest/develop/ai/search-and-query/vectors/)、[FT.HYBRID](https://redis.io/docs/latest/commands/ft.hybrid/)、[Vector sets](https://redis.io/docs/latest/develop/data-types/vector-sets/)。ラボ：[`local/03-search-vector`](https://github.com/litkhai/notes-on-redis/tree/main/local/03-search-vector)。
 
+**さらに多くの検索機能**（`extras.py`）。`FT.AGGREGATE` はグループ化と計算ができた。同義語により、バックグラウンドの再スキャンが終わると "switchover" で failover のノートが見つかった。`FT.SPELLCHECK` は綴りの誤りに対して `failover`、`eviction`、`replica` を提案した。`FLOAT16`、`INT8`、そして `LVQ8` 付きの `SVS-VAMANA` は、`FLOAT32` と同じ上位 3 件を返した。韓国語の質問で正しい英語のノートが見つかったのは多言語モデルを使った場合だけで、すべての質問で見つかったわけではない。
+
 ### まだ扱っていないこと
 
 Redis Insight デスクトップ版（Docker イメージは同じアプリケーション）と、redis-py と node-redis 以外のクライアント。
@@ -422,6 +438,8 @@ docker exec -it nor-redis8 redis-cli PING        # PONG
 ```
 
 เมื่อ 2026-11-07 `redis:latest`, `redis:8` และ `redis:8.10.3` มี digest เดียวกัน ไฟล์ compose ปักหมุดไว้ที่ `8.10.3` อิมเมจไม่มีไฟล์คอนฟิก: entrypoint จะเพิ่ม `--loadmodule` ให้ทุกโมดูลใน `/usr/local/lib/redis/modules/` จึงมี Search, JSON, Time series และ Bloom ตั้งแต่เริ่มต้น และ Vector set ถูกสร้างไว้ในตัวอยู่แล้ว
+
+**ไคลเอนต์เพิ่มเติม** (`go/`, `java/`) go-redis 9.23.0 (ต้องใช้ Go 1.26) และ Jedis 8.0.2 เชื่อมต่อกับเซิร์ฟเวอร์ทั้งสองด้วย URL แบบ `redis://` โดย go-redis เจรจาใช้ RESP3 ส่วน Jedis ที่ใช้ `RedisProtocol.RESP3` และ `CacheConfig` ส่ง GET เพียงครั้งเดียวสำหรับการอ่าน 1,001 ครั้ง เหมือน client-side cache ของ redis-py
 
 ### Redis Insight
 
@@ -500,6 +518,8 @@ Workbench รันคำสั่งและแสดงผลลัพธ์�
 
 redis-py 8.1.0 เจรจาใช้ RESP3 ดังนั้นการตอบกลับของ `FT.SEARCH` จึงมาเป็น map ไม่ใช่ลิสต์แบบแบนที่ตัวอย่างรุ่นเก่าแยกวิเคราะห์ เอกสาร: [Vector search](https://redis.io/docs/latest/develop/ai/search-and-query/vectors/), [FT.HYBRID](https://redis.io/docs/latest/commands/ft.hybrid/), [Vector sets](https://redis.io/docs/latest/develop/data-types/vector-sets/) Lab: [`local/03-search-vector`](https://github.com/litkhai/notes-on-redis/tree/main/local/03-search-vector)
 
+**ฟีเจอร์ค้นหาเพิ่มเติม** (`extras.py`) `FT.AGGREGATE` จัดกลุ่มและคำนวณได้ ส่วน synonym ทำให้ "switchover" ค้นเจอโน้ตเรื่อง failover เมื่อการสแกนใหม่เบื้องหลังเสร็จสิ้น `FT.SPELLCHECK` แนะนำ `failover`, `eviction` และ `replica` สำหรับคำที่สะกดผิด `FLOAT16`, `INT8` และ `SVS-VAMANA` กับ `LVQ8` คืน 3 อันดับแรกเหมือนกับ `FLOAT32` คำถามภาษาเกาหลีค้นเจอโน้ตภาษาอังกฤษที่ถูกต้องเฉพาะเมื่อใช้โมเดลหลายภาษา และไม่ใช่กับทุกคำถาม
+
 ### ยังไม่ครอบคลุม
 
 Redis Insight เวอร์ชันเดสก์ท็อป (อิมเมจ Docker เป็นแอปพลิเคชันเดียวกัน) และไคลเอนต์อื่นนอกเหนือจาก redis-py และ node-redis
@@ -522,6 +542,8 @@ docker exec -it nor-redis8 redis-cli PING        # PONG
 ```
 
 Pada 2026-11-07, `redis:latest`, `redis:8`, dan `redis:8.10.3` memiliki digest yang sama; berkas compose menetapkan `8.10.3`. Image tidak memiliki berkas konfigurasi: entrypoint-nya menambahkan `--loadmodule` untuk setiap modul di `/usr/local/lib/redis/modules/`, sehingga Search, JSON, Time series, dan Bloom sudah tersedia sejak awal, dan Vector set sudah bawaan.
+
+**Klien lainnya** (`go/`, `java/`). go-redis 9.23.0 (membutuhkan Go 1.26) dan Jedis 8.0.2 terhubung ke kedua server dengan URL `redis://`; go-redis menegosiasikan RESP3. Jedis dengan `RedisProtocol.RESP3` dan `CacheConfig` mengirim satu GET untuk 1,001 pembacaan, seperti client-side cache milik redis-py.
 
 ### Redis Insight
 
@@ -600,6 +622,8 @@ Dengan 4 thread klien, angka io-threads 4 sama pada setiap kali dijalankan: klie
 
 redis-py 8.1.0 menegosiasikan RESP3, sehingga balasan `FT.SEARCH` tiba sebagai map, bukan daftar datar yang di-parse contoh-contoh lama. Dokumentasi: [Vector search](https://redis.io/docs/latest/develop/ai/search-and-query/vectors/), [FT.HYBRID](https://redis.io/docs/latest/commands/ft.hybrid/), [Vector sets](https://redis.io/docs/latest/develop/data-types/vector-sets/). Lab: [`local/03-search-vector`](https://github.com/litkhai/notes-on-redis/tree/main/local/03-search-vector).
 
+**Fitur pencarian lainnya** (`extras.py`). `FT.AGGREGATE` mengelompokkan dan menghitung; sinonim membuat "switchover" menemukan catatan failover setelah pemindaian ulang di latar belakang selesai; `FT.SPELLCHECK` menyarankan `failover`, `eviction` dan `replica` untuk salah ketik; `FLOAT16`, `INT8` dan `SVS-VAMANA` dengan `LVQ8` mengembalikan 3 teratas yang sama seperti `FLOAT32`. Pertanyaan berbahasa Korea menemukan catatan bahasa Inggris yang benar hanya dengan model multibahasa, dan tidak untuk setiap pertanyaan.
+
 ### Belum dibahas
 
 Redis Insight desktop (image Docker adalah aplikasi yang sama) dan klien selain redis-py dan node-redis.
@@ -622,6 +646,8 @@ docker exec -it nor-redis8 redis-cli PING        # PONG
 ```
 
 Pada 2026-11-07, `redis:latest`, `redis:8` dan `redis:8.10.3` mempunyai digest yang sama; fail compose menetapkan `8.10.3`. Imej tiada fail konfigurasi: entrypoint menambah `--loadmodule` untuk setiap modul dalam `/usr/local/lib/redis/modules/`, jadi Search, JSON, Time series dan Bloom sedia ada sejak awal, dan Vector set terbina dalam.
+
+**Lebih banyak klien** (`go/`, `java/`). go-redis 9.23.0 (memerlukan Go 1.26) dan Jedis 8.0.2 bersambung ke kedua-dua pelayan dengan URL `redis://`; go-redis merundingkan RESP3. Jedis dengan `RedisProtocol.RESP3` dan `CacheConfig` menghantar satu GET untuk 1,001 bacaan, seperti client-side cache milik redis-py.
 
 ### Redis Insight
 
@@ -699,6 +725,8 @@ Dengan 4 thread klien, angka io-threads 4 sama dalam setiap larian: klien menjad
 | Vector set: `VADD` vektor yang sama, `VSIM` | 3 teratas yang sama seperti KNN, tanpa mengisytiharkan indeks |
 
 redis-py 8.1.0 merundingkan RESP3, jadi balasan `FT.SEARCH` tiba sebagai map, bukan senarai rata yang dihuraikan oleh contoh lama. Dokumentasi: [Vector search](https://redis.io/docs/latest/develop/ai/search-and-query/vectors/), [FT.HYBRID](https://redis.io/docs/latest/commands/ft.hybrid/), [Vector sets](https://redis.io/docs/latest/develop/data-types/vector-sets/). Makmal: [`local/03-search-vector`](https://github.com/litkhai/notes-on-redis/tree/main/local/03-search-vector).
+
+**Lebih banyak ciri carian** (`extras.py`). `FT.AGGREGATE` mengumpulkan dan mengira; sinonim membuat "switchover" menemui nota failover selepas imbasan semula di latar belakang selesai; `FT.SPELLCHECK` mencadangkan `failover`, `eviction` dan `replica` bagi ejaan yang salah; `FLOAT16`, `INT8` dan `SVS-VAMANA` dengan `LVQ8` memulangkan 3 teratas yang sama seperti `FLOAT32`. Soalan bahasa Korea menemui nota bahasa Inggeris yang betul hanya dengan model berbilang bahasa, dan tidak bagi setiap soalan.
 
 ### Belum diliputi
 

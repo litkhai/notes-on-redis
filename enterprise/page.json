@@ -55,6 +55,16 @@
    "ms": "**Modul dan TLS** (`tls.py`). Kluster menyertakan JSON, Bloom, Search dan time series dalam beberapa versi setiap satu, dan tiada RedisGears. Pangkalan data dengan `tls_mode: enabled` menutup sambungan TCP biasa; klien hanya berjaya bersambung dengan sijil proksi kluster (`GET /v1/cluster/certificates`) sebagai CA-nya, dan satu pusingan PING pada sambungan itu mengambil masa 0.13 ms."
   },
   {
+   "type": "md",
+   "en": "**LDAP and mutual TLS** (`ldap_mtls.py`). With an OpenLDAP container, a user in the mapped LDAP group could read a database and was refused writes; a wrong password and a user in no mapped group were refused, the latter with the unhelpful `problem with LDAP service`. A database with `enforce_client_authentication: enabled` accepted only the registered client certificate.",
+   "ko": "**LDAP과 상호 TLS**(`ldap_mtls.py`). OpenLDAP 컨테이너로 시험했다. 매핑된 LDAP 그룹의 사용자는 DB를 읽을 수 있었고 쓰기는 거절됐다. 틀린 비밀번호와 매핑된 그룹이 없는 사용자는 거절됐는데, 후자는 원인을 알기 어려운 `problem with LDAP service`를 받았다. `enforce_client_authentication: enabled`인 DB는 등록한 클라이언트 인증서만 받아들였다.",
+   "zh": "**LDAP 与双向 TLS**（`ldap_mtls.py`）。用 OpenLDAP 容器测试：映射的 LDAP 组中的用户可以读取数据库，写入被拒绝；错误密码和不在任何映射组中的用户都被拒绝，后者收到的是难以判断原因的 `problem with LDAP service`。设置了 `enforce_client_authentication: enabled` 的数据库只接受已注册的客户端证书。",
+   "ja": "**LDAP と相互 TLS**（`ldap_mtls.py`）。OpenLDAP コンテナーで試した。マッピングされた LDAP グループのユーザーはデータベースを読めて、書き込みは拒否された。間違ったパスワードと、どのマッピング済みグループにも属さないユーザーは拒否され、後者は原因の分かりにくい `problem with LDAP service` を受け取った。`enforce_client_authentication: enabled` のデータベースは、登録済みのクライアント証明書だけを受け付けた。",
+   "th": "**LDAP และ mutual TLS** (`ldap_mtls.py`) ทดสอบด้วยคอนเทนเนอร์ OpenLDAP ผู้ใช้ในกลุ่ม LDAP ที่แมปไว้อ่านฐานข้อมูลได้แต่เขียนถูกปฏิเสธ รหัสผ่านที่ผิดและผู้ใช้ที่ไม่อยู่ในกลุ่มที่แมปไว้ถูกปฏิเสธ โดยกรณีหลังได้รับข้อความ `problem with LDAP service` ที่บอกสาเหตุได้ยาก ฐานข้อมูลที่ตั้ง `enforce_client_authentication: enabled` ยอมรับเฉพาะใบรับรองไคลเอนต์ที่ลงทะเบียนไว้",
+   "id": "**LDAP dan mutual TLS** (`ldap_mtls.py`). Diuji dengan kontainer OpenLDAP: pengguna dalam grup LDAP yang dipetakan bisa membaca database dan ditolak saat menulis; kata sandi yang salah dan pengguna yang tidak berada di grup yang dipetakan ditolak, dan yang terakhir menerima pesan `problem with LDAP service` yang sulit dipahami penyebabnya. Database dengan `enforce_client_authentication: enabled` hanya menerima sertifikat klien yang terdaftar.",
+   "ms": "**LDAP dan mutual TLS** (`ldap_mtls.py`). Diuji dengan kontena OpenLDAP: pengguna dalam kumpulan LDAP yang dipetakan boleh membaca pangkalan data dan ditolak semasa menulis; kata laluan yang salah dan pengguna yang tidak berada dalam kumpulan yang dipetakan ditolak, dan yang terakhir menerima mesej `problem with LDAP service` yang sukar difahami puncanya. Pangkalan data dengan `enforce_client_authentication: enabled` hanya menerima sijil klien yang didaftarkan."
+  },
+  {
    "type": "img",
    "file": "01-rs-databases.webp",
    "alt": {
@@ -154,6 +164,16 @@
   },
   {
    "type": "md",
+   "en": "**TLS on a REDB** (`tls.sh`). `tlsMode: enabled` made the database refuse plain TCP; clients connected with the cluster's proxy certificate from the REC API as their CA.",
+   "ko": "**REDB의 TLS**(`tls.sh`). `tlsMode: enabled`이면 DB가 평문 TCP를 거절했고, 클라이언트는 REC API에서 받은 클러스터 프록시 인증서를 CA로 줘서 연결했다.",
+   "zh": "**REDB 上的 TLS**（`tls.sh`）。设置 `tlsMode: enabled` 后，数据库拒绝明文 TCP；客户端把从 REC API 获取的集群代理证书作为 CA 来连接。",
+   "ja": "**REDB の TLS**（`tls.sh`）。`tlsMode: enabled` にするとデータベースは平文の TCP を拒否し、クライアントは REC API から取得したクラスターのプロキシ証明書を CA として渡して接続した。",
+   "th": "**TLS บน REDB** (`tls.sh`) เมื่อตั้ง `tlsMode: enabled` ฐานข้อมูลปฏิเสธ TCP แบบข้อความล้วน ไคลเอนต์เชื่อมต่อโดยใช้ใบรับรองพร็อกซีของคลัสเตอร์จาก REC API เป็น CA",
+   "id": "**TLS pada REDB** (`tls.sh`). Dengan `tlsMode: enabled`, database menolak TCP polos; klien terhubung dengan sertifikat proxy klaster dari REC API sebagai CA-nya.",
+   "ms": "**TLS pada REDB** (`tls.sh`). Dengan `tlsMode: enabled`, pangkalan data menolak TCP biasa; klien bersambung dengan sijil proksi kluster daripada REC API sebagai CA-nya."
+  },
+  {
+   "type": "md",
    "en": "### Lab: RDI from Postgres\n\n**Verified on RDI 2.2.1 (Debezium 3.5.0, Flink processor), Postgres 17.11, Redis Enterprise 8.2.6-25 on kind, 2026-11-07.** From the docs: \"Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time.\" The source is 1,000 made-up customers in Postgres. One job adds a `tier` field from `credit_limit`, drops `email`, and writes JSON under `customer:<id>`. RDI keeps its state in the non-clustered `rdi-state` database from the operator lab.\n\n| Step | Result |\n|---|---|\n| RDI Helm chart | installed in 32 s: API, operator, reloader pods |\n| `redis-di deploy` | 67 s; collector (Debezium) and Flink job and task managers start; 1,000 rows in Redis 1 s later, transformed |\n| One-row UPDATE / INSERT / DELETE, three runs | visible in Redis after 0.2–1.5 s / 0.8–1.1 s / 0.4–1.1 s |\n| UPDATE of all 1,000 rows in one transaction | visible after 0.8–1.5 s |\n\nThe latencies include about 0.11 s of `kubectl exec` and come from one host, so read them as an order of magnitude. With no processor type set, the pipeline ran on Flink, the default since RDI 2.0. `redis-di describe` showed the target as \"Connected: no\" while rows were arriving; that was not investigated. Docs: [RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). Lab: [`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).",
    "ko": "### 실습: Postgres에서 RDI\n\n**확인: RDI 2.2.1(Debezium 3.5.0, Flink 프로세서), Postgres 17.11, kind 위 Redis Enterprise 8.2.6-25, 2026-11-07.** 문서의 표현: \"Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time.\" 원천은 Postgres의 가상 고객 1,000명이다. 작업 하나가 `credit_limit`에서 `tier` 필드를 만들고 `email`을 빼고 `customer:<id>`에 JSON으로 쓴다. RDI는 operator 실습의 클러스터가 아닌(non-clustered) `rdi-state` DB에 상태를 둔다.\n\n| 단계 | 결과 |\n|---|---|\n| RDI Helm 차트 | 32초에 설치: API, operator, reloader 파드 |\n| `redis-di deploy` | 67초. collector(Debezium)와 Flink job·task manager 시작. 1초 뒤 1,000행이 변환된 채 Redis에 |\n| 한 행 UPDATE / INSERT / DELETE, 세 번 실행 | Redis에 보이기까지 0.2–1.5초 / 0.8–1.1초 / 0.4–1.1초 |\n| 한 트랜잭션으로 1,000행 전부 UPDATE | 0.8–1.5초 뒤 보임 |\n\n지연에는 `kubectl exec` 약 0.11초가 들어 있고 호스트 하나에서 쟀으므로 규모로만 읽는다. 프로세서 종류를 정하지 않으면 RDI 2.0부터의 기본값인 Flink로 돈다. 행이 들어오는 동안에도 `redis-di describe`는 대상을 \"Connected: no\"로 표시했다. 조사하지 않았다. 문서: [RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). 실습: [`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).",
    "zh": "### 实验：从 Postgres 到 RDI\n\n**在 RDI 2.2.1（Debezium 3.5.0、Flink processor）、Postgres 17.11、kind 上的 Redis Enterprise 8.2.6-25 上验证，2026-11-07。** 文档中写道：\"Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time.\" 数据源是 Postgres 中 1,000 条虚构的客户记录。一个 job 根据 `credit_limit` 添加 `tier` 字段，丢弃 `email`，并把 JSON 写到 `customer:<id>` 之下。RDI 将其状态保存在 operator 实验中的非集群数据库 `rdi-state` 里。\n\n| 步骤 | 结果 |\n|---|---|\n| RDI Helm chart | 32 秒完成安装：API、operator、reloader 三个 pod |\n| `redis-di deploy` | 67 秒；collector（Debezium）、Flink 作业以及 task manager 启动；1 秒后 Redis 中出现 1,000 行，且已转换 |\n| 单行 UPDATE / INSERT / DELETE，各运行三次 | 分别在 0.2–1.5 秒 / 0.8–1.1 秒 / 0.4–1.1 秒后在 Redis 中可见 |\n| 在一个事务中 UPDATE 全部 1,000 行 | 0.8–1.5 秒后可见 |\n\n这些延迟包含约 0.11 秒的 `kubectl exec`，且来自同一台主机，因此只应视为数量级。未设置 processor 类型时，管道在 Flink 上运行，这是自 RDI 2.0 起的默认值。管道在接收行的同时，`redis-di describe` 却把目标显示为 \"Connected: no\"；对此没有深入调查。 文档：[RDI overview](https://redis.io/docs/latest/integrate/redis-data-integration/), [Install on Kubernetes](https://redis.io/docs/latest/integrate/redis-data-integration/installation/install-k8s/), [Pipeline configuration](https://redis.io/docs/latest/integrate/redis-data-integration/data-pipelines/pipeline-config/). 实验：[`enterprise/02-rdi`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/02-rdi).",
@@ -171,6 +191,38 @@
    "th": "**classic processor และ write-behind** (`classic.sh`) เมื่อตั้ง `processors.type: classic` ไปป์ไลน์เดียวกันรันใน `processor` pod ตัวเดียว แทน job และ task manager ของ Flink โดยเห็นการเปลี่ยนแปลงภายใน 0.2–1.1 วินาที write-behind (จาก Redis ไปยังฐานข้อมูล) ไม่อยู่ในเอกสาร RDI 2.2 เอนจิน write-behind รุ่นเก่าต้องใช้ RedisGears Python 1.2.6 ซึ่ง Redis Software 8.2.6 ไม่ได้ให้มา จึงรันไม่ได้",
    "id": "**Prosesor classic dan write-behind** (`classic.sh`). Dengan `processors.type: classic`, pipeline yang sama berjalan dalam satu pod `processor`, bukan job dan task manager milik Flink, dengan perubahan terlihat dalam 0.2–1.1 detik. Write-behind (dari Redis ke basis data) tidak ada dalam dokumentasi RDI 2.2; mesin write-behind yang lama membutuhkan RedisGears Python 1.2.6, yang tidak disertakan Redis Software 8.2.6, sehingga tidak bisa dijalankan.",
    "ms": "**Pemproses classic dan write-behind** (`classic.sh`). Dengan `processors.type: classic`, pipeline yang sama berjalan dalam satu pod `processor`, bukan job dan task manager milik Flink, dengan perubahan kelihatan dalam 0.2–1.1 saat. Write-behind (daripada Redis ke pangkalan data) tiada dalam dokumentasi RDI 2.2; enjin write-behind yang lama memerlukan RedisGears Python 1.2.6, yang tidak disertakan oleh Redis Software 8.2.6, jadi ia tidak dapat dijalankan."
+  },
+  {
+   "type": "md",
+   "en": "**Least privilege and Redis Insight** (`least_privilege.sh`, `insight.sh`). The pipeline re-snapshotted and streamed as a replication-only Postgres user (`LOGIN REPLICATION`, table ownership shared through a group), which could not create roles. Redis Insight 3.8.0 connected to the RDI API and showed the pipeline, its configuration with secret placeholders, and the job; its Analytics tab stayed empty for this Flink pipeline.",
+   "ko": "**최소 권한과 Redis Insight**(`least_privilege.sh`, `insight.sh`). 파이프라인은 복제 전용 Postgres 사용자(`LOGIN REPLICATION`, 그룹으로 테이블 소유권 공유)로 스냅샷을 다시 뜨고 스트리밍했고, 그 사용자는 역할을 만들 수 없었다. Redis Insight 3.8.0은 RDI API에 연결해 파이프라인, 시크릿 자리표시자가 든 설정, 작업을 보여 줬다. Analytics 탭은 이 Flink 파이프라인에서 비어 있었다.",
+   "zh": "**最小权限与 Redis Insight**（`least_privilege.sh`、`insight.sh`）。管道以仅有复制权限的 Postgres 用户（`LOGIN REPLICATION`，通过组共享表的所有权）重新做了快照并持续流式同步，该用户无法创建角色。Redis Insight 3.8.0 连接到 RDI API，显示了管道、带有密钥占位符的配置以及作业；Analytics 标签页在这条 Flink 管道上一直是空的。",
+   "ja": "**最小権限と Redis Insight**（`least_privilege.sh`、`insight.sh`）。パイプラインは、レプリケーション専用の Postgres ユーザー（`LOGIN REPLICATION`、グループでテーブルの所有権を共有）でスナップショットを取り直してストリーミングし、そのユーザーはロールを作成できなかった。Redis Insight 3.8.0 は RDI API に接続して、パイプライン、シークレットのプレースホルダーを含む設定、ジョブを表示した。Analytics タブは、この Flink パイプラインでは空のままだった。",
+   "th": "**สิทธิ์ขั้นต่ำและ Redis Insight** (`least_privilege.sh`, `insight.sh`) ไปป์ไลน์สร้างสแนปช็อตใหม่และสตรีมต่อได้ด้วยผู้ใช้ Postgres ที่มีสิทธิ์ replication เท่านั้น (`LOGIN REPLICATION` โดยใช้กรรมสิทธิ์ตารางร่วมกันผ่านกลุ่ม) ซึ่งผู้ใช้นี้สร้าง role ไม่ได้ Redis Insight 3.8.0 เชื่อมต่อกับ RDI API และแสดงไปป์ไลน์ การตั้งค่าที่มีตัวแทนค่าลับ (placeholder) และงาน (job) ส่วนแท็บ Analytics ว่างเปล่าสำหรับไปป์ไลน์ Flink นี้",
+   "id": "**Hak akses minimum dan Redis Insight** (`least_privilege.sh`, `insight.sh`). Pipeline membuat ulang snapshot dan melakukan streaming sebagai pengguna Postgres khusus replikasi (`LOGIN REPLICATION`, kepemilikan tabel dibagi lewat grup), yang tidak bisa membuat role. Redis Insight 3.8.0 terhubung ke RDI API dan menampilkan pipeline, konfigurasinya dengan placeholder rahasia, serta job-nya; tab Analytics tetap kosong untuk pipeline Flink ini.",
+   "ms": "**Keistimewaan minimum dan Redis Insight** (`least_privilege.sh`, `insight.sh`). Pipeline mengambil semula snapshot dan melakukan penstriman sebagai pengguna Postgres khusus replikasi (`LOGIN REPLICATION`, pemilikan jadual dikongsi melalui kumpulan), yang tidak dapat mencipta role. Redis Insight 3.8.0 bersambung ke RDI API dan memaparkan pipeline, konfigurasinya dengan placeholder rahsia, serta job-nya; tab Analytics kekal kosong untuk pipeline Flink ini."
+  },
+  {
+   "type": "img",
+   "file": "06-insight-rdi-pipeline.webp",
+   "alt": {
+    "en": "Redis Insight Data integration view of the RDI pipeline with its configuration file",
+    "ko": "설정 파일이 보이는 RDI 파이프라인의 Redis Insight Data integration 화면",
+    "zh": "Redis Insight 中 RDI 管道的 Data integration 视图，显示其配置文件",
+    "ja": "設定ファイルが見える RDI パイプラインの Redis Insight Data integration 画面",
+    "th": "มุมมอง Data integration ของ Redis Insight แสดงไปป์ไลน์ RDI พร้อมไฟล์การตั้งค่า",
+    "id": "Tampilan Data integration di Redis Insight untuk pipeline RDI beserta file konfigurasinya",
+    "ms": "Paparan Data integration Redis Insight bagi pipeline RDI beserta fail konfigurasinya"
+   },
+   "cap": {
+    "en": "Redis Insight 3.8.0 connected to RDI 2.2.1 on kind; captured with headless Chromium.",
+    "ko": "kind 위 RDI 2.2.1에 연결한 Redis Insight 3.8.0. headless Chromium으로 캡처.",
+    "zh": "Redis Insight 3.8.0 连接到 kind 上的 RDI 2.2.1；用 headless Chromium 截图。",
+    "ja": "kind 上の RDI 2.2.1 に接続した Redis Insight 3.8.0。headless Chromium でキャプチャ。",
+    "th": "Redis Insight 3.8.0 เชื่อมต่อกับ RDI 2.2.1 บน kind จับภาพด้วย headless Chromium",
+    "id": "Redis Insight 3.8.0 terhubung ke RDI 2.2.1 di kind; ditangkap dengan headless Chromium.",
+    "ms": "Redis Insight 3.8.0 bersambung ke RDI 2.2.1 pada kind; ditangkap dengan headless Chromium."
+   }
   },
   {
    "type": "md",
