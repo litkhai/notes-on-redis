@@ -265,13 +265,13 @@
     "ms": "Tab Alerts dengan alert saiz dataset dan sambungan, kedua-duanya pada 80 peratus had pelan"
    },
    "cap": {
-    "en": "Free plan alerts: dataset size and number of connections, each as a percent of the plan limit, preset to 80%.",
-    "ko": "무료 플랜 알림: 데이터 크기와 커넥션 수, 각각 플랜 한도 대비 %로 80%가 미리 설정돼 있다.",
-    "zh": "免费计划的告警：数据集大小和连接数，均为计划限制的百分比，预设为 80%。",
-    "ja": "無料プランのアラート：データセットサイズと接続数。それぞれプラン上限に対する % で、80% にプリセットされています。",
-    "th": "alert ของแผนฟรี: ขนาด dataset และจำนวนการเชื่อมต่อ แต่ละรายการเป็นเปอร์เซ็นต์ของขีดจำกัดแผน ตั้งไว้ล่วงหน้าที่ 80%",
-    "id": "Alert paket gratis: ukuran dataset dan jumlah koneksi, masing-masing sebagai persentase dari batas paket, diatur awal pada 80%.",
-    "ms": "Alert pelan percuma: saiz dataset dan bilangan sambungan, masing-masing sebagai peratusan had pelan, ditetapkan awal pada 80%."
+    "en": "Free plan alerts: dataset size and number of connections, each as a percent of the plan limit, preset to 80%. On 2026-11-07 the connections alert arrived by email from Redis: \"The number of connections for your database has reached 93.33% of the connections limit\" (28 of 30). The Iris services were holding them ([Iris]({{ '/iris/' | relative_url }})).",
+    "ko": "무료 플랜 알림: 데이터 크기와 커넥션 수, 각각 플랜 한도 대비 %로 80%가 미리 설정돼 있다. 2026-11-07에 커넥션 알림이 Redis의 이메일로 왔다: \"The number of connections for your database has reached 93.33% of the connections limit\"(30개 중 28개). Iris 서비스들이 잡고 있던 연결이다([Iris]({{ '/iris/' | relative_url }})).",
+    "zh": "免费计划的告警：数据集大小和连接数，均为计划限制的百分比，预设为 80%。2026-11-07，连接数告警通过电子邮件从 Redis 送达：\"The number of connections for your database has reached 93.33% of the connections limit\"（30 个中的 28 个）。这些连接是由 Iris 服务占用的（[Iris]({{ '/iris/' | relative_url }})）。",
+    "ja": "無料プランのアラート：データセットサイズと接続数。それぞれプラン上限に対する % で、80% にプリセットされています。2026-11-07 に、接続数のアラートが Redis からメールで届きました：\"The number of connections for your database has reached 93.33% of the connections limit\"（30 件中 28 件）。これらの接続は Iris のサービスが保持していました（[Iris]({{ '/iris/' | relative_url }})）。",
+    "th": "alert ของแผนฟรี: ขนาด dataset และจำนวนการเชื่อมต่อ แต่ละรายการเป็นเปอร์เซ็นต์ของขีดจำกัดแผน ตั้งไว้ล่วงหน้าที่ 80% เมื่อ 2026-11-07 alert จำนวนการเชื่อมต่อถูกส่งมาทางอีเมลจาก Redis: \"The number of connections for your database has reached 93.33% of the connections limit\" (28 จาก 30) การเชื่อมต่อเหล่านี้ถูกถือไว้โดยบริการของ Iris ([Iris]({{ '/iris/' | relative_url }}))",
+    "id": "Alert paket gratis: ukuran dataset dan jumlah koneksi, masing-masing sebagai persentase dari batas paket, diatur awal pada 80%. Pada 2026-11-07, alert koneksi tiba melalui email dari Redis: \"The number of connections for your database has reached 93.33% of the connections limit\" (28 dari 30). Koneksi tersebut dipegang oleh layanan Iris ([Iris]({{ '/iris/' | relative_url }})).",
+    "ms": "Alert pelan percuma: saiz dataset dan bilangan sambungan, masing-masing sebagai peratusan had pelan, ditetapkan awal pada 80%. Pada 2026-11-07, alert sambungan tiba melalui e-mel daripada Redis: \"The number of connections for your database has reached 93.33% of the connections limit\" (28 daripada 30). Sambungan tersebut dipegang oleh perkhidmatan Iris ([Iris]({{ '/iris/' | relative_url }}))."
    }
   },
   {

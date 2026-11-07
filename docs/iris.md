@@ -157,6 +157,18 @@ The registry shows publication state and latest version per FAQ. <small>Captured
 
 Proposals wait in an inbox until someone accepts and publishes them. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
 
+### What Iris costs the free database
+
+The services keep their data and their connection pools in the database you pick. With Agent Memory, Intent Router, a Context Surface and a Playbook all on the free database, nothing of ours running, on 2026-11-07:
+
+| Resource | Used | How it was seen |
+|---|---|---|
+| Connections | 28 of 30 | `CLIENT LIST`: 28 `go-redis` clients from AWS us-east-1 addresses, plus our one check |
+| Data | 16.7 MB of 30 MB, 111 keys | console Configuration card; keys `iris:intent:*` 25, `memory:*` 44, `iris:playbook:*` 12, plus 30 lab products |
+| Alert | email from Redis | "The number of connections for your database has reached 93.33% of the connections limit" |
+
+On the free plan that leaves two connections for an application. Give Iris its own database, or a plan with more connections, before putting real traffic next to it.
+
 ### Not covered yet
 
 Lens and Agent Mesh (beta) have their own lab in the repository issues. Message consumption stays an open question until the console or the bill shows it.
@@ -313,6 +325,18 @@ FAQ의 두 번째 버전은 초안으로 남았고, `faqs publish --version 2` �
 <p class="shot"><img src="{{ '/assets/img/iris/28-playbook-proposals.webp' | relative_url }}" width="1440" height="765" alt="Active-Active에 관한 열린 제안 하나가 있는 제안함" loading="lazy" decoding="async"></p>
 
 제안은 누군가 받아들이고 공개할 때까지 제안함에서 기다린다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
+
+### Iris가 무료 DB에서 쓰는 것
+
+서비스들은 고른 DB에 데이터와 커넥션 풀을 둔다. Agent Memory, Intent Router, Context Surface, Playbook을 모두 무료 DB에 두고 우리 쪽은 아무것도 돌리지 않은 2026-11-07 상태:
+
+| 자원 | 사용량 | 확인 방법 |
+|---|---|---|
+| 커넥션 | 30개 중 28개 | `CLIENT LIST`: AWS us-east-1 주소의 `go-redis` 클라이언트 28개와 우리 확인용 연결 1개 |
+| 데이터 | 30 MB 중 16.7 MB, 키 111개 | 콘솔 Configuration 카드. 키 `iris:intent:*` 25, `memory:*` 44, `iris:playbook:*` 12, 실습 상품 30 |
+| 알림 | Redis의 이메일 | "The number of connections for your database has reached 93.33% of the connections limit" |
+
+무료 플랜이면 애플리케이션에 남는 커넥션은 두 개다. 실제 트래픽을 옆에 두기 전에 Iris에 별도 DB나 커넥션이 더 많은 플랜을 준다.
 
 ### 아직 다루지 않은 것
 
@@ -471,6 +495,18 @@ Context Surface 是一个数据模型：实体映射到键模板，字段有类�
 
 提案会留在收件箱中，直到有人接受并发布。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
+### Iris 对免费数据库的占用
+
+这些服务把数据和连接池放在你所选的数据库中。2026-11-07，Agent Memory、Intent Router、Context Surface 和 Playbook 全部放在免费数据库上，我们这边没有运行任何东西：
+
+| 资源 | 使用量 | 查看方式 |
+|---|---|---|
+| 连接数 | 30 个中的 28 个 | `CLIENT LIST`：28 个来自 AWS us-east-1 地址的 `go-redis` 客户端，外加我们自己的一个检查连接 |
+| 数据 | 30 MB 中的 16.7 MB，111 个键 | 控制台 Configuration 卡片；键 `iris:intent:*` 25 个、`memory:*` 44 个、`iris:playbook:*` 12 个，另有 30 个实验用商品 |
+| 告警 | 来自 Redis 的电子邮件 | "The number of connections for your database has reached 93.33% of the connections limit" |
+
+在免费计划上，这只给应用程序留下两个连接。在让真实流量与它并存之前，请为 Iris 单独准备一个数据库，或选择连接数更多的计划。
+
 ### 尚未涵盖
 
 Lens 和 Agent Mesh（beta）在仓库的 issue 中有各自的实验。消息消耗量仍是未决问题，要等控制台或账单给出数据。
@@ -627,6 +663,18 @@ FAQ の二つ目のバージョンは下書きのままで、`faqs publish --ver
 <p class="shot"><img src="{{ '/assets/img/iris/28-playbook-proposals.webp' | relative_url }}" width="1440" height="765" alt="Active-Active に関する未処理の提案が一件ある提案トレイ" loading="lazy" decoding="async"></p>
 
 提案は、誰かが受け入れて公開するまでトレイで待つ。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
+
+### Iris が無料データベースに与える負荷
+
+サービスは、選んだデータベースにデータとコネクションプールを置きます。Agent Memory、Intent Router、Context Surface、Playbook をすべて無料データベースに置き、こちらでは何も動かしていない 2026-11-07 の状態です。
+
+| リソース | 使用量 | 確認方法 |
+|---|---|---|
+| 接続数 | 30 件中 28 件 | `CLIENT LIST`：AWS us-east-1 のアドレスからの `go-redis` クライアント 28 件と、こちらの確認用の 1 件 |
+| データ | 30 MB 中 16.7 MB、キー 111 個 | コンソールの Configuration カード。キーは `iris:intent:*` 25、`memory:*` 44、`iris:playbook:*` 12、ほかに実習用の商品 30 |
+| アラート | Redis からのメール | "The number of connections for your database has reached 93.33% of the connections limit" |
+
+無料プランでは、アプリケーションに残る接続は 2 件です。実際のトラフィックをそばに置く前に、Iris 専用のデータベースか、接続数の多いプランを用意してください。
 
 ### まだ扱っていないこと
 
@@ -785,6 +833,18 @@ FAQ เวอร์ชันที่สองยังเป็นฉบับ�
 
 ข้อเสนอจะรออยู่ในกล่องจนกว่าจะมีคนรับและเผยแพร่ <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
+### Iris ใช้อะไรจากฐานข้อมูลฟรี
+
+บริการเหล่านี้เก็บข้อมูลและ connection pool ไว้ในฐานข้อมูลที่คุณเลือก เมื่อวางทั้ง Agent Memory, Intent Router, Context Surface และ Playbook ไว้บนฐานข้อมูลฟรี โดยฝั่งเราไม่ได้รันอะไรเลย ณ วันที่ 2026-11-07:
+
+| ทรัพยากร | ที่ใช้ | วิธีที่เห็น |
+|---|---|---|
+| การเชื่อมต่อ | 28 จาก 30 | `CLIENT LIST`: ไคลเอนต์ `go-redis` 28 รายการจากแอดเดรสของ AWS us-east-1 บวกการเชื่อมต่อสำหรับตรวจสอบของเราอีก 1 รายการ |
+| ข้อมูล | 16.7 MB จาก 30 MB, 111 คีย์ | การ์ด Configuration ในคอนโซล; คีย์ `iris:intent:*` 25, `memory:*` 44, `iris:playbook:*` 12, บวกสินค้าทดลอง 30 รายการ |
+| Alert | อีเมลจาก Redis | "The number of connections for your database has reached 93.33% of the connections limit" |
+
+บนแผนฟรี จะเหลือการเชื่อมต่อให้แอปพลิเคชันเพียงสองรายการ ควรให้ Iris มีฐานข้อมูลของตัวเอง หรือใช้แผนที่มีการเชื่อมต่อมากกว่านี้ ก่อนนำทราฟฟิกจริงมาวางไว้ข้างกัน
+
 ### ยังไม่ครอบคลุม
 
 Lens และ Agent Mesh (beta) มีแล็บของตัวเองใน issue ของรีโพซิทอรี การใช้ข้อความยังเป็นคำถามที่เปิดอยู่จนกว่าคอนโซลหรือบิลจะแสดงตัวเลข
@@ -942,6 +1002,18 @@ Registri menampilkan status penerbitan dan versi terbaru setiap FAQ. <small>Dita
 
 Usulan menunggu di kotak masuk sampai seseorang menerima dan menerbitkannya. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
 
+### Biaya Iris pada database gratis
+
+Layanan menyimpan data dan connection pool-nya di database yang Anda pilih. Dengan Agent Memory, Intent Router, Context Surface, dan Playbook semuanya di database gratis, tanpa ada yang kami jalankan sendiri, pada 2026-11-07:
+
+| Sumber daya | Terpakai | Cara melihatnya |
+|---|---|---|
+| Koneksi | 28 dari 30 | `CLIENT LIST`: 28 klien `go-redis` dari alamat AWS us-east-1, ditambah satu koneksi pemeriksaan kami |
+| Data | 16.7 MB dari 30 MB, 111 key | kartu Configuration di konsol; key `iris:intent:*` 25, `memory:*` 44, `iris:playbook:*` 12, ditambah 30 produk latihan |
+| Alert | email dari Redis | "The number of connections for your database has reached 93.33% of the connections limit" |
+
+Pada paket gratis, itu menyisakan dua koneksi untuk aplikasi. Berikan Iris database tersendiri, atau paket dengan lebih banyak koneksi, sebelum menempatkan lalu lintas nyata di sampingnya.
+
 ### Belum tercakup
 
 Lens dan Agent Mesh (beta) memiliki lab sendiri di issue repositori. Konsumsi pesan tetap menjadi pertanyaan terbuka sampai konsol atau tagihan menunjukkannya.
@@ -1098,6 +1170,18 @@ Daftar ini memaparkan status penerbitan dan versi terkini bagi setiap FAQ. <smal
 <p class="shot"><img src="{{ '/assets/img/iris/28-playbook-proposals.webp' | relative_url }}" width="1440" height="765" alt="Peti masuk cadangan dengan satu cadangan terbuka tentang Active-Active" loading="lazy" decoding="async"></p>
 
 Cadangan menunggu dalam peti masuk sehingga seseorang menerima dan menerbitkannya. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
+
+### Kos Iris pada pangkalan data percuma
+
+Perkhidmatan menyimpan data dan connection pool mereka dalam pangkalan data yang anda pilih. Dengan Agent Memory, Intent Router, Context Surface dan Playbook semuanya pada pangkalan data percuma, tanpa sebarang perkara kami berjalan sendiri, pada 2026-11-07:
+
+| Sumber | Digunakan | Cara ia dilihat |
+|---|---|---|
+| Sambungan | 28 daripada 30 | `CLIENT LIST`: 28 klien `go-redis` dari alamat AWS us-east-1, ditambah satu sambungan semakan kami |
+| Data | 16.7 MB daripada 30 MB, 111 kunci | kad Configuration di konsol; kunci `iris:intent:*` 25, `memory:*` 44, `iris:playbook:*` 12, ditambah 30 produk latihan |
+| Alert | e-mel daripada Redis | "The number of connections for your database has reached 93.33% of the connections limit" |
+
+Pada pelan percuma, itu hanya meninggalkan dua sambungan untuk aplikasi. Berikan Iris pangkalan data sendiri, atau pelan dengan lebih banyak sambungan, sebelum meletakkan trafik sebenar di sebelahnya.
 
 ### Belum diliputi
 
