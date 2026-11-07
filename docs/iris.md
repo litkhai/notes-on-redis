@@ -135,8 +135,6 @@ Intents with their targets and example counts; Try a query matches from the cons
 | Wrong argument shape | refused with `invalid_arguments`, tool not called |
 | `deepwiki__read_wiki_structure` redis/redis | page list through the Gateway; 1.5 s |
 
-`mcp-redis` was not used: an upstream has to be reachable from Redis Cloud, and this host does not serve one publicly. The Surface covers Redis data as tools.
-
 <p class="shot"><img src="{{ '/assets/img/iris/19-context-surface-fields.webp' | relative_url }}" width="1440" height="1284" alt="Context Surface fields: id as primary key, name text index, category and colour tag indexes, price and stock numeric" loading="lazy" decoding="async"></p>
 
 A Context Surface is a data model: entities mapped to key templates, fields typed and indexed. The Gateway builds the search tools from it. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
@@ -148,6 +146,23 @@ Both upstreams behind one endpoint, each switchable on or off. <small>Captured 2
 **Full versus search exposure** (`exposure.py`). Switched to **Full** in the console, the agent saw 13 tools named `namespace__tool` (10 from the Context Surface, 3 from DeepWiki); in **Search** it sees only `search_tools` and `run_tool`. Result caching and compression are not in the Redis Cloud console: the docs set them with an admin token on a self-managed Gateway, and compression needs a `noeviction` database, which the free one is not.
 
 <p class="shot"><img src="{{ '/assets/img/iris/31-gateway-full-exposure.webp' | relative_url }}" width="1440" height="1040" alt="Context Gateway configuration with tool exposure set to Full" loading="lazy" decoding="async"></p>
+
+Tool exposure set to Full for the measurement, then back to Search. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
+
+**mcp-redis as an upstream** (`mcp-redis/`). mcp-redis 0.5.1 runs over stdio from its CLI, so a small wrapper serves its FastMCP server over Streamable HTTP with a bearer token. It ran behind a temporary Cloudflare tunnel, against a throwaway local Redis 8.10.3 holding made-up keys.
+
+| Step | Result |
+|---|---|
+| Added with no credentials | upstream created, discovery failed (422): "the Upstream rejected the Gateway's credentials", no tools |
+| Bearer token set with **Edit** | "Saved. Found 53 tools"; the console shows "Bearer token, value set" and never shows the token again |
+| Full exposure | 66 tools: 53 `redis-lab__*`, 10 from the Surface, 3 from DeepWiki |
+| search "read every field of a Redis hash" | four vector tools; `hgetall` not among them |
+| `redis-lab__hgetall` ticket:1 | the hash; 3.5 s |
+| `redis-lab__set`, `redis-lab__delete` | written and deleted in the local Redis; 3.0 s each |
+
+An agent gets reads and writes on strings, hashes, lists, sets, sorted sets, streams, JSON and vector indexes, plus `delete`, `rename`, `expire`, `scan_all_keys`, `info` and `client_list`. There is no FLUSHALL, CONFIG or EVAL tool. The delete dialog mentions per-upstream tool policies; they were not tried.
+
+<p class="shot"><img src="{{ '/assets/img/iris/34-gateway-mcp-redis-upstream.webp' | relative_url }}" width="1440" height="895" alt="mcp-redis upstream redis-lab: Streamable HTTP endpoint behind a tunnel, bearer token set" loading="lazy" decoding="async"></p>
 
 Tool exposure set to Full for the measurement, then back to Search. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
 
@@ -355,8 +370,6 @@ MemoryETL(베타): extractor는 사용자 정의 기억 유형의 프롬프트�
 | 인자 형식이 틀림 | `invalid_arguments`로 거절, 도구 호출 안 됨 |
 | `deepwiki__read_wiki_structure` redis/redis | 게이트웨이를 거쳐 페이지 목록, 1.5초 |
 
-`mcp-redis`는 쓰지 않았다. 업스트림은 Redis Cloud에서 닿아야 하는데 이 호스트는 공개로 띄우지 않는다. Redis 데이터를 도구로 쓰는 것은 Surface가 맡는다.
-
 <p class="shot"><img src="{{ '/assets/img/iris/19-context-surface-fields.webp' | relative_url }}" width="1440" height="1284" alt="Context Surface 필드: 기본 키 id, 텍스트 색인 name, 태그 색인 category·colour, 숫자 price·stock" loading="lazy" decoding="async"></p>
 
 Context Surface는 데이터 모델이다. 엔티티를 키 템플릿에 대응시키고 필드에 유형과 색인을 준다. 게이트웨이가 여기서 검색 도구를 만든다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
@@ -368,6 +381,23 @@ Context Surface는 데이터 모델이다. 엔티티를 키 템플릿에 대응�
 **Full 대 Search 노출**(`exposure.py`). 콘솔에서 **Full**로 바꾸자 에이전트에 `namespace__tool` 이름의 도구 13개(Context Surface 10개, DeepWiki 3개)가 보였다. **Search**에서는 `search_tools`와 `run_tool`만 보인다. 결과 캐시와 압축은 Redis Cloud 콘솔에 없다. 문서는 자체 운영 게이트웨이에서 관리 토큰으로 설정하고, 압축에는 `noeviction` DB가 필요한데 무료 DB는 아니다.
 
 <p class="shot"><img src="{{ '/assets/img/iris/31-gateway-full-exposure.webp' | relative_url }}" width="1440" height="1040" alt="도구 노출을 Full로 둔 Context Gateway 설정" loading="lazy" decoding="async"></p>
+
+측정을 위해 도구 노출을 Full로 바꾼 화면. 그 뒤 Search로 되돌렸다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
+
+**mcp-redis를 업스트림으로**(`mcp-redis/`). mcp-redis 0.5.1은 CLI에서 stdio로만 돌아서, 작은 래퍼가 그 FastMCP 서버를 bearer 토큰과 함께 Streamable HTTP로 띄웠다. 임시 Cloudflare 터널 뒤에서, 가짜 키를 넣은 일회용 로컬 Redis 8.10.3에 붙여 실행했다.
+
+| 단계 | 결과 |
+|---|---|
+| 인증 정보 없이 추가 | 업스트림은 생겼지만 탐색 실패(422): "the Upstream rejected the Gateway's credentials", 도구 없음 |
+| **Edit**로 bearer 토큰 설정 | "Saved. Found 53 tools". 콘솔은 "Bearer token, value set"만 보여 주고 토큰은 다시 보여 주지 않는다 |
+| Full 노출 | 도구 66개: `redis-lab__*` 53개, Surface 10개, DeepWiki 3개 |
+| "read every field of a Redis hash" 검색 | 벡터 도구 넷, `hgetall`은 없음 |
+| `redis-lab__hgetall` ticket:1 | 해시 반환, 3.5초 |
+| `redis-lab__set`, `redis-lab__delete` | 로컬 Redis에 쓰고 지워짐, 각 3.0초 |
+
+에이전트는 문자열, 해시, 리스트, 셋, 정렬 셋, 스트림, JSON, 벡터 인덱스의 읽기·쓰기와 `delete`, `rename`, `expire`, `scan_all_keys`, `info`, `client_list`를 얻는다. FLUSHALL, CONFIG, EVAL 도구는 없다. 삭제 대화상자에 업스트림별 도구 정책이 언급되지만 시험하지 않았다.
+
+<p class="shot"><img src="{{ '/assets/img/iris/34-gateway-mcp-redis-upstream.webp' | relative_url }}" width="1440" height="895" alt="mcp-redis 업스트림 redis-lab: 터널 뒤 Streamable HTTP 엔드포인트, bearer 토큰 설정됨" loading="lazy" decoding="async"></p>
 
 측정을 위해 도구 노출을 Full로 바꾼 화면. 그 뒤 Search로 되돌렸다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
 
@@ -575,8 +605,6 @@ MemoryETL（beta）：extractor 复制自定义记忆类型的提示，把上传
 | 参数形状错误 | 以 `invalid_arguments` 拒绝，未调用工具 |
 | `deepwiki__read_wiki_structure` redis/redis | 通过 Gateway 得到页面列表；1.5 秒 |
 
-未使用 `mcp-redis`：上游必须能从 Redis Cloud 访问，而这台主机没有公开提供。Surface 把 Redis 数据作为工具提供。
-
 <p class="shot"><img src="{{ '/assets/img/iris/19-context-surface-fields.webp' | relative_url }}" width="1440" height="1284" alt="Context Surface 字段：id 为主键，name 为文本索引，category 和 colour 为标签索引，price 和 stock 为数值" loading="lazy" decoding="async"></p>
 
 Context Surface 是一个数据模型：实体映射到键模板，字段有类型并建立索引。Gateway 据此生成搜索工具。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
@@ -588,6 +616,23 @@ Context Surface 是一个数据模型：实体映射到键模板，字段有类�
 **Full 与 Search 暴露方式**（`exposure.py`）。在控制台切换到 **Full** 后，agent 看到 13 个名为 `namespace__tool` 的工具（10 个来自 Context Surface，3 个来自 DeepWiki）；在 **Search** 下只能看到 `search_tools` 和 `run_tool`。结果缓存和压缩不在 Redis Cloud 控制台中：文档说明要在自行管理的 Gateway 上用管理员令牌设置，而压缩需要 `noeviction` 数据库，免费数据库不满足。
 
 <p class="shot"><img src="{{ '/assets/img/iris/31-gateway-full-exposure.webp' | relative_url }}" width="1440" height="1040" alt="工具暴露方式设为 Full 的 Context Gateway 配置" loading="lazy" decoding="async"></p>
+
+为测量将工具暴露方式设为 Full，之后改回 Search。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
+
+**mcp-redis 作为上游**(`mcp-redis/`)。mcp-redis 0.5.1 只能通过其 CLI 以 stdio 运行,因此用一个小型封装层,通过 Streamable HTTP 并带 bearer 令牌提供它的 FastMCP 服务器。它运行在临时 Cloudflare 隧道之后,连接到一个一次性的本地 Redis 8.10.3,其中只有虚构的键。
+
+| 步骤 | 结果 |
+|---|---|
+| 不带凭据添加 | 上游已创建,但发现失败(422):"the Upstream rejected the Gateway's credentials",没有工具 |
+| 用 **Edit** 设置 bearer 令牌 | "Saved. Found 53 tools";控制台显示 "Bearer token, value set",且不再显示令牌 |
+| Full 暴露 | 66 个工具:53 个 `redis-lab__*`,10 个来自 Surface,3 个来自 DeepWiki |
+| 搜索 "read every field of a Redis hash" | 四个向量工具,其中没有 `hgetall` |
+| `redis-lab__hgetall` ticket:1 | 返回该哈希;3.5 秒 |
+| `redis-lab__set`、`redis-lab__delete` | 在本地 Redis 中写入并删除;各 3.0 秒 |
+
+智能体可以读写字符串、哈希、列表、集合、有序集合、流、JSON 和向量索引,还有 `delete`、`rename`、`expire`、`scan_all_keys`、`info` 和 `client_list`。没有 FLUSHALL、CONFIG 或 EVAL 工具。删除对话框提到了按上游设置的工具策略,但未试用。
+
+<p class="shot"><img src="{{ '/assets/img/iris/34-gateway-mcp-redis-upstream.webp' | relative_url }}" width="1440" height="895" alt="mcp-redis 上游 redis-lab:隧道后的 Streamable HTTP 端点,已设置 bearer 令牌" loading="lazy" decoding="async"></p>
 
 为测量将工具暴露方式设为 Full，之后改回 Search。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
@@ -795,8 +840,6 @@ intent とそのターゲット、例の数。Try a query でコンソールか�
 | 引数の形が誤り | `invalid_arguments` で拒否、ツールは呼ばれず |
 | `deepwiki__read_wiki_structure` redis/redis | Gateway 経由でページ一覧を取得、1.5 秒 |
 
-`mcp-redis` は使わなかった。上流は Redis Cloud から到達できる必要があるが、このホストは公開していない。Surface が Redis のデータをツールとして扱う。
-
 <p class="shot"><img src="{{ '/assets/img/iris/19-context-surface-fields.webp' | relative_url }}" width="1440" height="1284" alt="Context Surface のフィールド：主キーの id、テキストインデックスの name、タグインデックスの category と colour、数値の price と stock" loading="lazy" decoding="async"></p>
 
 Context Surface はデータモデルである。エンティティをキーのテンプレートに対応させ、フィールドに型とインデックスを付ける。Gateway はここから検索ツールを作る。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
@@ -808,6 +851,23 @@ Context Surface はデータモデルである。エンティティをキーの�
 **Full と Search の公開方式**（`exposure.py`）。コンソールで **Full** に切り替えると、agent には `namespace__tool` という名前のツールが 13 個見えた（Context Surface から 10 個、DeepWiki から 3 個）。**Search** では `search_tools` と `run_tool` だけが見える。結果キャッシュと圧縮は Redis Cloud のコンソールにはない。ドキュメントでは、セルフマネージドの Gateway で管理者トークンを使って設定するとされ、圧縮には `noeviction` のデータベースが必要だが、無料のものは該当しない。
 
 <p class="shot"><img src="{{ '/assets/img/iris/31-gateway-full-exposure.webp' | relative_url }}" width="1440" height="1040" alt="ツールの公開方式を Full にした Context Gateway の設定" loading="lazy" decoding="async"></p>
+
+測定のためにツールの公開方式を Full にした画面。その後 Search に戻した。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
+
+**mcp-redis をアップストリームとして**(`mcp-redis/`)。mcp-redis 0.5.1 は CLI から stdio でしか動かないため、小さなラッパーがその FastMCP サーバーを bearer トークン付きの Streamable HTTP で公開した。一時的な Cloudflare トンネルの背後で、架空のキーだけを入れた使い捨てのローカル Redis 8.10.3 に接続して実行した。
+
+| ステップ | 結果 |
+|---|---|
+| 認証情報なしで追加 | アップストリームは作成されたが検出に失敗(422): "the Upstream rejected the Gateway's credentials"、ツールなし |
+| **Edit** で bearer トークンを設定 | "Saved. Found 53 tools"。コンソールは "Bearer token, value set" と表示するだけで、トークンは二度と表示しない |
+| Full 公開 | 66 ツール: `redis-lab__*` が 53、Surface が 10、DeepWiki が 3 |
+| "read every field of a Redis hash" を検索 | ベクトルツールが 4 つ、`hgetall` は含まれない |
+| `redis-lab__hgetall` ticket:1 | ハッシュを返した。3.5 秒 |
+| `redis-lab__set`、`redis-lab__delete` | ローカル Redis に書き込み、削除。各 3.0 秒 |
+
+エージェントは、文字列、ハッシュ、リスト、セット、ソート済みセット、ストリーム、JSON、ベクトルインデックスの読み書きに加え、`delete`、`rename`、`expire`、`scan_all_keys`、`info`、`client_list` を使える。FLUSHALL、CONFIG、EVAL のツールはない。削除ダイアログにはアップストリームごとのツールポリシーへの言及があるが、試していない。
+
+<p class="shot"><img src="{{ '/assets/img/iris/34-gateway-mcp-redis-upstream.webp' | relative_url }}" width="1440" height="895" alt="mcp-redis アップストリーム redis-lab: トンネルの背後にある Streamable HTTP エンドポイント、bearer トークン設定済み" loading="lazy" decoding="async"></p>
 
 測定のためにツールの公開方式を Full にした画面。その後 Search に戻した。 <small>2026-11-07 にキャプチャ、Redis Cloud 無料プラン。</small>
 
@@ -1015,8 +1075,6 @@ intent พร้อมเป้าหมายและจำนวนตัว�
 | รูปแบบอาร์กิวเมนต์ผิด | ถูกปฏิเสธด้วย `invalid_arguments` ไม่ได้เรียกเครื่องมือ |
 | `deepwiki__read_wiki_structure` redis/redis | รายการหน้าผ่าน Gateway; 1.5 วินาที |
 
-ไม่ได้ใช้ `mcp-redis`: upstream ต้องเข้าถึงได้จาก Redis Cloud แต่โฮสต์นี้ไม่ได้เปิดให้บริการสาธารณะ ส่วน Surface ครอบคลุมข้อมูล Redis ในรูปแบบเครื่องมือ
-
 <p class="shot"><img src="{{ '/assets/img/iris/19-context-surface-fields.webp' | relative_url }}" width="1440" height="1284" alt="ฟิลด์ของ Context Surface: id เป็นคีย์หลัก, name เป็นดัชนีข้อความ, category และ colour เป็นดัชนีแท็ก, price และ stock เป็นตัวเลข" loading="lazy" decoding="async"></p>
 
 Context Surface คือโมเดลข้อมูล: เอนทิตีถูกแมปกับเทมเพลตคีย์ ฟิลด์มีชนิดและดัชนี Gateway สร้างเครื่องมือค้นหาจากโมเดลนี้ <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
@@ -1028,6 +1086,23 @@ upstream ทั้งสองอยู่หลัง endpoint เดียว 
 **การเปิดเผยแบบ Full เทียบกับ Search** (`exposure.py`) เมื่อสลับเป็น **Full** ในคอนโซล agent เห็นเครื่องมือ 13 รายการชื่อ `namespace__tool` (10 รายการจาก Context Surface และ 3 รายการจาก DeepWiki) ส่วนใน **Search** จะเห็นเพียง `search_tools` กับ `run_tool` การแคชผลลัพธ์และการบีบอัดไม่มีในคอนโซล Redis Cloud: เอกสารระบุให้ตั้งค่าด้วยโทเคนผู้ดูแลบน Gateway ที่ดูแลเอง และการบีบอัดต้องใช้ฐานข้อมูล `noeviction` ซึ่งฐานข้อมูลฟรีไม่ใช่
 
 <p class="shot"><img src="{{ '/assets/img/iris/31-gateway-full-exposure.webp' | relative_url }}" width="1440" height="1040" alt="การตั้งค่า Context Gateway ที่ตั้งการเปิดเผยเครื่องมือเป็น Full" loading="lazy" decoding="async"></p>
+
+ตั้งการเปิดเผยเครื่องมือเป็น Full เพื่อการวัด แล้วตั้งกลับเป็น Search <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+**mcp-redis เป็นอัปสตรีม** (`mcp-redis/`) mcp-redis 0.5.1 ทำงานผ่าน stdio จาก CLI เท่านั้น จึงใช้ wrapper ขนาดเล็กเปิดเซิร์ฟเวอร์ FastMCP ของมันผ่าน Streamable HTTP พร้อม bearer token โดยรันอยู่หลังอุโมงค์ Cloudflare ชั่วคราว และเชื่อมกับ Redis 8.10.3 ในเครื่องแบบใช้แล้วทิ้งที่มีแต่คีย์สมมติ
+
+| ขั้นตอน | ผลลัพธ์ |
+|---|---|
+| เพิ่มโดยไม่ใส่ข้อมูลรับรอง | สร้างอัปสตรีมได้ แต่การค้นหาล้มเหลว (422): "the Upstream rejected the Gateway's credentials" ไม่มีเครื่องมือ |
+| ตั้ง bearer token ด้วย **Edit** | "Saved. Found 53 tools" คอนโซลแสดง "Bearer token, value set" และไม่แสดงโทเค็นอีก |
+| เปิดเผยแบบ Full | 66 เครื่องมือ: `redis-lab__*` 53 ตัว, จาก Surface 10 ตัว, จาก DeepWiki 3 ตัว |
+| ค้นหา "read every field of a Redis hash" | เครื่องมือเวกเตอร์สี่ตัว ไม่มี `hgetall` |
+| `redis-lab__hgetall` ticket:1 | ได้แฮช 3.5 วินาที |
+| `redis-lab__set`, `redis-lab__delete` | เขียนและลบใน Redis ในเครื่อง ครั้งละ 3.0 วินาที |
+
+เอเจนต์อ่านและเขียนสตริง แฮช ลิสต์ เซต sorted set สตรีม JSON และดัชนีเวกเตอร์ได้ รวมถึง `delete`, `rename`, `expire`, `scan_all_keys`, `info` และ `client_list` ไม่มีเครื่องมือ FLUSHALL, CONFIG หรือ EVAL กล่องโต้ตอบการลบกล่าวถึงนโยบายเครื่องมือรายอัปสตรีม แต่ไม่ได้ทดลอง
+
+<p class="shot"><img src="{{ '/assets/img/iris/34-gateway-mcp-redis-upstream.webp' | relative_url }}" width="1440" height="895" alt="อัปสตรีม mcp-redis ชื่อ redis-lab: เอนด์พอยต์ Streamable HTTP หลังอุโมงค์ ตั้ง bearer token แล้ว" loading="lazy" decoding="async"></p>
 
 ตั้งการเปิดเผยเครื่องมือเป็น Full เพื่อการวัด แล้วตั้งกลับเป็น Search <small>บันทึกภาพหน้าจอเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
@@ -1235,8 +1310,6 @@ Intent beserta target dan jumlah contohnya; Try a query mencocokkan langsung dar
 | Bentuk argumen salah | ditolak dengan `invalid_arguments`, alat tidak dipanggil |
 | `deepwiki__read_wiki_structure` redis/redis | daftar halaman lewat Gateway; 1.5 detik |
 
-`mcp-redis` tidak dipakai: upstream harus dapat dijangkau dari Redis Cloud, dan host ini tidak menyediakannya secara publik. Surface mencakup data Redis sebagai alat.
-
 <p class="shot"><img src="{{ '/assets/img/iris/19-context-surface-fields.webp' | relative_url }}" width="1440" height="1284" alt="Bidang Context Surface: id sebagai kunci primer, name indeks teks, category dan colour indeks tag, price dan stock numerik" loading="lazy" decoding="async"></p>
 
 Context Surface adalah model data: entitas dipetakan ke templat kunci, bidang diberi tipe dan indeks. Gateway membangun alat pencarian dari model ini. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
@@ -1248,6 +1321,23 @@ Kedua upstream berada di balik satu endpoint, masing-masing dapat diaktifkan ata
 **Eksposur Full versus Search** (`exposure.py`). Setelah diganti ke **Full** di konsol, agen melihat 13 alat bernama `namespace__tool` (10 dari Context Surface, 3 dari DeepWiki); pada **Search** agen hanya melihat `search_tools` dan `run_tool`. Caching hasil dan kompresi tidak ada di konsol Redis Cloud: dokumentasi mengaturnya dengan token admin pada Gateway yang dikelola sendiri, dan kompresi memerlukan basis data `noeviction`, yang bukan basis data gratis.
 
 <p class="shot"><img src="{{ '/assets/img/iris/31-gateway-full-exposure.webp' | relative_url }}" width="1440" height="1040" alt="Konfigurasi Context Gateway dengan eksposur alat diatur ke Full" loading="lazy" decoding="async"></p>
+
+Eksposur alat diatur ke Full untuk pengukuran, lalu dikembalikan ke Search. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
+
+**mcp-redis sebagai upstream** (`mcp-redis/`). mcp-redis 0.5.1 hanya berjalan lewat stdio dari CLI-nya, jadi sebuah wrapper kecil menyajikan server FastMCP-nya melalui Streamable HTTP dengan bearer token. Ia berjalan di balik tunnel Cloudflare sementara, terhadap Redis 8.10.3 lokal sekali pakai yang berisi key rekaan.
+
+| Langkah | Hasil |
+|---|---|
+| Ditambahkan tanpa kredensial | upstream dibuat, discovery gagal (422): "the Upstream rejected the Gateway's credentials", tanpa tool |
+| Bearer token diatur dengan **Edit** | "Saved. Found 53 tools"; konsol menampilkan "Bearer token, value set" dan tidak pernah menampilkan token lagi |
+| Full exposure | 66 tool: 53 `redis-lab__*`, 10 dari Surface, 3 dari DeepWiki |
+| pencarian "read every field of a Redis hash" | empat tool vektor; `hgetall` tidak termasuk |
+| `redis-lab__hgetall` ticket:1 | hash-nya; 3,5 dtk |
+| `redis-lab__set`, `redis-lab__delete` | ditulis dan dihapus di Redis lokal; masing-masing 3,0 dtk |
+
+Agen mendapat akses baca dan tulis untuk string, hash, list, set, sorted set, stream, JSON, dan indeks vektor, plus `delete`, `rename`, `expire`, `scan_all_keys`, `info`, dan `client_list`. Tidak ada tool FLUSHALL, CONFIG, atau EVAL. Dialog hapus menyebut kebijakan tool per upstream; kebijakan itu tidak dicoba.
+
+<p class="shot"><img src="{{ '/assets/img/iris/34-gateway-mcp-redis-upstream.webp' | relative_url }}" width="1440" height="895" alt="Upstream mcp-redis redis-lab: endpoint Streamable HTTP di balik tunnel, bearer token sudah diatur" loading="lazy" decoding="async"></p>
 
 Eksposur alat diatur ke Full untuk pengukuran, lalu dikembalikan ke Search. <small>Ditangkap 2026-11-07, paket gratis Redis Cloud.</small>
 
@@ -1455,8 +1545,6 @@ Intent beserta sasaran dan bilangan contohnya; Try a query memadankan terus dari
 | Bentuk argumen salah | ditolak dengan `invalid_arguments`, alat tidak dipanggil |
 | `deepwiki__read_wiki_structure` redis/redis | senarai halaman melalui Gateway; 1.5 saat |
 
-`mcp-redis` tidak digunakan: upstream mesti boleh dicapai dari Redis Cloud, dan hos ini tidak menyediakannya secara awam. Surface merangkumi data Redis sebagai alat.
-
 <p class="shot"><img src="{{ '/assets/img/iris/19-context-surface-fields.webp' | relative_url }}" width="1440" height="1284" alt="Medan Context Surface: id sebagai kunci utama, name indeks teks, category dan colour indeks tag, price dan stock berangka" loading="lazy" decoding="async"></p>
 
 Context Surface ialah model data: entiti dipetakan kepada templat kunci, medan diberi jenis dan indeks. Gateway membina alat carian daripadanya. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
@@ -1468,6 +1556,23 @@ Kedua-dua upstream berada di sebalik satu endpoint, masing-masing boleh dihidupk
 **Pendedahan Full berbanding Search** (`exposure.py`). Setelah ditukar kepada **Full** dalam konsol, ejen melihat 13 alat bernama `namespace__tool` (10 daripada Context Surface, 3 daripada DeepWiki); dalam **Search** ia hanya melihat `search_tools` dan `run_tool`. Caching hasil dan pemampatan tiada dalam konsol Redis Cloud: dokumentasi menetapkannya dengan token pentadbir pada Gateway yang diurus sendiri, dan pemampatan memerlukan pangkalan data `noeviction`, yang bukan pangkalan data percuma.
 
 <p class="shot"><img src="{{ '/assets/img/iris/31-gateway-full-exposure.webp' | relative_url }}" width="1440" height="1040" alt="Konfigurasi Context Gateway dengan pendedahan alat ditetapkan kepada Full" loading="lazy" decoding="async"></p>
+
+Pendedahan alat ditetapkan kepada Full untuk pengukuran, kemudian dikembalikan kepada Search. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
+
+**mcp-redis sebagai upstream** (`mcp-redis/`). mcp-redis 0.5.1 hanya berjalan melalui stdio daripada CLI-nya, jadi sebuah wrapper kecil menyajikan pelayan FastMCP-nya melalui Streamable HTTP dengan bearer token. Ia berjalan di belakang terowong Cloudflare sementara, terhadap Redis 8.10.3 tempatan sekali guna yang mengandungi kunci rekaan.
+
+| Langkah | Keputusan |
+|---|---|
+| Ditambah tanpa bukti kelayakan | upstream dicipta, penemuan gagal (422): "the Upstream rejected the Gateway's credentials", tiada alat |
+| Bearer token ditetapkan dengan **Edit** | "Saved. Found 53 tools"; konsol memaparkan "Bearer token, value set" dan tidak memaparkan token lagi |
+| Full exposure | 66 alat: 53 `redis-lab__*`, 10 daripada Surface, 3 daripada DeepWiki |
+| carian "read every field of a Redis hash" | empat alat vektor; `hgetall` tiada |
+| `redis-lab__hgetall` ticket:1 | hash itu; 3.5 s |
+| `redis-lab__set`, `redis-lab__delete` | ditulis dan dipadam dalam Redis tempatan; masing-masing 3.0 s |
+
+Ejen mendapat akses baca dan tulis untuk rentetan, hash, senarai, set, sorted set, stream, JSON dan indeks vektor, serta `delete`, `rename`, `expire`, `scan_all_keys`, `info` dan `client_list`. Tiada alat FLUSHALL, CONFIG atau EVAL. Dialog padam menyebut dasar alat bagi setiap upstream; ia tidak dicuba.
+
+<p class="shot"><img src="{{ '/assets/img/iris/34-gateway-mcp-redis-upstream.webp' | relative_url }}" width="1440" height="895" alt="Upstream mcp-redis redis-lab: titik akhir Streamable HTTP di belakang terowong, bearer token telah ditetapkan" loading="lazy" decoding="async"></p>
 
 Pendedahan alat ditetapkan kepada Full untuk pengukuran, kemudian dikembalikan kepada Search. <small>Ditangkap 2026-11-07, pelan percuma Redis Cloud.</small>
 
