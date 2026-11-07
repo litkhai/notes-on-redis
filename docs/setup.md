@@ -53,3 +53,39 @@ Docker 中的 Redis 8、`redis-cli`、Redis Insight、Python 与 Node 客户端�
 Docker の Redis 8、`redis-cli`、Redis Insight、Python・Node クライアント、無料 30 MB の Redis Cloud DB（カード不要、アカウントにつき一つ）。TLS のスモークテストと gitleaks が守る `.env` で終わる。
 
 </div>
+
+<div class="lang" data-lang="th" markdown="1">
+
+## ภาษาไทย
+
+<div class="note" markdown="1">
+**สถานะ: ออกแบบเท่านั้น** ยังไม่ได้รันสิ่งใดในหน้านี้ แผนอยู่ใน [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)
+</div>
+
+Redis 8 ใน Docker, `redis-cli`, Redis Insight, ไคลเอนต์ Python และ Node และฐานข้อมูล Redis Cloud ฟรีขนาด 30 MB (ไม่ต้องใช้บัตร; หนึ่งฐานข้อมูลต่อหนึ่งบัญชี) จบด้วยการทดสอบเบื้องต้น (smoke test) ผ่าน TLS และไฟล์ `.env` ที่ gitleaks คอยตรวจป้องกัน
+
+</div>
+
+<div class="lang" data-lang="id" markdown="1">
+
+## Bahasa Indonesia
+
+<div class="note" markdown="1">
+**Status: hanya desain.** Belum ada yang dijalankan di halaman ini. Rencananya ada di [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+</div>
+
+Redis 8 di Docker, `redis-cli`, Redis Insight, klien Python dan Node, serta basis data Redis Cloud gratis 30 MB (tanpa kartu; satu per akun). Diakhiri dengan smoke test melalui TLS dan berkas `.env` yang dijaga gitleaks.
+
+</div>
+
+<div class="lang" data-lang="ms" markdown="1">
+
+## Bahasa Melayu
+
+<div class="note" markdown="1">
+**Status: reka bentuk sahaja.** Belum ada apa-apa di halaman ini yang telah dijalankan. Perancangannya ada dalam [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+</div>
+
+Redis 8 dalam Docker, `redis-cli`, Redis Insight, klien Python dan Node, serta pangkalan data Redis Cloud percuma 30 MB (tanpa kad; satu bagi setiap akaun). Diakhiri dengan smoke test melalui TLS dan fail `.env` yang dikawal oleh gitleaks.
+
+</div>

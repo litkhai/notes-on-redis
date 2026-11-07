@@ -53,3 +53,39 @@ Redis Iris 按 Redis 的说法是"面向 AI 代理的生产级上下文引擎" �
 Redis Iris は Redis の言葉では「AI エージェント向けの本番対応コンテキストエンジン」 — サービス群でありデータベースではなく、その下にあるデータベースが Redis。2026-05-18 公開、2026-11-04 に六つのサービスに: Intent Router、Agent Playbooks、Agent Memory、Context Gateway（GA）、Lens、Agent Mesh（ベータ）。Redis Cloud のマネージド、セルフマネージドはライセンスが必要な Helm チャート。サービスごとにラボ一つ、すべて無料 DB と無料 5,000 メッセージで行い、ラボごとの消費メッセージ数を記録。名前の罠 — Context Retriever → Context Gateway、LangCache と Agent Playbooks — は別の節。2026-11-07 に [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/) で読んだ。
 
 </div>
+
+<div class="lang" data-lang="th" markdown="1">
+
+## ภาษาไทย
+
+<div class="note" markdown="1">
+**สถานะ: ออกแบบเท่านั้น** ยังไม่ได้รันสิ่งใดในหน้านี้ แผนอยู่ใน [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)
+</div>
+
+Redis Iris ตามคำของ Redis คือ "a production-ready context engine for AI agents" เป็นชุดบริการ ไม่ใช่ฐานข้อมูล โดยมี Redis เป็นฐานข้อมูลอยู่ข้างใต้ เปิดตัวเมื่อ 2026-05-18 และเมื่อ 2026-11-04 กลายเป็นหกบริการ ได้แก่ Intent Router, Agent Playbooks, Agent Memory และ Context Gateway (GA) รวมถึง Lens และ Agent Mesh (beta) ให้บริการแบบจัดการให้บน Redis Cloud ส่วนแบบดูแลเองใช้ Helm chart ซึ่งต้องมีใบอนุญาต มีหนึ่งแล็บต่อหนึ่งบริการ ทั้งหมดใช้ฐานข้อมูลฟรีและข้อความฟรี 5,000 ข้อความ โดยบันทึกจำนวนข้อความที่แต่ละแล็บใช้ไป กับดักเรื่องชื่อ คือ Context Retriever → Context Gateway และ LangCache เทียบกับ Agent Playbooks มีหัวข้อแยกต่างหาก อ่านเมื่อ 2026-11-07 ที่ [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/)
+
+</div>
+
+<div class="lang" data-lang="id" markdown="1">
+
+## Bahasa Indonesia
+
+<div class="note" markdown="1">
+**Status: hanya desain.** Belum ada yang dijalankan di halaman ini. Rencananya ada di [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+</div>
+
+Redis Iris, menurut Redis, adalah "a production-ready context engine for AI agents", yaitu kumpulan layanan, bukan basis data; Redis adalah basis data di bawahnya. Diluncurkan 2026-05-18; pada 2026-11-04 menjadi enam layanan: Intent Router, Agent Playbooks, Agent Memory dan Context Gateway (GA), Lens dan Agent Mesh (beta). Dikelola di Redis Cloud; untuk dikelola sendiri tersedia Helm chart yang memerlukan lisensi. Satu lab per layanan, semuanya memakai basis data gratis dan 5.000 pesan gratis, dengan jumlah pesan yang terpakai per lab dicatat. Jebakan penamaan, yaitu Context Retriever → Context Gateway serta LangCache vs Agent Playbooks, dibahas di bagian tersendiri. Dibaca 2026-11-07 di [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/).
+
+</div>
+
+<div class="lang" data-lang="ms" markdown="1">
+
+## Bahasa Melayu
+
+<div class="note" markdown="1">
+**Status: reka bentuk sahaja.** Belum ada apa-apa di halaman ini yang telah dijalankan. Perancangannya ada dalam [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+</div>
+
+Redis Iris, menurut Redis, ialah "a production-ready context engine for AI agents", iaitu suite perkhidmatan, bukan pangkalan data; Redis ialah pangkalan data di bawahnya. Dilancarkan 2026-05-18; pada 2026-11-04 ia menjadi enam perkhidmatan: Intent Router, Agent Playbooks, Agent Memory dan Context Gateway (GA), Lens dan Agent Mesh (beta). Diurus di Redis Cloud; untuk diurus sendiri tersedia Helm chart yang memerlukan lesen. Satu makmal bagi setiap perkhidmatan, kesemuanya menggunakan pangkalan data percuma dan 5,000 mesej percuma, dengan bilangan mesej yang digunakan setiap makmal direkodkan. Perangkap penamaan, iaitu Context Retriever → Context Gateway serta LangCache vs Agent Playbooks, diberi bahagian tersendiri. Dibaca 2026-11-07 di [redis.io/docs — context engine](https://redis.io/docs/latest/develop/ai/context-engine/).
+
+</div>

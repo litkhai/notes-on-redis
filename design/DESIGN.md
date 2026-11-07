@@ -257,7 +257,7 @@ read at run time, not assumed.
 2. Pro ($200 credit / $200 minimum) — yes, later, or never?
 3. ElastiCache lab on the personal AWS account — yes or skip (matrix only)?
 4. Create the Vercel project and send the CNAME now, or after the first content lands?
-5. Languages: four (en/ko/zh/ja, as runpod-hols) or two (en/ko)? Four is wired in; two halves the translation load.
+5. Languages: decided 2026-11-07 by the user — seven: en/ko/zh/ja plus th/id/ms (#22); Filipino held back.
 
 ---
 
@@ -362,4 +362,4 @@ cloud/03·04 → ⑨ enterprise/01–03, deep-dive/05–08, iris/06 → ⑩ Pro�
 2. Pro($200 크레딧 / 최소 $200) — 예, 나중에, 안 함.
 3. 개인 AWS 계정으로 ElastiCache 랩 — 예 / 매트릭스만.
 4. Vercel 프로젝트 생성과 CNAME 전달 — 지금 / 첫 콘텐츠 뒤.
-5. 언어: 4개(en/ko/zh/ja, runpod-hols와 같음) 또는 2개(en/ko). 4개가 연결돼 있고, 2개면 번역 부담이 반.
+5. 언어: 2026-11-07 사용자 결정 — 일곱 개, en/ko/zh/ja에 th/id/ms 추가(#22). 필리핀어는 보류.

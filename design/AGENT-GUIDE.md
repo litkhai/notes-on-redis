@@ -58,9 +58,10 @@ versions and prices always with the date they were read; Redis Ltd., not "Redis 
 ### 4. Site page
 
 A lab's site page is `docs/<track>.md` (one page per nav item; labs are sections on it).
-Four `.lang` blocks (`en`, `ko`, `zh`, `ja`) — edit all four or the checker fails; `zh`/`ja`
-are translated from `en`. Status badges and tables on `docs/index.md` change when a lab runs.
-Issue #14 may reduce the languages to two; until it is closed, keep four.
+Seven `.lang` blocks (`en`, `ko`, `zh`, `ja`, `th`, `id`, `ms`; #22) — edit all of them or the
+checker fails; everything but `ko` is translated from `en`. Pages with a `page.json` source
+(`cloud/02-console-tour`, `compare/02-elasticache-valkey`) are edited there and rebuilt with
+`scripts/build-lang-page.py`. Status badges and tables on `docs/index.md` change when a lab runs.
 
 Screenshots: `docs/assets/img/<slug>/NN-<name>.webp`, 2x, WebP quality 82, masked
 (account ID, endpoints, e-mail, IPs, amounts) before commit. Markup:
@@ -122,8 +123,9 @@ python3 scripts/check-docs.py -v           # 시작 전과 푸시 전에 통과�
 ### 4. 사이트 페이지
 
 랩의 사이트 페이지는 `docs/<track>.md`(네비 항목당 한 페이지, 랩은 그 안의 절). `.lang` 블록
-넷(`en`, `ko`, `zh`, `ja`) — 넷 다 고치지 않으면 검사 실패; `zh`/`ja`는 `en`에서 번역.
-`docs/index.md`의 배지와 표는 랩이 실행되면 바꾼다. #14가 언어를 둘로 줄일 수 있다 — 닫히기 전까지 넷 유지.
+일곱 개(`en`, `ko`, `zh`, `ja`, `th`, `id`, `ms`; #22) — 다 고치지 않으면 검사 실패; `ko` 외에는 `en`에서 번역.
+`page.json` 원천이 있는 페이지(`cloud/02-console-tour`, `compare/02-elasticache-valkey`)는 거기서 고치고
+`scripts/build-lang-page.py`로 다시 만든다. `docs/index.md`의 배지와 표는 랩이 실행되면 바꾼다.
 
 캡처: `docs/assets/img/<slug>/NN-<이름>.webp`, 2x, WebP 품질 82, 커밋 전에 가림(계정 ID,
 엔드포인트, 이메일, IP, 금액). 마크업은 `<img … loading="lazy" decoding="async">` 뒤에 촬영

@@ -8,7 +8,10 @@
   "en": "Captured 2026-11-07, AWS ap-northeast-2.",
   "ko": "2026-11-07 캡처, AWS ap-northeast-2.",
   "zh": "2026-11-07 截图，AWS ap-northeast-2。",
-  "ja": "2026-11-07 キャプチャ、AWS ap-northeast-2。"
+  "ja": "2026-11-07 キャプチャ、AWS ap-northeast-2。",
+  "th": "จับภาพเมื่อ 2026-11-07, AWS ap-northeast-2.",
+  "id": "Ditangkap 2026-11-07, AWS ap-northeast-2.",
+  "ms": "Ditangkap 2026-11-07, AWS ap-northeast-2."
  },
  "blocks": [
   {
@@ -16,35 +19,50 @@
    "en": "<div class=\"note\" markdown=\"1\">\n**Status: partly run.** The ElastiCache section below was run on 2026-11-07; the rest of this page is still the plan in [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).\n</div>\n\nRedis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey and for Redis OSS (≤ 7.1), Azure Managed Redis (Redis Enterprise inside), Memorystore for Valkey — a matrix with a source per cell (licence, modules, Active-Active, tiering, SLA, pricing model), the licence timeline (BSD-3 → RSALv2/SSPL at 7.4 → AGPLv3 added at 8.0; Valkey forked 7.2.4 under BSD-3), and the same workload run on Redis 8.10 and Valkey 9.1 side by side. Dragonfly, KeyDB and Garnet in a paragraph each.",
    "ko": "<div class=\"note\" markdown=\"1\">\n**상태: 일부 실행.** 아래 ElastiCache 절은 2026-11-07에 실행했다. 나머지는 아직 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)의 계획이다.\n</div>\n\nRedis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey와 for Redis OSS(≤ 7.1), Azure Managed Redis(안은 Redis Enterprise), Memorystore for Valkey — 셀마다 출처가 있는 매트릭스(라이선스, 모듈, Active-Active, 티어링, SLA, 가격 모델), 라이선스 연표(BSD-3 → 7.4에서 RSALv2/SSPL → 8.0에서 AGPLv3 추가; Valkey는 7.2.4를 BSD-3로 포크), 그리고 Redis 8.10과 Valkey 9.1에 같은 워크로드를 나란히. Dragonfly, KeyDB, Garnet은 한 문단씩.",
    "zh": "<div class=\"note\" markdown=\"1\">\n**状态：部分已运行。** 下面的 ElastiCache 一节于 2026-11-07 运行；本页其余部分仍是 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) 中的计划。\n</div>\n\nRedis Open Source 8.x、Redis Cloud / Software、Valkey 9.x、ElastiCache for Valkey 与 for Redis OSS（≤ 7.1）、Azure Managed Redis（内核为 Redis Enterprise）、Memorystore for Valkey — 每格有来源的矩阵（许可证、模块、Active-Active、分层、SLA、定价模型）、许可证时间线（BSD-3 → 7.4 起 RSALv2/SSPL → 8.0 加入 AGPLv3；Valkey 自 7.2.4 以 BSD-3 分叉），以及在 Redis 8.10 与 Valkey 9.1 上并排运行同一负载。Dragonfly、KeyDB、Garnet 各一段。",
-   "ja": "<div class=\"note\" markdown=\"1\">\n**状態: 一部実行済み。** 下の ElastiCache の節は 2026-11-07 に実行した。このページの残りはまだ [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) の計画である。\n</div>\n\nRedis Open Source 8.x、Redis Cloud / Software、Valkey 9.x、ElastiCache for Valkey と for Redis OSS（≤ 7.1）、Azure Managed Redis（中身は Redis Enterprise）、Memorystore for Valkey — セルごとに出典のあるマトリクス（ライセンス、モジュール、Active-Active、階層化、SLA、価格モデル）、ライセンスの年表（BSD-3 → 7.4 で RSALv2/SSPL → 8.0 で AGPLv3 追加、Valkey は 7.2.4 を BSD-3 でフォーク）、そして Redis 8.10 と Valkey 9.1 で同じワークロードを並べて実行。Dragonfly、KeyDB、Garnet は一段落ずつ。"
+   "ja": "<div class=\"note\" markdown=\"1\">\n**状態: 一部実行済み。** 下の ElastiCache の節は 2026-11-07 に実行した。このページの残りはまだ [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) の計画である。\n</div>\n\nRedis Open Source 8.x、Redis Cloud / Software、Valkey 9.x、ElastiCache for Valkey と for Redis OSS（≤ 7.1）、Azure Managed Redis（中身は Redis Enterprise）、Memorystore for Valkey — セルごとに出典のあるマトリクス（ライセンス、モジュール、Active-Active、階層化、SLA、価格モデル）、ライセンスの年表（BSD-3 → 7.4 で RSALv2/SSPL → 8.0 で AGPLv3 追加、Valkey は 7.2.4 を BSD-3 でフォーク）、そして Redis 8.10 と Valkey 9.1 で同じワークロードを並べて実行。Dragonfly、KeyDB、Garnet は一段落ずつ。",
+   "th": "<div class=\"note\" markdown=\"1\">\n**สถานะ: รันแล้วบางส่วน** ส่วนของ ElastiCache ด้านล่างรันเมื่อ 2026-11-07 ส่วนที่เหลือของหน้านี้ยังเป็นแผนใน [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)\n</div>\n\nRedis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey และ for Redis OSS (≤ 7.1), Azure Managed Redis (Redis Enterprise อยู่ภายใน), Memorystore for Valkey — ตารางเปรียบเทียบที่มีแหล่งอ้างอิงในทุกช่อง (ใบอนุญาต, โมดูล, Active-Active, tiering, SLA, รูปแบบราคา), ไทม์ไลน์ใบอนุญาต (BSD-3 → RSALv2/SSPL ที่ 7.4 → เพิ่ม AGPLv3 ที่ 8.0; Valkey แยกจาก 7.2.4 ภายใต้ BSD-3) และเวิร์กโหลดเดียวกันที่รันบน Redis 8.10 และ Valkey 9.1 เทียบกัน ส่วน Dragonfly, KeyDB และ Garnet อธิบายอย่างละหนึ่งย่อหน้า",
+   "id": "<div class=\"note\" markdown=\"1\">\n**Status: sebagian sudah dijalankan.** Bagian ElastiCache di bawah dijalankan pada 2026-11-07; sisa halaman ini masih berupa rencana di [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).\n</div>\n\nRedis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey dan for Redis OSS (≤ 7.1), Azure Managed Redis (berisi Redis Enterprise), Memorystore for Valkey — sebuah matriks dengan sumber pada setiap sel (lisensi, modul, Active-Active, tiering, SLA, model harga), linimasa lisensi (BSD-3 → RSALv2/SSPL pada 7.4 → AGPLv3 ditambahkan pada 8.0; Valkey di-fork dari 7.2.4 di bawah BSD-3), dan beban kerja yang sama dijalankan berdampingan pada Redis 8.10 dan Valkey 9.1. Dragonfly, KeyDB, dan Garnet masing-masing satu paragraf.",
+   "ms": "<div class=\"note\" markdown=\"1\">\n**Status: sebahagian telah dijalankan.** Bahagian ElastiCache di bawah dijalankan pada 2026-11-07; selebihnya halaman ini masih berupa pelan dalam [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).\n</div>\n\nRedis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey dan for Redis OSS (≤ 7.1), Azure Managed Redis (mengandungi Redis Enterprise), Memorystore for Valkey — satu matriks dengan sumber bagi setiap sel (lesen, modul, Active-Active, tiering, SLA, model harga), garis masa lesen (BSD-3 → RSALv2/SSPL pada 7.4 → AGPLv3 ditambah pada 8.0; Valkey dipecahkan daripada 7.2.4 di bawah BSD-3), dan beban kerja yang sama dijalankan secara bersebelahan pada Redis 8.10 dan Valkey 9.1. Dragonfly, KeyDB dan Garnet masing-masing satu perenggan."
   },
   {
    "type": "md",
    "en": "### ElastiCache Serverless for Valkey, next to the Redis Cloud free database\n\n**Run on 2026-11-07 in AWS ap-northeast-2 (Seoul).** One serverless cache, Valkey 9.0, created and deleted in the console; it lived about 31 minutes. Same probe script and same client host in Korea as the [Redis Cloud free database lab]({{ '/cloud/' | relative_url }}). Prices from the AWS price list for Seoul published 2026-10-28, read 2026-11-07. Masked: account ID and alias, ARNs, endpoints.",
    "ko": "### ElastiCache Serverless for Valkey, Redis Cloud 무료 DB와 나란히\n\n**2026-11-07, AWS ap-northeast-2(서울)에서 실행.** 서버리스 캐시 하나(Valkey 9.0)를 콘솔에서 만들고 지웠다. 약 31분 살아 있었다. [Redis Cloud 무료 DB 실습]({{ '/cloud/' | relative_url }})과 같은 측정 스크립트, 같은 한국의 클라이언트 호스트를 썼다. 가격은 2026-10-28에 게시된 서울 리전 AWS 가격표를 2026-11-07에 읽었다. 가린 것: 계정 ID와 별칭, ARN, 엔드포인트.",
    "zh": "### ElastiCache Serverless for Valkey 与 Redis Cloud 免费数据库的对比\n\n**2026-11-07 在 AWS ap-northeast-2（首尔）运行。** 在控制台创建并删除了一个 Serverless 缓存，Valkey 9.0，存续约 31 分钟。使用与 [Redis Cloud 免费数据库实验]({{ '/cloud/' | relative_url }}) 相同的探测脚本和位于韩国的同一台客户端主机。价格取自 2026-10-28 发布的 AWS 首尔价格表，2026-11-07 读取。已隐去：账户 ID 和别名、ARN、端点。",
-   "ja": "### ElastiCache Serverless for Valkey と Redis Cloud 無料データベースの比較\n\n**2026-11-07 に AWS ap-northeast-2（ソウル）で実施。** コンソールで Serverless キャッシュを 1 つ、Valkey 9.0 で作成して削除した。存続時間は約 31 分。[Redis Cloud 無料データベースのラボ]({{ '/cloud/' | relative_url }}) と同じプローブスクリプト、同じ韓国内のクライアントホストを使った。価格は 2026-10-28 公開の AWS ソウル価格表によるもので、2026-11-07 に確認した。マスク済み：アカウント ID とエイリアス、ARN、エンドポイント。"
+   "ja": "### ElastiCache Serverless for Valkey と Redis Cloud 無料データベースの比較\n\n**2026-11-07 に AWS ap-northeast-2（ソウル）で実施。** コンソールで Serverless キャッシュを 1 つ、Valkey 9.0 で作成して削除した。存続時間は約 31 分。[Redis Cloud 無料データベースのラボ]({{ '/cloud/' | relative_url }}) と同じプローブスクリプト、同じ韓国内のクライアントホストを使った。価格は 2026-10-28 公開の AWS ソウル価格表によるもので、2026-11-07 に確認した。マスク済み：アカウント ID とエイリアス、ARN、エンドポイント。",
+   "th": "### ElastiCache Serverless for Valkey เทียบกับฐานข้อมูลฟรีของ Redis Cloud\n\n**รันเมื่อ 2026-11-07 ใน AWS ap-northeast-2 (โซล)** แคชแบบ serverless หนึ่งตัว Valkey 9.0 สร้างและลบผ่านคอนโซล มีอายุประมาณ 31 นาที ใช้สคริปต์ probe เดียวกันและเครื่องไคลเอนต์เครื่องเดิมในเกาหลีเหมือนกับ[แล็บฐานข้อมูลฟรีของ Redis Cloud]({{ '/cloud/' | relative_url }}) ราคามาจากรายการราคา AWS สำหรับโซลที่เผยแพร่เมื่อ 2026-10-28 และอ่านเมื่อ 2026-11-07 ข้อมูลที่ปกปิด: account ID และ alias, ARN, endpoint",
+   "id": "### ElastiCache Serverless for Valkey, dibandingkan dengan database gratis Redis Cloud\n\n**Dijalankan pada 2026-11-07 di AWS ap-northeast-2 (Seoul).** Satu cache serverless, Valkey 9.0, dibuat dan dihapus melalui konsol; umurnya sekitar 31 menit. Skrip probe yang sama dan host klien yang sama di Korea seperti pada [lab database gratis Redis Cloud]({{ '/cloud/' | relative_url }}). Harga dari daftar harga AWS untuk Seoul yang terbit pada 2026-10-28, dibaca pada 2026-11-07. Disamarkan: ID dan alias akun, ARN, endpoint.",
+   "ms": "### ElastiCache Serverless for Valkey, bersebelahan dengan pangkalan data percuma Redis Cloud\n\n**Dijalankan pada 2026-11-07 di AWS ap-northeast-2 (Seoul).** Satu cache serverless, Valkey 9.0, dicipta dan dipadam melalui konsol; hayatnya kira-kira 31 minit. Skrip probe yang sama dan hos klien yang sama di Korea seperti dalam [makmal pangkalan data percuma Redis Cloud]({{ '/cloud/' | relative_url }}). Harga daripada senarai harga AWS untuk Seoul yang diterbitkan pada 2026-10-28, dibaca pada 2026-11-07. Disamarkan: ID dan alias akaun, ARN, endpoint."
   },
   {
    "type": "md",
    "en": "#### What differed\n\n| | Redis Cloud free database | ElastiCache Serverless for Valkey |\n|---|---|---|\n| Cost | $0 for 30 MB | $0.101 per GB-hour of data (100 MB minimum, about $7.4 a month idle) plus $0.0027 per million ECPUs |\n| Created to usable | seconds | 58 s |\n| Engine | Redis 8.6.2 | Valkey 9.0 (9, 8 and 7 offered); `INFO` reports `redis_version:7.2` |\n| Network | public endpoint; CIDR allow list, 0.0.0.0/0 by default | VPC by default; a Public connection type that requires IAM authentication |\n| Authentication | default user and password | IAM: a SigV4 token valid 15 minutes, user `default.iam-user` |\n| TLS | off by default | always on |\n| Multi-key commands | `MGET` over any keys worked | cross-slot `MGET` refused: `Keys in request don't hash to the same slot` |\n| Connections | connection 31 refused | 40 opened without error |\n| Memory | writes refused at about 28 MB | writes refused after about 1.77 GB of 10 kB values, with a 1 GB storage limit set |\n| Backups | none on the free plan | automatic backups off by default; the delete dialog defaults to a final backup |\n| Metrics | 16 charts in the console, 5 minutes to 3 months | CloudWatch; 16 of 50 metrics on the cache page |\n| Programmatic access | REST API with account and user keys, Terraform and Pulumi | AWS API, CLI, CloudFormation; an MCP server for ElastiCache |",
    "ko": "#### 다른 점\n\n| | Redis Cloud 무료 DB | ElastiCache Serverless for Valkey |\n|---|---|---|\n| 비용 | 30 MB에 $0 | 데이터 GB-시간당 $0.101(최소 100 MB, 놀려 두면 월 약 $7.4)과 100만 ECPU당 $0.0027 |\n| 만들기부터 사용 가능까지 | 몇 초 | 58초 |\n| 엔진 | Redis 8.6.2 | Valkey 9.0(9, 8, 7 선택 가능). `INFO`는 `redis_version:7.2`로 보고 |\n| 네트워크 | 공개 엔드포인트. CIDR 허용 목록, 기본 0.0.0.0/0 | 기본 VPC. Public 접속 방식은 IAM 인증 필수 |\n| 인증 | 기본 사용자와 비밀번호 | IAM: 15분 유효한 SigV4 토큰, 사용자 `default.iam-user` |\n| TLS | 기본 꺼짐 | 항상 켜짐 |\n| 여러 키 명령 | 아무 키나 `MGET` 가능 | 슬롯이 다른 `MGET` 거절: `Keys in request don't hash to the same slot` |\n| 커넥션 | 31번째 연결 거절 | 40개 오류 없이 연결 |\n| 메모리 | 약 28 MB에서 쓰기 거절 | 저장 한도 1 GB를 걸었는데 10 kB 값 약 1.77 GB 뒤에 쓰기 거절 |\n| 백업 | 무료 플랜에는 없음 | 자동 백업 기본 꺼짐. 삭제 창은 기본으로 마지막 백업을 만든다 |\n| 지표 | 콘솔 차트 16개, 5분부터 3개월 | CloudWatch. 캐시 화면에 지표 50개 중 16개 |\n| 프로그램 접근 | 계정 키와 사용자 키로 REST API, Terraform과 Pulumi | AWS API, CLI, CloudFormation. ElastiCache용 MCP 서버 |",
    "zh": "#### 差异\n\n| | Redis Cloud free database | ElastiCache Serverless for Valkey |\n|---|---|---|\n| 费用 | 30 MB 为 $0 | 每 GB 小时数据 $0.101（最低 100 MB，空闲时每月约 $7.4），另加每百万 ECPU $0.0027 |\n| 从创建到可用 | 数秒 | 58 秒 |\n| 引擎 | Redis 8.6.2 | Valkey 9.0（提供 9、8、7）；`INFO` 报告 `redis_version:7.2` |\n| 网络 | 公共端点；CIDR 允许列表，默认 0.0.0.0/0 | 默认 VPC；Public 连接类型，要求 IAM 认证 |\n| 认证 | default 用户和密码 | IAM：有效期 15 分钟的 SigV4 令牌，用户 `default.iam-user` |\n| TLS | 默认关闭 | 始终开启 |\n| 多键命令 | 对任意键的 `MGET` 均可执行 | 跨槽 `MGET` 被拒绝：`Keys in request don't hash to the same slot` |\n| 连接数 | 第 31 个连接被拒绝 | 打开 40 个，无错误 |\n| 内存 | 约 28 MB 时拒绝写入 | 设置 1 GB 存储上限后，写入约 1.77 GB 的 10 kB 值后被拒绝 |\n| 备份 | 免费计划无 | 自动备份默认关闭；删除对话框默认创建最终备份 |\n| 指标 | 控制台 16 张图表，5 分钟到 3 个月 | CloudWatch；缓存页面显示 50 项指标中的 16 项 |\n| 编程访问 | 使用账户密钥和用户密钥的 REST API，Terraform 和 Pulumi | AWS API、CLI、CloudFormation；ElastiCache 的 MCP 服务器 |",
-   "ja": "#### 異なった点\n\n| | Redis Cloud free database | ElastiCache Serverless for Valkey |\n|---|---|---|\n| 費用 | 30 MB まで $0 | データ 1 GB 時間あたり $0.101（最低 100 MB、アイドル時は月約 $7.4）に加え、100 万 ECPU あたり $0.0027 |\n| 作成から利用可能まで | 数秒 | 58 秒 |\n| エンジン | Redis 8.6.2 | Valkey 9.0（9、8、7 を提供）。`INFO` は `redis_version:7.2` と報告 |\n| ネットワーク | パブリックエンドポイント。CIDR 許可リスト、既定は 0.0.0.0/0 | 既定は VPC。IAM 認証を必須とする Public 接続タイプ |\n| 認証 | default ユーザーとパスワード | IAM：有効期間 15 分の SigV4 トークン、ユーザー `default.iam-user` |\n| TLS | 既定でオフ | 常にオン |\n| 複数キーコマンド | 任意のキーへの `MGET` が成功 | スロットをまたぐ `MGET` は拒否：`Keys in request don't hash to the same slot` |\n| 接続数 | 31 本目の接続が拒否された | エラーなしで 40 本を開けた |\n| メモリ | 約 28 MB で書き込みが拒否された | ストレージ上限を 1 GB に設定し、10 kB の値を約 1.77 GB 書き込んだ後に拒否された |\n| バックアップ | 無料プランにはなし | 自動バックアップは既定でオフ。削除ダイアログは既定で最終バックアップを作成 |\n| メトリクス | コンソールに 16 チャート、5 分から 3 か月 | CloudWatch。キャッシュページには 50 メトリクスのうち 16 を表示 |\n| プログラムからのアクセス | アカウントキーとユーザーキーを使う REST API、Terraform と Pulumi | AWS API、CLI、CloudFormation。ElastiCache 用の MCP サーバー |"
+   "ja": "#### 異なった点\n\n| | Redis Cloud free database | ElastiCache Serverless for Valkey |\n|---|---|---|\n| 費用 | 30 MB まで $0 | データ 1 GB 時間あたり $0.101（最低 100 MB、アイドル時は月約 $7.4）に加え、100 万 ECPU あたり $0.0027 |\n| 作成から利用可能まで | 数秒 | 58 秒 |\n| エンジン | Redis 8.6.2 | Valkey 9.0（9、8、7 を提供）。`INFO` は `redis_version:7.2` と報告 |\n| ネットワーク | パブリックエンドポイント。CIDR 許可リスト、既定は 0.0.0.0/0 | 既定は VPC。IAM 認証を必須とする Public 接続タイプ |\n| 認証 | default ユーザーとパスワード | IAM：有効期間 15 分の SigV4 トークン、ユーザー `default.iam-user` |\n| TLS | 既定でオフ | 常にオン |\n| 複数キーコマンド | 任意のキーへの `MGET` が成功 | スロットをまたぐ `MGET` は拒否：`Keys in request don't hash to the same slot` |\n| 接続数 | 31 本目の接続が拒否された | エラーなしで 40 本を開けた |\n| メモリ | 約 28 MB で書き込みが拒否された | ストレージ上限を 1 GB に設定し、10 kB の値を約 1.77 GB 書き込んだ後に拒否された |\n| バックアップ | 無料プランにはなし | 自動バックアップは既定でオフ。削除ダイアログは既定で最終バックアップを作成 |\n| メトリクス | コンソールに 16 チャート、5 分から 3 か月 | CloudWatch。キャッシュページには 50 メトリクスのうち 16 を表示 |\n| プログラムからのアクセス | アカウントキーとユーザーキーを使う REST API、Terraform と Pulumi | AWS API、CLI、CloudFormation。ElastiCache 用の MCP サーバー |",
+   "th": "#### สิ่งที่แตกต่าง\n\n| | ฐานข้อมูลฟรีของ Redis Cloud | ElastiCache Serverless for Valkey |\n|---|---|---|\n| ค่าใช้จ่าย | $0 สำหรับ 30 MB | $0.101 ต่อ GB-hour ของข้อมูล (ขั้นต่ำ 100 MB, ประมาณ $7.4 ต่อเดือนเมื่อไม่ได้ใช้งาน) บวก $0.0027 ต่อหนึ่งล้าน ECPU |\n| จากสร้างถึงใช้งานได้ | ไม่กี่วินาที | 58 วินาที |\n| เอนจิน | Redis 8.6.2 | Valkey 9.0 (มีให้เลือก 9, 8 และ 7); `INFO` รายงาน `redis_version:7.2` |\n| เครือข่าย | public endpoint; allow list แบบ CIDR, ค่าเริ่มต้น 0.0.0.0/0 | ค่าเริ่มต้นเป็น VPC; มีชนิดการเชื่อมต่อ Public ที่ต้องใช้การยืนยันตัวตนแบบ IAM |\n| การยืนยันตัวตน | ผู้ใช้ default และรหัสผ่าน | IAM: โทเค็น SigV4 ที่ใช้ได้ 15 นาที, ผู้ใช้ `default.iam-user` |\n| TLS | ปิดเป็นค่าเริ่มต้น | เปิดตลอด |\n| คำสั่งหลายคีย์ | `MGET` กับคีย์ใดก็ได้ใช้งานได้ | `MGET` ข้าม slot ถูกปฏิเสธ: `Keys in request don't hash to the same slot` |\n| การเชื่อมต่อ | การเชื่อมต่อที่ 31 ถูกปฏิเสธ | เปิดได้ 40 รายการโดยไม่มีข้อผิดพลาด |\n| หน่วยความจำ | การเขียนถูกปฏิเสธที่ประมาณ 28 MB | การเขียนถูกปฏิเสธหลังจากประมาณ 1.77 GB ของค่าขนาด 10 kB โดยตั้งขีดจำกัดพื้นที่จัดเก็บไว้ที่ 1 GB |\n| การสำรองข้อมูล | ไม่มีในแผนฟรี | การสำรองอัตโนมัติปิดเป็นค่าเริ่มต้น; กล่องโต้ตอบการลบมีค่าเริ่มต้นเป็นการสำรองครั้งสุดท้าย |\n| เมตริก | 16 กราฟในคอนโซล, 5 นาทีถึง 3 เดือน | CloudWatch; 16 จาก 50 เมตริกในหน้าแคช |\n| การเข้าถึงด้วยโปรแกรม | REST API พร้อมคีย์ระดับบัญชีและผู้ใช้, Terraform และ Pulumi | AWS API, CLI, CloudFormation; MCP server สำหรับ ElastiCache |",
+   "id": "#### Yang berbeda\n\n| | Database gratis Redis Cloud | ElastiCache Serverless for Valkey |\n|---|---|---|\n| Biaya | $0 untuk 30 MB | $0.101 per GB-hour data (minimum 100 MB, sekitar $7.4 sebulan saat idle) ditambah $0.0027 per sejuta ECPU |\n| Dari dibuat hingga dapat dipakai | hitungan detik | 58 dtk |\n| Engine | Redis 8.6.2 | Valkey 9.0 (tersedia 9, 8, dan 7); `INFO` melaporkan `redis_version:7.2` |\n| Jaringan | endpoint publik; allow list CIDR, 0.0.0.0/0 secara default | VPC secara default; tipe koneksi Public yang mewajibkan autentikasi IAM |\n| Autentikasi | pengguna default dan kata sandi | IAM: token SigV4 berlaku 15 menit, pengguna `default.iam-user` |\n| TLS | nonaktif secara default | selalu aktif |\n| Perintah multi-key | `MGET` atas sembarang key berhasil | `MGET` lintas slot ditolak: `Keys in request don't hash to the same slot` |\n| Koneksi | koneksi ke-31 ditolak | 40 dibuka tanpa error |\n| Memori | penulisan ditolak pada sekitar 28 MB | penulisan ditolak setelah sekitar 1.77 GB nilai 10 kB, dengan batas penyimpanan 1 GB |\n| Backup | tidak ada di paket gratis | backup otomatis nonaktif secara default; dialog hapus secara default membuat backup akhir |\n| Metrik | 16 grafik di konsol, 5 menit hingga 3 bulan | CloudWatch; 16 dari 50 metrik di halaman cache |\n| Akses terprogram | REST API dengan key akun dan pengguna, Terraform dan Pulumi | AWS API, CLI, CloudFormation; sebuah MCP server untuk ElastiCache |",
+   "ms": "#### Perbezaannya\n\n| | Pangkalan data percuma Redis Cloud | ElastiCache Serverless for Valkey |\n|---|---|---|\n| Kos | $0 untuk 30 MB | $0.101 setiap GB-hour data (minimum 100 MB, kira-kira $7.4 sebulan ketika melahu) ditambah $0.0027 setiap sejuta ECPU |\n| Dicipta hingga boleh digunakan | beberapa saat | 58 s |\n| Enjin | Redis 8.6.2 | Valkey 9.0 (9, 8 dan 7 ditawarkan); `INFO` melaporkan `redis_version:7.2` |\n| Rangkaian | endpoint awam; senarai benar CIDR, 0.0.0.0/0 secara lalai | VPC secara lalai; jenis sambungan Public yang memerlukan pengesahan IAM |\n| Pengesahan | pengguna default dan kata laluan | IAM: token SigV4 sah selama 15 minit, pengguna `default.iam-user` |\n| TLS | dimatikan secara lalai | sentiasa hidup |\n| Perintah berbilang kunci | `MGET` ke atas sebarang kunci berjaya | `MGET` merentas slot ditolak: `Keys in request don't hash to the same slot` |\n| Sambungan | sambungan ke-31 ditolak | 40 dibuka tanpa ralat |\n| Memori | penulisan ditolak pada kira-kira 28 MB | penulisan ditolak selepas kira-kira 1.77 GB nilai 10 kB, dengan had storan 1 GB ditetapkan |\n| Sandaran | tiada pada pelan percuma | sandaran automatik dimatikan secara lalai; dialog pemadaman secara lalai mencipta sandaran akhir |\n| Metrik | 16 carta dalam konsol, 5 minit hingga 3 bulan | CloudWatch; 16 daripada 50 metrik pada halaman cache |\n| Akses secara atur cara | REST API dengan kunci akaun dan pengguna, Terraform dan Pulumi | AWS API, CLI, CloudFormation; sebuah pelayan MCP untuk ElastiCache |"
   },
   {
    "type": "md",
    "en": "#### Client measurements\n\n| Probe | Redis Cloud free, plain TCP | ElastiCache Serverless, TLS + IAM |\n|---|---|---|\n| Round trip, mean of 50 `PING` | 2.6 ms | 5.1 ms |\n| 1 connection, no pipeline | 249 ops/s | 287 ops/s |\n| 8 connections, no pipeline | 2,363 ops/s | 2,419 ops/s |\n| 1 connection, pipeline 100 | 24,671 ops/s | 4,960 ops/s |\n| 8 connections, pipeline 100 | 103,920 ops/s | 24,893 ops/s over 15 s; 45,600–54,300 INCR/s in the per-second run |\n| 60 s sustained, 8 × pipeline 100 | 100,840–108,780 INCR/s, steady | 0–45,785 INCR/s per 5 s; three 5-second windows at zero, no errors |\n\nThe throughput rows are not a verdict on either service: one side is plain TCP and the other TLS, the client is a single Python process in Korea, and the serverless cache was capped at 200,000 ECPUs/s (the zero windows came at about 40,000 INCR/s, below that cap; they were not explained). Unpipelined numbers are bound by the round trip on both sides.",
    "ko": "#### 클라이언트 측정\n\n| 측정 | Redis Cloud 무료, 평문 TCP | ElastiCache Serverless, TLS + IAM |\n|---|---|---|\n| 왕복, `PING` 50회 평균 | 2.6 ms | 5.1 ms |\n| 연결 1개, 파이프라인 없음 | 249 ops/s | 287 ops/s |\n| 연결 8개, 파이프라인 없음 | 2,363 ops/s | 2,419 ops/s |\n| 연결 1개, 파이프라인 100 | 24,671 ops/s | 4,960 ops/s |\n| 연결 8개, 파이프라인 100 | 103,920 ops/s | 15초 동안 24,893 ops/s. 초 단위 측정에서는 45,600–54,300 INCR/s |\n| 60초 지속, 8 × 파이프라인 100 | 100,840–108,780 INCR/s, 고름 | 5초마다 0–45,785 INCR/s. 0인 5초 구간 세 번, 오류 없음 |\n\n처리량 행은 어느 서비스에 대한 판정도 아니다. 한쪽은 평문 TCP, 다른 쪽은 TLS이고, 클라이언트는 한국의 파이썬 프로세스 하나이며, 서버리스 캐시는 초당 200,000 ECPU로 상한을 걸었다(0 구간은 그 상한보다 낮은 초당 약 40,000 INCR에서 나왔고 원인은 밝히지 못했다). 파이프라인 없는 수치는 양쪽 모두 왕복 시간에 묶인다.",
    "zh": "#### 客户端测量\n\n| Probe | Redis Cloud free, plain TCP | ElastiCache Serverless, TLS + IAM |\n|---|---|---|\n| 往返时间，50 次 `PING` 的平均值 | 2.6 ms | 5.1 ms |\n| 1 个连接，无 pipeline | 249 ops/s | 287 ops/s |\n| 8 个连接，无 pipeline | 2,363 ops/s | 2,419 ops/s |\n| 1 个连接，pipeline 100 | 24,671 ops/s | 4,960 ops/s |\n| 8 个连接，pipeline 100 | 103,920 ops/s | 15 秒内 24,893 ops/s；按秒运行时为 45,600–54,300 INCR/s |\n| 持续 60 秒，8 × pipeline 100 | 100,840–108,780 INCR/s，稳定 | 每 5 秒 0–45,785 INCR/s；三个 5 秒窗口为零，无错误 |\n\n吞吐量各行不是对任一服务的结论：一方是明文 TCP，另一方是 TLS，客户端是位于韩国的单个 Python 进程，且 Serverless 缓存被限制在 200,000 ECPUs/s（为零的窗口出现在约 40,000 INCR/s 时，低于该上限；原因未能解释）。未使用 pipeline 的数值在两侧都受往返时间限制。",
-   "ja": "#### クライアント側の測定\n\n| Probe | Redis Cloud free, plain TCP | ElastiCache Serverless, TLS + IAM |\n|---|---|---|\n| ラウンドトリップ、`PING` 50 回の平均 | 2.6 ms | 5.1 ms |\n| 1 接続、パイプラインなし | 249 ops/s | 287 ops/s |\n| 8 接続、パイプラインなし | 2,363 ops/s | 2,419 ops/s |\n| 1 接続、pipeline 100 | 24,671 ops/s | 4,960 ops/s |\n| 8 接続、pipeline 100 | 103,920 ops/s | 15 秒間で 24,893 ops/s。秒ごとの実行では 45,600–54,300 INCR/s |\n| 60 秒持続、8 × pipeline 100 | 100,840–108,780 INCR/s、安定 | 5 秒ごとに 0–45,785 INCR/s。5 秒ウィンドウ 3 つがゼロ、エラーなし |\n\nスループットの各行はどちらのサービスの優劣を示すものではない。片方は平文 TCP、もう片方は TLS であり、クライアントは韓国内の単一の Python プロセスで、Serverless キャッシュは 200,000 ECPUs/s に制限されていた（ゼロのウィンドウは約 40,000 INCR/s のときに発生し、この上限を下回っていた。原因は説明できていない）。パイプラインなしの数値は、どちら側もラウンドトリップで律速される。"
+   "ja": "#### クライアント側の測定\n\n| Probe | Redis Cloud free, plain TCP | ElastiCache Serverless, TLS + IAM |\n|---|---|---|\n| ラウンドトリップ、`PING` 50 回の平均 | 2.6 ms | 5.1 ms |\n| 1 接続、パイプラインなし | 249 ops/s | 287 ops/s |\n| 8 接続、パイプラインなし | 2,363 ops/s | 2,419 ops/s |\n| 1 接続、pipeline 100 | 24,671 ops/s | 4,960 ops/s |\n| 8 接続、pipeline 100 | 103,920 ops/s | 15 秒間で 24,893 ops/s。秒ごとの実行では 45,600–54,300 INCR/s |\n| 60 秒持続、8 × pipeline 100 | 100,840–108,780 INCR/s、安定 | 5 秒ごとに 0–45,785 INCR/s。5 秒ウィンドウ 3 つがゼロ、エラーなし |\n\nスループットの各行はどちらのサービスの優劣を示すものではない。片方は平文 TCP、もう片方は TLS であり、クライアントは韓国内の単一の Python プロセスで、Serverless キャッシュは 200,000 ECPUs/s に制限されていた（ゼロのウィンドウは約 40,000 INCR/s のときに発生し、この上限を下回っていた。原因は説明できていない）。パイプラインなしの数値は、どちら側もラウンドトリップで律速される。",
+   "th": "#### ผลการวัดฝั่งไคลเอนต์\n\n| Probe | Redis Cloud ฟรี, TCP ธรรมดา | ElastiCache Serverless, TLS + IAM |\n|---|---|---|\n| ไป-กลับ, ค่าเฉลี่ยของ `PING` 50 ครั้ง | 2.6 ms | 5.1 ms |\n| 1 การเชื่อมต่อ, ไม่มี pipeline | 249 ops/s | 287 ops/s |\n| 8 การเชื่อมต่อ, ไม่มี pipeline | 2,363 ops/s | 2,419 ops/s |\n| 1 การเชื่อมต่อ, pipeline 100 | 24,671 ops/s | 4,960 ops/s |\n| 8 การเชื่อมต่อ, pipeline 100 | 103,920 ops/s | 24,893 ops/s ในช่วง 15 วินาที; 45,600–54,300 INCR/s ในการรันแบบรายวินาที |\n| ต่อเนื่อง 60 วินาที, 8 × pipeline 100 | 100,840–108,780 INCR/s, คงที่ | 0–45,785 INCR/s ต่อ 5 วินาที; สามช่วง 5 วินาทีเป็นศูนย์, ไม่มีข้อผิดพลาด |\n\nแถวของ throughput ไม่ใช่คำตัดสินของบริการใดบริการหนึ่ง: ฝั่งหนึ่งเป็น TCP ธรรมดาและอีกฝั่งเป็น TLS, ไคลเอนต์เป็นโปรเซส Python เดียวในเกาหลี และแคช serverless ถูกจำกัดไว้ที่ 200,000 ECPU/s (ช่วงที่เป็นศูนย์เกิดขึ้นที่ประมาณ 40,000 INCR/s ซึ่งต่ำกว่าขีดจำกัดนั้น และยังไม่มีคำอธิบาย) ตัวเลขที่ไม่ใช้ pipeline ถูกจำกัดด้วยเวลาไป-กลับทั้งสองฝั่ง",
+   "id": "#### Pengukuran klien\n\n| Probe | Redis Cloud gratis, TCP biasa | ElastiCache Serverless, TLS + IAM |\n|---|---|---|\n| Round trip, rata-rata 50 `PING` | 2.6 ms | 5.1 ms |\n| 1 koneksi, tanpa pipeline | 249 ops/s | 287 ops/s |\n| 8 koneksi, tanpa pipeline | 2,363 ops/s | 2,419 ops/s |\n| 1 koneksi, pipeline 100 | 24,671 ops/s | 4,960 ops/s |\n| 8 koneksi, pipeline 100 | 103,920 ops/s | 24,893 ops/s selama 15 dtk; 45,600–54,300 INCR/s pada uji per detik |\n| 60 dtk berkelanjutan, 8 × pipeline 100 | 100,840–108,780 INCR/s, stabil | 0–45,785 INCR/s per 5 dtk; tiga jendela 5 detik bernilai nol, tanpa error |\n\nBaris throughput bukan vonis untuk salah satu layanan: satu sisi memakai TCP biasa dan sisi lain TLS, klien adalah satu proses Python di Korea, dan cache serverless dibatasi pada 200,000 ECPU/s (jendela nol terjadi pada sekitar 40,000 INCR/s, di bawah batas itu; penyebabnya belum dijelaskan). Angka tanpa pipeline dibatasi oleh round trip di kedua sisi.",
+   "ms": "#### Ukuran klien\n\n| Probe | Redis Cloud percuma, TCP biasa | ElastiCache Serverless, TLS + IAM |\n|---|---|---|\n| Pergi balik, purata 50 `PING` | 2.6 ms | 5.1 ms |\n| 1 sambungan, tanpa pipeline | 249 ops/s | 287 ops/s |\n| 8 sambungan, tanpa pipeline | 2,363 ops/s | 2,419 ops/s |\n| 1 sambungan, pipeline 100 | 24,671 ops/s | 4,960 ops/s |\n| 8 sambungan, pipeline 100 | 103,920 ops/s | 24,893 ops/s dalam 15 s; 45,600–54,300 INCR/s dalam larian setiap saat |\n| 60 s berterusan, 8 × pipeline 100 | 100,840–108,780 INCR/s, stabil | 0–45,785 INCR/s setiap 5 s; tiga tetingkap 5 saat pada sifar, tiada ralat |\n\nBaris throughput bukan penentu bagi mana-mana perkhidmatan: satu pihak menggunakan TCP biasa dan satu lagi TLS, klien ialah satu proses Python di Korea, dan cache serverless dihadkan pada 200,000 ECPU/s (tetingkap sifar berlaku pada kira-kira 40,000 INCR/s, di bawah had itu; puncanya tidak dapat dijelaskan). Angka tanpa pipeline dihadkan oleh pergi balik pada kedua-dua pihak."
   },
   {
    "type": "md",
    "en": "#### The console, screen by screen",
    "ko": "#### 콘솔, 화면 순서대로",
    "zh": "#### 控制台，逐屏查看",
-   "ja": "#### コンソールを画面ごとに見る"
+   "ja": "#### コンソールを画面ごとに見る",
+   "th": "#### คอนโซลทีละหน้าจอ",
+   "id": "#### Konsol, layar demi layar",
+   "ms": "#### Konsol, skrin demi skrin"
   },
   {
    "type": "img",
@@ -53,13 +71,19 @@
     "en": "ElastiCache dashboard in Seoul with no resources",
     "ko": "리소스가 없는 서울 리전 ElastiCache 대시보드",
     "zh": "首尔区域中没有资源的 ElastiCache 控制面板",
-    "ja": "リソースがないソウルリージョンの ElastiCache ダッシュボード"
+    "ja": "リソースがないソウルリージョンの ElastiCache ダッシュボード",
+    "th": "แดชบอร์ด ElastiCache ในโซลที่ไม่มีทรัพยากร",
+    "id": "Dasbor ElastiCache di Seoul tanpa sumber daya",
+    "ms": "Papan pemuka ElastiCache di Seoul tanpa sumber"
    },
    "cap": {
     "en": "The ElastiCache dashboard: Valkey, Memcached and Redis OSS caches, global datastores, reserved nodes, backups, subnet and parameter groups, user management, migrations.",
     "ko": "ElastiCache 대시보드: Valkey·Memcached·Redis OSS 캐시, 글로벌 데이터 스토어, 예약 노드, 백업, 서브넷·파라미터 그룹, 사용자 관리, 마이그레이션.",
     "zh": "ElastiCache 控制面板：Valkey、Memcached 和 Redis OSS 缓存、全局数据存储、预留节点、备份、子网组和参数组、用户管理、迁移。",
-    "ja": "ElastiCache ダッシュボード：Valkey、Memcached、Redis OSS のキャッシュ、グローバルデータストア、リザーブドノード、バックアップ、サブネットグループとパラメータグループ、ユーザー管理、移行。"
+    "ja": "ElastiCache ダッシュボード：Valkey、Memcached、Redis OSS のキャッシュ、グローバルデータストア、リザーブドノード、バックアップ、サブネットグループとパラメータグループ、ユーザー管理、移行。",
+    "th": "แดชบอร์ด ElastiCache: แคช Valkey, Memcached และ Redis OSS, global datastore, reserved node, การสำรองข้อมูล, subnet group และ parameter group, การจัดการผู้ใช้, การย้ายข้อมูล",
+    "id": "Dasbor ElastiCache: cache Valkey, Memcached, dan Redis OSS, global datastore, reserved node, backup, subnet group dan parameter group, manajemen pengguna, migrasi.",
+    "ms": "Papan pemuka ElastiCache: cache Valkey, Memcached dan Redis OSS, global datastore, reserved node, sandaran, subnet group dan parameter group, pengurusan pengguna, migrasi."
    }
   },
   {
@@ -69,13 +93,19 @@
     "en": "Empty Valkey caches list",
     "ko": "비어 있는 Valkey caches 목록",
     "zh": "空的 Valkey caches 列表",
-    "ja": "空の Valkey caches 一覧"
+    "ja": "空の Valkey caches 一覧",
+    "th": "รายการแคช Valkey ที่ว่างเปล่า",
+    "id": "Daftar cache Valkey yang kosong",
+    "ms": "Senarai cache Valkey yang kosong"
    },
    "cap": {
     "en": "Valkey caches is a list with a Create cache button.",
     "ko": "Valkey caches는 Create cache 버튼이 있는 목록이다.",
     "zh": "Valkey caches 是一个带有 Create cache 按钮的列表。",
-    "ja": "Valkey caches は Create cache ボタンのある一覧である。"
+    "ja": "Valkey caches は Create cache ボタンのある一覧である。",
+    "th": "Valkey caches เป็นรายการที่มีปุ่ม Create cache",
+    "id": "Valkey caches adalah daftar dengan tombol Create cache.",
+    "ms": "Valkey caches ialah senarai dengan butang Create cache."
    }
   },
   {
@@ -85,13 +115,19 @@
     "en": "Create Valkey cache form with engine, deployment option, creation method, name, engine version and connection type",
     "ko": "엔진, 배포 방식, 생성 방식, 이름, 엔진 버전, 접속 방식이 있는 Create Valkey cache 양식",
     "zh": "包含引擎、部署选项、创建方式、名称、引擎版本和连接类型的 Create Valkey cache 表单",
-    "ja": "エンジン、デプロイオプション、作成方法、名前、エンジンバージョン、接続タイプを含む Create Valkey cache フォーム"
+    "ja": "エンジン、デプロイオプション、作成方法、名前、エンジンバージョン、接続タイプを含む Create Valkey cache フォーム",
+    "th": "ฟอร์มสร้างแคช Valkey พร้อมเอนจิน ตัวเลือกการปรับใช้ วิธีการสร้าง ชื่อ เวอร์ชันเอนจิน และชนิดการเชื่อมต่อ",
+    "id": "Formulir pembuatan cache Valkey dengan engine, opsi deployment, metode pembuatan, nama, versi engine, dan tipe koneksi",
+    "ms": "Borang cipta cache Valkey dengan enjin, pilihan penempatan, kaedah penciptaan, nama, versi enjin dan jenis sambungan"
    },
    "cap": {
     "en": "One form: engine (Valkey recommended, Memcached, Redis OSS), deployment (Serverless or node-based cluster), new or restored from an .rdb, engine version 9, connection type VPC.",
     "ko": "양식 하나: 엔진(Valkey 권장, Memcached, Redis OSS), 배포(서버리스 또는 노드 기반 클러스터), 새로 만들기 또는 .rdb 복원, 엔진 버전 9, 접속 방식 VPC.",
     "zh": "一个表单：引擎（推荐 Valkey，另有 Memcached、Redis OSS）、部署（Serverless 或基于节点的集群）、新建或从 .rdb 恢复、引擎版本 9、连接类型 VPC。",
-    "ja": "1 つのフォーム：エンジン（Valkey 推奨、ほかに Memcached、Redis OSS）、デプロイ（Serverless またはノードベースのクラスター）、新規作成または .rdb からの復元、エンジンバージョン 9、接続タイプ VPC。"
+    "ja": "1 つのフォーム：エンジン（Valkey 推奨、ほかに Memcached、Redis OSS）、デプロイ（Serverless またはノードベースのクラスター）、新規作成または .rdb からの復元、エンジンバージョン 9、接続タイプ VPC。",
+    "th": "ฟอร์มเดียว: เอนจิน (แนะนำ Valkey, Memcached, Redis OSS), การปรับใช้ (Serverless หรือคลัสเตอร์แบบใช้โหนด), สร้างใหม่หรือกู้คืนจากไฟล์ .rdb, เวอร์ชันเอนจิน 9, ชนิดการเชื่อมต่อ VPC",
+    "id": "Satu formulir: engine (Valkey direkomendasikan, Memcached, Redis OSS), deployment (Serverless atau cluster berbasis node), baru atau dipulihkan dari .rdb, versi engine 9, tipe koneksi VPC.",
+    "ms": "Satu borang: enjin (Valkey disyorkan, Memcached, Redis OSS), penempatan (Serverless atau kluster berasaskan nod), baharu atau dipulihkan daripada .rdb, versi enjin 9, jenis sambungan VPC."
    }
   },
   {
@@ -101,13 +137,19 @@
     "en": "Customized settings: network type, encryption, user group default.iam-user-group, backups, usage limits",
     "ko": "사용자화 설정: 네트워크 유형, 암호화, 사용자 그룹 default.iam-user-group, 백업, 사용량 한도",
     "zh": "自定义设置：网络类型、加密、用户组 default.iam-user-group、备份、使用量限制",
-    "ja": "カスタマイズ設定：ネットワークタイプ、暗号化、ユーザーグループ default.iam-user-group、バックアップ、使用量の上限"
+    "ja": "カスタマイズ設定：ネットワークタイプ、暗号化、ユーザーグループ default.iam-user-group、バックアップ、使用量の上限",
+    "th": "การตั้งค่าแบบกำหนดเอง: ชนิดเครือข่าย การเข้ารหัส user group default.iam-user-group การสำรองข้อมูล ขีดจำกัดการใช้งาน",
+    "id": "Pengaturan kustom: tipe jaringan, enkripsi, user group default.iam-user-group, backup, batas penggunaan",
+    "ms": "Tetapan tersuai: jenis rangkaian, penyulitan, user group default.iam-user-group, sandaran, had penggunaan"
    },
    "cap": {
     "en": "With Public selected the form says the user group must contain only IAM-authenticated users and fills in default.iam-user-group. Encryption in transit is enabled and cannot be turned off here; automatic backups are unchecked.",
     "ko": "Public을 고르면 사용자 그룹에 IAM 인증 사용자만 있어야 한다는 안내와 함께 default.iam-user-group이 채워진다. 전송 중 암호화는 켜져 있고 여기서 끌 수 없다. 자동 백업은 꺼져 있다.",
     "zh": "选择 Public 后，表单提示用户组只能包含使用 IAM 认证的用户，并自动填入 default.iam-user-group。传输中加密已启用，在此无法关闭；自动备份未勾选。",
-    "ja": "Public を選ぶと、ユーザーグループには IAM 認証ユーザーのみを含める必要があるという案内が表示され、default.iam-user-group が入力される。転送中の暗号化は有効で、ここではオフにできない。自動バックアップはチェックなし。"
+    "ja": "Public を選ぶと、ユーザーグループには IAM 認証ユーザーのみを含める必要があるという案内が表示され、default.iam-user-group が入力される。転送中の暗号化は有効で、ここではオフにできない。自動バックアップはチェックなし。",
+    "th": "เมื่อเลือก Public ฟอร์มระบุว่า user group ต้องมีเฉพาะผู้ใช้ที่ยืนยันตัวตนด้วย IAM และกรอก default.iam-user-group ให้ การเข้ารหัสระหว่างส่งข้อมูลเปิดอยู่และปิดไม่ได้ที่นี่ การสำรองข้อมูลอัตโนมัติไม่ได้ถูกเลือก",
+    "id": "Dengan Public dipilih, formulir menyatakan bahwa user group hanya boleh berisi pengguna dengan autentikasi IAM dan mengisi default.iam-user-group. Enkripsi saat transit aktif dan tidak dapat dimatikan di sini; backup otomatis tidak dicentang.",
+    "ms": "Apabila Public dipilih, borang menyatakan bahawa user group mesti hanya mengandungi pengguna yang disahkan IAM dan mengisi default.iam-user-group. Penyulitan semasa transit dihidupkan dan tidak boleh dimatikan di sini; sandaran automatik tidak ditandakan."
    }
   },
   {
@@ -117,13 +159,19 @@
     "en": "Filled form: name notes-on-redis-valkey, Public, maximum storage 1 GB, maximum 200,000 ECPUs per second",
     "ko": "채운 양식: 이름 notes-on-redis-valkey, Public, 최대 저장 1 GB, 초당 최대 200,000 ECPU",
     "zh": "填写后的表单：名称 notes-on-redis-valkey、Public、最大存储 1 GB、每秒最多 200,000 ECPU",
-    "ja": "入力済みのフォーム：名前 notes-on-redis-valkey、Public、最大ストレージ 1 GB、毎秒最大 200,000 ECPU"
+    "ja": "入力済みのフォーム：名前 notes-on-redis-valkey、Public、最大ストレージ 1 GB、毎秒最大 200,000 ECPU",
+    "th": "ฟอร์มที่กรอกแล้ว: ชื่อ notes-on-redis-valkey, Public, พื้นที่จัดเก็บสูงสุด 1 GB, สูงสุด 200,000 ECPU ต่อวินาที",
+    "id": "Formulir terisi: nama notes-on-redis-valkey, Public, penyimpanan maksimum 1 GB, maksimum 200,000 ECPU per detik",
+    "ms": "Borang yang diisi: nama notes-on-redis-valkey, Public, storan maksimum 1 GB, maksimum 200,000 ECPU sesaat"
    },
    "cap": {
     "en": "Usage limits used as a spending cap: data storage 1 GB maximum (the form allows 1 to 5,000 GB) and 200,000 ECPUs per second maximum (1,000 to 15,000,000).",
     "ko": "사용량 한도를 지출 상한으로 썼다. 저장 최대 1 GB(양식은 1–5,000 GB 허용), 초당 ECPU 최대 200,000(1,000–15,000,000).",
     "zh": "将使用量限制用作支出上限：数据存储最大 1 GB（表单允许 1 到 5,000 GB），每秒最多 200,000 ECPU（1,000 到 15,000,000）。",
-    "ja": "使用量の上限を支出の上限として使った。データストレージは最大 1 GB（フォームは 1〜5,000 GB を許可）、ECPU は毎秒最大 200,000（1,000〜15,000,000）。"
+    "ja": "使用量の上限を支出の上限として使った。データストレージは最大 1 GB（フォームは 1〜5,000 GB を許可）、ECPU は毎秒最大 200,000（1,000〜15,000,000）。",
+    "th": "ใช้ขีดจำกัดการใช้งานเป็นเพดานค่าใช้จ่าย: พื้นที่จัดเก็บข้อมูลสูงสุด 1 GB (ฟอร์มอนุญาต 1 ถึง 5,000 GB) และสูงสุด 200,000 ECPU ต่อวินาที (1,000 ถึง 15,000,000)",
+    "id": "Batas penggunaan dipakai sebagai plafon pengeluaran: penyimpanan data maksimum 1 GB (formulir mengizinkan 1 hingga 5,000 GB) dan maksimum 200,000 ECPU per detik (1,000 hingga 15,000,000).",
+    "ms": "Had penggunaan digunakan sebagai siling perbelanjaan: storan data maksimum 1 GB (borang membenarkan 1 hingga 5,000 GB) dan maksimum 200,000 ECPU sesaat (1,000 hingga 15,000,000)."
    }
   },
   {
@@ -133,13 +181,19 @@
     "en": "Cache details: available, Valkey 9.0, Public, limits shown",
     "ko": "캐시 상세: Available, Valkey 9.0, Public, 한도 표시",
     "zh": "缓存详情：Available、Valkey 9.0、Public，显示限制",
-    "ja": "キャッシュの詳細：Available、Valkey 9.0、Public、上限を表示"
+    "ja": "キャッシュの詳細：Available、Valkey 9.0、Public、上限を表示",
+    "th": "รายละเอียดแคช: available, Valkey 9.0, Public, แสดงขีดจำกัด",
+    "id": "Detail cache: available, Valkey 9.0, Public, batas ditampilkan",
+    "ms": "Butiran cache: available, Valkey 9.0, Public, had dipaparkan"
    },
    "cap": {
     "en": "Details after creation: status Available, engine version 9.0, connection type Public, the two limits, endpoint on port 6379.",
     "ko": "생성 뒤 상세: 상태 Available, 엔진 버전 9.0, 접속 방식 Public, 한도 두 개, 6379 포트 엔드포인트.",
     "zh": "创建后的详情：状态 Available，引擎版本 9.0，连接类型 Public，两项限制，6379 端口上的端点。",
-    "ja": "作成後の詳細：ステータス Available、エンジンバージョン 9.0、接続タイプ Public、2 つの上限、ポート 6379 のエンドポイント。"
+    "ja": "作成後の詳細：ステータス Available、エンジンバージョン 9.0、接続タイプ Public、2 つの上限、ポート 6379 のエンドポイント。",
+    "th": "รายละเอียดหลังสร้าง: สถานะ Available, เวอร์ชันเอนจิน 9.0, ชนิดการเชื่อมต่อ Public, ขีดจำกัดทั้งสองรายการ, endpoint บนพอร์ต 6379",
+    "id": "Detail setelah pembuatan: status Available, versi engine 9.0, tipe koneksi Public, kedua batas, endpoint pada port 6379.",
+    "ms": "Butiran selepas penciptaan: status Available, versi enjin 9.0, jenis sambungan Public, kedua-dua had, endpoint pada port 6379."
    }
   },
   {
@@ -149,13 +203,19 @@
     "en": "Connect to your cache section with CloudShell and CLI instructions",
     "ko": "CloudShell과 CLI 안내가 있는 Connect to your cache 절",
     "zh": "包含 CloudShell 和 CLI 说明的 Connect to your cache 部分",
-    "ja": "CloudShell と CLI の案内がある Connect to your cache セクション"
+    "ja": "CloudShell と CLI の案内がある Connect to your cache セクション",
+    "th": "ส่วน Connect to your cache พร้อมคำแนะนำ CloudShell และ CLI",
+    "id": "Bagian Connect to your cache dengan petunjuk CloudShell dan CLI",
+    "ms": "Bahagian Connect to your cache dengan arahan CloudShell dan CLI"
    },
    "cap": {
     "en": "Connect instructions: generate a SigV4 token with the Developer Toolkit, then valkey-cli -c --tls --user. Tokens last 15 minutes. Other tabs: MCP integration, Valkey GLIDE (recommended), client libraries.",
     "ko": "접속 안내: Developer Toolkit으로 SigV4 토큰을 만든 뒤 valkey-cli -c --tls --user. 토큰은 15분 유효. 다른 탭: MCP integration, Valkey GLIDE(권장), 클라이언트 라이브러리.",
     "zh": "连接说明：用 Developer Toolkit 生成 SigV4 令牌，然后执行 valkey-cli -c --tls --user。令牌有效期 15 分钟。其他标签页：MCP integration、Valkey GLIDE（推荐）、客户端库。",
-    "ja": "接続の案内：Developer Toolkit で SigV4 トークンを生成し、続けて valkey-cli -c --tls --user を実行する。トークンの有効期間は 15 分。ほかのタブ：MCP integration、Valkey GLIDE（推奨）、クライアントライブラリ。"
+    "ja": "接続の案内：Developer Toolkit で SigV4 トークンを生成し、続けて valkey-cli -c --tls --user を実行する。トークンの有効期間は 15 分。ほかのタブ：MCP integration、Valkey GLIDE（推奨）、クライアントライブラリ。",
+    "th": "คำแนะนำการเชื่อมต่อ: สร้างโทเค็น SigV4 ด้วย Developer Toolkit แล้วใช้ valkey-cli -c --tls --user โทเค็นใช้ได้ 15 นาที แท็บอื่น: MCP integration, Valkey GLIDE (แนะนำ), client library",
+    "id": "Petunjuk koneksi: buat token SigV4 dengan Developer Toolkit, lalu valkey-cli -c --tls --user. Token berlaku 15 menit. Tab lain: MCP integration, Valkey GLIDE (direkomendasikan), pustaka klien.",
+    "ms": "Arahan sambungan: jana token SigV4 dengan Developer Toolkit, kemudian valkey-cli -c --tls --user. Token sah selama 15 minit. Tab lain: MCP integration, Valkey GLIDE (disyorkan), pustaka klien."
    }
   },
   {
@@ -165,13 +225,19 @@
     "en": "default.iam-user-group with one user default.iam-user",
     "ko": "사용자 default.iam-user 하나가 든 default.iam-user-group",
     "zh": "包含一个用户 default.iam-user 的 default.iam-user-group",
-    "ja": "ユーザー default.iam-user を 1 つ含む default.iam-user-group"
+    "ja": "ユーザー default.iam-user を 1 つ含む default.iam-user-group",
+    "th": "default.iam-user-group ที่มีผู้ใช้หนึ่งราย คือ default.iam-user",
+    "id": "default.iam-user-group dengan satu pengguna default.iam-user",
+    "ms": "default.iam-user-group dengan satu pengguna default.iam-user"
    },
    "cap": {
     "en": "The default IAM user group holds one user, default.iam-user, access string on ~* +@all, usable over Public and VPC.",
     "ko": "기본 IAM 사용자 그룹에는 사용자 default.iam-user 하나가 있다. 접근 문자열 on ~* +@all, Public과 VPC 모두 사용 가능.",
     "zh": "默认 IAM 用户组包含一个用户 default.iam-user，访问字符串为 on ~* +@all，可通过 Public 和 VPC 使用。",
-    "ja": "既定の IAM ユーザーグループにはユーザー default.iam-user が 1 つあり、アクセス文字列は on ~* +@all で、Public と VPC の両方で使用できる。"
+    "ja": "既定の IAM ユーザーグループにはユーザー default.iam-user が 1 つあり、アクセス文字列は on ~* +@all で、Public と VPC の両方で使用できる。",
+    "th": "IAM user group เริ่มต้นมีผู้ใช้หนึ่งราย คือ default.iam-user, access string เป็น ~* +@all, ใช้ได้ทั้งผ่าน Public และ VPC",
+    "id": "User group IAM default berisi satu pengguna, default.iam-user, access string ~* +@all, dapat dipakai melalui Public dan VPC.",
+    "ms": "User group IAM lalai mengandungi satu pengguna, default.iam-user, access string ~* +@all, boleh digunakan melalui Public dan VPC."
    }
   },
   {
@@ -181,13 +247,19 @@
     "en": "Users list: default (VPC only) and default.iam-user (Public and VPC)",
     "ko": "사용자 목록: default(VPC 전용)와 default.iam-user(Public과 VPC)",
     "zh": "用户列表：default（仅 VPC）和 default.iam-user（Public 和 VPC）",
-    "ja": "ユーザー一覧：default（VPC のみ）と default.iam-user（Public と VPC）"
+    "ja": "ユーザー一覧：default（VPC のみ）と default.iam-user（Public と VPC）",
+    "th": "รายการผู้ใช้: default (เฉพาะ VPC) และ default.iam-user (Public และ VPC)",
+    "id": "Daftar pengguna: default (hanya VPC) dan default.iam-user (Public dan VPC)",
+    "ms": "Senarai pengguna: default (VPC sahaja) dan default.iam-user (Public dan VPC)"
    },
    "cap": {
     "en": "Two users exist: the password-less default user (VPC only) and the IAM user.",
     "ko": "사용자는 둘이다. 비밀번호 없는 default 사용자(VPC 전용)와 IAM 사용자.",
     "zh": "存在两个用户：无密码的 default 用户（仅 VPC）和 IAM 用户。",
-    "ja": "ユーザーは 2 つある。パスワードなしの default ユーザー（VPC のみ）と IAM ユーザー。"
+    "ja": "ユーザーは 2 つある。パスワードなしの default ユーザー（VPC のみ）と IAM ユーザー。",
+    "th": "มีผู้ใช้สองราย: ผู้ใช้ default ที่ไม่มีรหัสผ่าน (เฉพาะ VPC) และผู้ใช้ IAM",
+    "id": "Ada dua pengguna: pengguna default tanpa kata sandi (hanya VPC) dan pengguna IAM.",
+    "ms": "Terdapat dua pengguna: pengguna default tanpa kata laluan (VPC sahaja) dan pengguna IAM."
    }
   },
   {
@@ -197,13 +269,19 @@
     "en": "Events tab with one event: cache created and ready to use",
     "ko": "이벤트 하나가 있는 Events 탭: 캐시 생성 완료",
     "zh": "只有一个事件的 Events 标签页：缓存已创建并可使用",
-    "ja": "イベントが 1 つだけの Events タブ：キャッシュの作成が完了し利用可能"
+    "ja": "イベントが 1 つだけの Events タブ：キャッシュの作成が完了し利用可能",
+    "th": "แท็บ Events ที่มีหนึ่งเหตุการณ์: สร้างแคชแล้วและพร้อมใช้งาน",
+    "id": "Tab Events dengan satu event: cache dibuat dan siap digunakan",
+    "ms": "Tab Events dengan satu peristiwa: cache dicipta dan sedia digunakan"
    },
    "cap": {
     "en": "Created at 14:36:59 KST, ready at 14:37:57.",
     "ko": "14:36:59(KST)에 만들기 시작, 14:37:57에 준비 완료.",
     "zh": "14:36:59（KST）开始创建，14:37:57 准备就绪。",
-    "ja": "14:36:59（KST）に作成を開始し、14:37:57 に準備が完了した。"
+    "ja": "14:36:59（KST）に作成を開始し、14:37:57 に準備が完了した。",
+    "th": "สร้างเมื่อ 14:36:59 KST, พร้อมใช้งานเมื่อ 14:37:57",
+    "id": "Dibuat pada 14:36:59 KST, siap pada 14:37:57.",
+    "ms": "Dicipta pada 14:36:59 KST, sedia pada 14:37:57."
    }
   },
   {
@@ -213,13 +291,19 @@
     "en": "Monitoring tab: data stored, ECPUs consumed, read and write latency, total commands, cache hit rate",
     "ko": "Monitoring 탭: 저장 데이터, 소비 ECPU, 읽기·쓰기 지연, 전체 명령 수, 캐시 적중률",
     "zh": "Monitoring 标签页：存储的数据、消耗的 ECPU、读写延迟、命令总数、缓存命中率",
-    "ja": "Monitoring タブ：保存データ、消費 ECPU、読み取りと書き込みのレイテンシ、総コマンド数、キャッシュヒット率"
+    "ja": "Monitoring タブ：保存データ、消費 ECPU、読み取りと書き込みのレイテンシ、総コマンド数、キャッシュヒット率",
+    "th": "แท็บ Monitoring: ข้อมูลที่จัดเก็บ ECPU ที่ใช้ เวลาแฝงการอ่านและเขียน คำสั่งทั้งหมด อัตรา cache hit",
+    "id": "Tab Monitoring: data tersimpan, ECPU terpakai, latensi baca dan tulis, total perintah, cache hit rate",
+    "ms": "Tab Monitoring: data disimpan, ECPU digunakan, kependaman baca dan tulis, jumlah arahan, kadar cache hit"
    },
    "cap": {
     "en": "Monitoring after the tests: data stored peaked at 649 MB in a 5-minute datapoint; read latency up to 2.4 ms, write latency up to 1.4 ms on the server side.",
     "ko": "시험 뒤 Monitoring: 저장 데이터는 5분 데이터포인트 기준 최고 649 MB. 서버 쪽 읽기 지연 최대 2.4 ms, 쓰기 지연 최대 1.4 ms.",
     "zh": "测试后的 Monitoring：存储数据在 5 分钟数据点中峰值为 649 MB；服务器端读取延迟最高 2.4 ms，写入延迟最高 1.4 ms。",
-    "ja": "テスト後の Monitoring：保存データは 5 分間のデータポイントで最大 649 MB。サーバー側の読み取りレイテンシは最大 2.4 ms、書き込みレイテンシは最大 1.4 ms。"
+    "ja": "テスト後の Monitoring：保存データは 5 分間のデータポイントで最大 649 MB。サーバー側の読み取りレイテンシは最大 2.4 ms、書き込みレイテンシは最大 1.4 ms。",
+    "th": "Monitoring หลังการทดสอบ: ข้อมูลที่จัดเก็บสูงสุด 649 MB ในจุดข้อมูล 5 นาที; เวลาแฝงการอ่านสูงสุด 2.4 ms, เวลาแฝงการเขียนสูงสุด 1.4 ms ฝั่งเซิร์ฟเวอร์",
+    "id": "Monitoring setelah pengujian: data tersimpan mencapai puncak 649 MB pada satu datapoint 5 menit; latensi baca hingga 2.4 ms, latensi tulis hingga 1.4 ms di sisi server.",
+    "ms": "Monitoring selepas ujian: data disimpan memuncak pada 649 MB dalam satu titik data 5 minit; kependaman baca sehingga 2.4 ms, kependaman tulis sehingga 1.4 ms di sebelah pelayan."
    }
   },
   {
@@ -229,13 +313,19 @@
     "en": "Delete dialog with final backup set to No and the name typed",
     "ko": "마지막 백업을 No로 두고 이름을 입력한 삭제 창",
     "zh": "最终备份设为 No 并已输入名称的删除对话框",
-    "ja": "最終バックアップを No にし、名前を入力した削除ダイアログ"
+    "ja": "最終バックアップを No にし、名前を入力した削除ダイアログ",
+    "th": "กล่องโต้ตอบการลบที่ตั้งการสำรองครั้งสุดท้ายเป็น No และพิมพ์ชื่อแล้ว",
+    "id": "Dialog hapus dengan backup akhir diatur ke No dan nama sudah diketik",
+    "ms": "Dialog pemadaman dengan sandaran akhir ditetapkan kepada No dan nama telah ditaip"
    },
    "cap": {
     "en": "Deleting asks for the cache name and defaults to creating a final backup; No was chosen. The cache was gone from the list about 3 minutes later.",
     "ko": "삭제는 캐시 이름 입력을 요구하고 기본으로 마지막 백업을 만든다. No를 골랐다. 약 3분 뒤 목록에서 사라졌다.",
     "zh": "删除时需要输入缓存名称，且默认创建最终备份；此处选择了 No。约 3 分钟后缓存从列表中消失。",
-    "ja": "削除ではキャッシュ名の入力が求められ、既定で最終バックアップが作成される。ここでは No を選んだ。約 3 分後にキャッシュが一覧から消えた。"
+    "ja": "削除ではキャッシュ名の入力が求められ、既定で最終バックアップが作成される。ここでは No を選んだ。約 3 分後にキャッシュが一覧から消えた。",
+    "th": "การลบต้องพิมพ์ชื่อแคชและมีค่าเริ่มต้นเป็นการสร้างการสำรองครั้งสุดท้าย; เลือก No แคชหายไปจากรายการหลังจากนั้นประมาณ 3 นาที",
+    "id": "Penghapusan meminta nama cache dan secara default membuat backup akhir; dipilih No. Cache hilang dari daftar sekitar 3 menit kemudian.",
+    "ms": "Pemadaman meminta nama cache dan secara lalai mencipta sandaran akhir; No dipilih. Cache hilang daripada senarai kira-kira 3 minit kemudian."
    }
   },
   {
@@ -243,7 +333,10 @@
    "en": "#### Cost\n\nThe cache lived about 31 minutes. By the price list: about 0.2 GB-hours of storage (the 100 MB minimum, plus the memory test) and about 5 million ECPUs, together roughly $0.05. The AWS bill had not shown it yet when this was written; the billed amount goes into `STATUS.md` when it does.",
    "ko": "#### 비용\n\n캐시는 약 31분 살아 있었다. 가격표로 계산하면 저장 약 0.2 GB-시간(최소 100 MB와 메모리 시험)과 ECPU 약 500만 개, 합쳐 약 $0.05다. 이 글을 쓸 때는 AWS 청구서에 아직 나타나지 않았다. 나타나면 청구액을 `STATUS.md`에 적는다.",
    "zh": "#### 费用\n\n缓存存续约 31 分钟。按价格表计算：约 0.2 GB 小时的存储（最低 100 MB，加上内存测试）和约 500 万 ECPU，合计约 $0.05。撰写本文时 AWS 账单尚未显示该费用；显示后，实际计费金额会记入 `STATUS.md`。",
-   "ja": "#### 費用\n\nキャッシュは約 31 分存続した。価格表で計算すると、ストレージは約 0.2 GB 時間（最低 100 MB とメモリテスト分）、ECPU は約 500 万で、合計およそ $0.05 になる。本稿の執筆時点では AWS の請求にまだ表示されていなかった。表示された時点で、請求額を `STATUS.md` に記録する。"
+   "ja": "#### 費用\n\nキャッシュは約 31 分存続した。価格表で計算すると、ストレージは約 0.2 GB 時間（最低 100 MB とメモリテスト分）、ECPU は約 500 万で、合計およそ $0.05 になる。本稿の執筆時点では AWS の請求にまだ表示されていなかった。表示された時点で、請求額を `STATUS.md` に記録する。",
+   "th": "#### ค่าใช้จ่าย\n\nแคชมีอายุประมาณ 31 นาที ตามรายการราคา: พื้นที่จัดเก็บประมาณ 0.2 GB-hour (ขั้นต่ำ 100 MB บวกการทดสอบหน่วยความจำ) และประมาณ 5 ล้าน ECPU รวมกันราว $0.05 ขณะเขียนนี้ใบเรียกเก็บเงินของ AWS ยังไม่แสดงรายการนี้ เมื่อแสดงแล้ว จำนวนเงินที่เรียกเก็บจะบันทึกลงใน `STATUS.md`",
+   "id": "#### Biaya\n\nCache hidup sekitar 31 menit. Menurut daftar harga: sekitar 0.2 GB-hour penyimpanan (minimum 100 MB, ditambah uji memori) dan sekitar 5 juta ECPU, totalnya kira-kira $0.05. Tagihan AWS belum menampilkannya saat ini ditulis; jumlah yang ditagih akan dimasukkan ke `STATUS.md` ketika sudah muncul.",
+   "ms": "#### Kos\n\nCache hidup kira-kira 31 minit. Mengikut senarai harga: kira-kira 0.2 GB-hour storan (minimum 100 MB, ditambah ujian memori) dan kira-kira 5 juta ECPU, jumlahnya lebih kurang $0.05. Bil AWS belum menunjukkannya ketika ini ditulis; jumlah yang dibilkan akan dimasukkan ke dalam `STATUS.md` apabila ia muncul."
   }
  ]
 }

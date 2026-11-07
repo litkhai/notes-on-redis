@@ -729,3 +729,546 @@ pipeline を使わない 1 接続では 249 ops/s で、これは往復時間に
 ソウルの Essentials でのレプリケーション、永続化、バックアップ、RBAC、REST API のラボ、Pro Active-Active は、それぞれ別のラボで、リポジトリに個別の issue があります。
 
 </div>
+
+<div class="lang" data-lang="th" markdown="1">
+
+## ภาษาไทย
+
+**Redis Cloud ตั้งแต่สมัครใช้งานจนถึงทุกเมนูของคอนโซล** บันทึกเมื่อ 2026-11-07 บนแผนฟรี: ฐานข้อมูลฟรี 1 ฐาน (Redis 8.6, AWS ap-northeast-2 Seoul) คอนโซลในโหมดมืด ไม่มีการชำระเงินใดๆ ฟอร์มของ Essentials และ Pro ถูกเปิดและบันทึกภาพไว้แต่ไม่ได้ส่งข้อมูล ข้อมูลที่ปิดบังในภาพหน้าจอทุกภาพ: ชื่อ อีเมล หมายเลขบัญชี ID ของ subscription และฐานข้อมูล endpoint พอร์ต ที่อยู่ IP และ API keys ราคาในหน้านี้อ่านจากคอนโซลเมื่อ 2026-11-07
+
+### ภาพรวม
+
+แถบด้านซ้าย จากบนลงล่าง: **Databases**, **Subscriptions**, **Redis Search**, **Data Integration** ใต้ *AI services* คือ **Iris** ซึ่งมี Agent Playbooks, Agent Memory, Context Gateway, Intent Router, Lens (beta), Agent Mesh (beta) และ Access & Identity ใต้ *Reports* คือ **Logs** และ **Usage** ใต้ *Account* คือ **API Keys & Team**, **Data Access**, **Billing**, **Integrations**, **Settings** แถบด้านบนมีตัวสลับแอป ไอคอนเคล็ดลับ ตัวสลับธีม (สว่าง มืด ตามระบบ) และเมนูบัญชี
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/01-databases-empty.webp' | relative_url }}" width="1440" height="765" alt="หน้า Databases ว่างที่มีปุ่ม New database" loading="lazy" decoding="async"></p>
+
+บัญชีใหม่เปิดมาที่ Databases ซึ่งยังไม่มีอะไรอยู่ <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+### สร้างฐานข้อมูล
+
+**New database** เปิดหน้าเดียวที่มีการ์ดแผนสองใบ **Essentials** เป็นโครงสร้างพื้นฐานแบบใช้ร่วมกัน เริ่มที่ $0.007/ชั่วโมง ($5/เดือน) **Pro** เป็นโครงสร้างพื้นฐานเฉพาะ เริ่มที่ $0.014/ชั่วโมง โดยมีขั้นต่ำ $200/เดือน และป้าย "First $200 free" ใต้การ์ดมีบรรทัด *Not ready? Try 30 MB for free* ลิงก์นี้เป็นทางเดียวที่นำไปสู่แผนฟรี
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/02-create-essentials-form.webp' | relative_url }}" width="1440" height="2118" alt="ฟอร์มสร้าง Essentials: cloud vendor และ region, ชื่อ, เวอร์ชัน 8.6, แถบเลื่อนขนาด, ตัวเลือก high availability และ persistence, วิธีชำระเงิน" loading="lazy" decoding="async"></p>
+
+ค่าเริ่มต้นของ Essentials: AWS us-east-1, Redis 8.6, รวม 250 MB (dataset 125 MB บวก replica 125 MB), 1,000 ops/s, single-zone replication และ AOF ทุกวินาที, $8/เดือน ขนาดมีตั้งแต่ 250 MB ถึง 100 GB, RAM+SSD (Flex) เป็นตัวสลับ ต้องมีวิธีชำระเงินก่อนกด Confirm & pay <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/03-create-pro-form.webp' | relative_url }}" width="1440" height="2338" alt="ฟอร์มสร้าง Pro: Easy create หรือ Custom settings, ไทล์ cloud vendor, region, ตัวปรับขนาด dataset และ throughput, persistence, high availability, สรุปราคา" loading="lazy" decoding="async"></p>
+
+Pro เริ่มต้นด้วยการเลือกวิธีตั้งค่า คือ Easy create หรือ Custom settings ค่าเริ่มต้นของ Easy create: dataset 3 GB (หน่วยความจำรวม 6 GB เมื่อรวม replica), 3,000 ops/s, AOF ทุกวินาที, เปิด high availability, $0.274/ชั่วโมง (ประมาณ $200/เดือน) <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/04-create-free-form.webp' | relative_url }}" width="1440" height="1259" alt="ฟอร์มสร้างแผนฟรีที่มี region Asia Pacific (Seoul), ชื่อ notes-on-redis-free และขีดจำกัดที่รวมอยู่" loading="lazy" decoding="async"></p>
+
+ฟอร์มแผนฟรีแสดงสิ่งที่รวมอยู่: 1 ฐานข้อมูล, RAM 30 MB, 30 การเชื่อมต่อ, 100 ops/sec, $0/เดือน เลือก region ได้อิสระ (AWS, Google Cloud หรือ Azure; เลือก Seoul) ภาพนี้เป็นภาพเดียวที่บันทึกในโหมดสว่าง และไม่สามารถเปิดฟอร์มนี้ซ้ำได้เมื่อบัญชีมีฐานข้อมูลฟรีแล้ว <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+### หน้าฐานข้อมูล
+
+หลังกด Create database ระบบจะเข้าสู่หน้าฐานข้อมูลภายในไม่กี่วินาที หน้านี้มีสี่แท็บ: Configuration, Metrics, Alerts, Slowlog เมื่อเข้าครั้งแรกจะมีกล่องโต้ตอบเสนอการตั้งค่าแบบนำทาง การปิดกล่องนี้ไม่ได้ใช้การเปลี่ยนแปลงใดๆ
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/05-database-setup-dialog.webp' | relative_url }}" width="1440" height="765" alt="กล่องโต้ตอบ Set up your database เหนือหน้าฐานข้อมูลใหม่" loading="lazy" decoding="async"></p>
+
+"No changes are applied until you confirm." กล่องโต้ตอบถูกปิดโดยไม่ได้ตรวจสอบ <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/06-database-configuration.webp' | relative_url }}" width="1440" height="1977" alt="แท็บ Configuration ของฐานข้อมูลฟรี: การ์ดการใช้งาน, แถบเลื่อนแผน, แผงความพร้อมใช้งานและการสำรองข้อมูล, การเข้าถึง, ข้อมูล, ความปลอดภัย และข้อมูลฐานข้อมูล" loading="lazy" decoding="async"></p>
+
+ค่าเริ่มต้นของฐานข้อมูลฟรีตามที่แสดง: ไม่มี replication, ไม่มี persistence, ปิด remote backup, eviction policy เป็น volatile-lru, เปิด default user, ปิด CIDR allow list, ปิด TLS, RESP3, Redis 8.6 หน้า Logs บันทึก allow list เป็น 0.0.0.0/0 <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/07-connect-dialog.webp' | relative_url }}" width="1440" height="765" alt="ลิ้นชัก Connect ที่มีส่วนไคลเอนต์ Redis CLI, Redis Insight และ Redis SDK" loading="lazy" decoding="async"></p>
+
+Connect ให้คำสั่ง redis-cli ที่พร้อมใช้ผ่าน endpoint สาธารณะ รหัสผ่านจะถูกซ่อนจนกว่าจะกดไอคอนรูปดวงตา endpoint เป็นชื่อโฮสต์ที่สร้างขึ้นภายใต้ db.redis.io <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/08-database-metrics.webp' | relative_url }}" width="1440" height="1587" alt="แท็บ Metrics ระหว่างการทดสอบโหลด: ops ต่อวินาทีเพิ่มขึ้นถึง 82 พัน, กราฟ latency, การเชื่อมต่อ, key, หน่วยความจำ และเครือข่าย" loading="lazy" decoding="async"></p>
+
+ช่วงเวลาตั้งแต่ 5 นาทีถึง 3 เดือน กราฟ: ops/sec, latency (แยกเป็น reads, writes, other ด้วย), การเชื่อมต่อ, อ็อบเจกต์ที่ถูก evict และหมดอายุ/วินาที, จำนวน key ทั้งหมด, reads/sec, writes/sec, other commands/sec, read hit ratio, หน่วยความจำที่ใช้, network egress และ ingress บันทึกระหว่างการทดสอบ throughput ด้านล่าง <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/09-database-throughput-over-limit.webp' | relative_url }}" width="1440" height="765" alt="การ์ด Throughput แสดง 61,806 จาก 100 ops ต่อวินาที พร้อมไอคอนเตือน" loading="lazy" decoding="async"></p>
+
+การ์ด throughput ระหว่างการทดสอบ: 61,806 / 100 ops/sec คอนโซลแจ้งว่าเกินขีดจำกัด แต่ฐานข้อมูลยังคงให้บริการต่อ (ดูผลการวัดด้านล่าง) <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/10-database-alerts.webp' | relative_url }}" width="1440" height="765" alt="แท็บ Alerts ที่มี alert ขนาด dataset และจำนวนการเชื่อมต่อ ทั้งคู่ที่ 80 เปอร์เซ็นต์ของขีดจำกัดแผน" loading="lazy" decoding="async"></p>
+
+alert ของแผนฟรี: ขนาด dataset และจำนวนการเชื่อมต่อ แต่ละรายการเป็นเปอร์เซ็นต์ของขีดจำกัดแผน ตั้งไว้ล่วงหน้าที่ 80% <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/11-database-slowlog.webp' | relative_url }}" width="1440" height="765" alt="แท็บ Slowlog ที่ไม่มีรายการและมีปุ่ม Clear slowlog" loading="lazy" decoding="async"></p>
+
+Slowlog ยังคงว่าง: การทดสอบใช้เพียง INCR และ SET <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+### ฐานข้อมูลและ subscription
+
+ทุกฐานข้อมูลเป็นของ subscription หนึ่ง แผนฟรีสร้าง subscription หนึ่งรายการที่มีฐานข้อมูลหนึ่งฐาน
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/12-databases-list.webp' | relative_url }}" width="1440" height="765" alt="รายการ Databases ที่มีหนึ่งแถว: notes-on-redis-free, การใช้หน่วยความจำ 7.4 เปอร์เซ็นต์ของ 30 MB, เวอร์ชัน 8.6" loading="lazy" decoding="async"></p>
+
+คอลัมน์: status, ชื่อฐานข้อมูล, subscription, endpoint (ปุ่ม Connect), การใช้หน่วยความจำ, capabilities, tags, เวอร์ชัน, actions ตัวกรองมี status, subscription, plan, capabilities, เวอร์ชัน, region และ cloud <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/13-subscriptions.webp' | relative_url }}" width="1440" height="765" alt="หน้า Subscriptions ที่มีการ์ด subscription ฟรีและรายการฐานข้อมูล" loading="lazy" decoding="async"></p>
+
+subscription ฟรีใน ap-northeast-2 พร้อมปุ่ม Plan upgrade และแท็บ Databases และ Overview <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+### เมนูผลิตภัณฑ์
+
+รายการในแถบด้านข้างสามรายการเป็นจุดเริ่มต้นของผลิตภัณฑ์ ไม่ใช่หน้าการตั้งค่า
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/14-redis-search.webp' | relative_url }}" width="1440" height="818" alt="หน้า Redis Search ที่นำเสนอ vector search สำหรับ agent พร้อมตัวเลือกฐานข้อมูล" loading="lazy" decoding="async"></p>
+
+Redis Search เป็นจุดเริ่มต้นแบบนำทางสำหรับสร้าง vector index แรกบนฐานข้อมูลที่มีอยู่ <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/15-data-integration.webp' | relative_url }}" width="1440" height="1489" alt="หน้า Data Integration: ซิงค์เข้า Redis แบบใกล้เรียลไทม์, $1.37 ต่อชั่วโมง, สามขั้นตอน" loading="lazy" decoding="async"></p>
+
+Data Integration คือ RDI แบบมีผู้ดูแลให้: $1.37/ชั่วโมง ประมาณ $1,000/เดือน คิดค่าบริการตั้งแต่สร้าง pipeline ขั้นตอน: เชื่อมต่อฐานข้อมูลต้นทาง, แปลงข้อมูล, ให้บริการการอ่านจาก Redis ไม่ได้สร้างไว้ในที่นี้ <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/16-iris.webp' | relative_url }}" width="1440" height="1276" alt="หน้า landing ของ Iris AI Services ที่มีวิดีโอสาธิตและรายการบริการ" loading="lazy" decoding="async"></p>
+
+หน้า landing ของ Iris บริการที่แสดง: Agent Memory, Agent Playbooks, Intent Router, Context Gateway, Agent Mesh; Lens ปรากฏในแถบด้านข้าง หน้า Iris ของเว็บไซต์นี้อธิบายแต่ละบริการ <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+### รายงาน
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/17-logs-system.webp' | relative_url }}" width="1440" height="765" alt="System log: สร้าง subscription, เปิดใช้งานฐานข้อมูล, ปิด persistence, เพิ่ม source IP, เปิด RESP3, เปิด API, กำหนด API key" loading="lazy" decoding="async"></p>
+
+System log แสดงทุกเหตุการณ์การตั้งค่าพร้อมเวลา ผู้ดำเนินการ และชื่อ API key ปุ่ม Export all ใช้ดาวน์โหลด <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/18-logs-sessions.webp' | relative_url }}" width="1440" height="765" alt="Sessions log ที่มีการเข้าสู่ระบบสำเร็จสองครั้ง" loading="lazy" decoding="async"></p>
+
+Sessions: การเข้าสู่ระบบคอนโซลแต่ละครั้งพร้อม user agent, IP, บทบาท และประเภทการเข้าสู่ระบบ <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/19-usage.webp' | relative_url }}" width="1440" height="765" alt="รายงาน Usage แท็บ Memory Usage, กราฟรายวันของเดือนพฤศจิกายน 2026" loading="lazy" decoding="async"></p>
+
+Usage มีแท็บ Memory Usage และ RBU Usage และการดาวน์โหลด Cost report ทันทีหลังสร้างฐานข้อมูล ระบบแจ้งว่ารายงานจะปรากฏในอีกหนึ่งชั่วโมง เมื่อถึงการบันทึกภาพครั้งสุดท้ายก็มีข้อมูลแสดงแล้ว <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+### บัญชี
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/20-api-keys.webp' | relative_url }}" width="1440" height="765" alt="แท็บ API Keys ที่ซ่อน account key และมี user key หนึ่งรายการ" loading="lazy" decoding="async"></p>
+
+Enable API ใช้งานได้บนแผนฟรี การเรียกใช้ต้องมี account key และ user key; สร้าง user key หนึ่งรายการ และ GET /v1/fixed/subscriptions ตอบกลับ 200 subscription แบบ Free และ Essentials อยู่ภายใต้ /v1/fixed ส่วน Pro อยู่ภายใต้ /v1/subscriptions <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/21-team.webp' | relative_url }}" width="1440" height="765" alt="แท็บ Team ที่มีเจ้าของหนึ่งคนซึ่งสมัครผ่าน Google" loading="lazy" decoding="async"></p>
+
+Team: ผู้ใช้คอนโซล บทบาท และประเภทการสมัคร <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/22-single-sign-on.webp' | relative_url }}" width="1440" height="765" alt="แท็บ Single Sign-On: ยังไม่เปิดใช้ SSO, ปุ่ม Set up SAML SSO" loading="lazy" decoding="async"></p>
+
+สามารถตั้งค่า SAML SSO ใหม่ หรือเข้าร่วมจากการตั้งค่าที่มีอยู่ได้ แท็บนี้มีอยู่บนแผนฟรี <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/23-data-access-users.webp' | relative_url }}" width="1440" height="765" alt="Data Access Control แท็บ Users ยังไม่มีผู้ใช้ที่กำหนดไว้" loading="lazy" decoding="async"></p>
+
+Data Access คือ RBAC ระดับฐานข้อมูล: ผู้ใช้ บทบาท และ Redis ACLs ต้องมีบทบาทก่อนจึงจะเพิ่มผู้ใช้ได้ <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/24-data-access-roles.webp' | relative_url }}" width="1440" height="765" alt="แท็บ Roles ยังไม่มีบทบาทที่กำหนดไว้" loading="lazy" decoding="async"></p>
+
+Roles ผูกกฎ ACL เข้ากับฐานข้อมูล <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/25-redis-acls.webp' | relative_url }}" width="1440" height="765" alt="แท็บ Redis ACLs ที่มีกฎเริ่มต้นสามข้อ" loading="lazy" decoding="async"></p>
+
+กฎ ACL เริ่มต้นสามข้อ: Full-Access +@all ~*, Read-Write +@all -@dangerous ~*, Read-Only +@read ~* <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/26-billing-history.webp' | relative_url }}" width="1440" height="765" alt="Billing history: ไม่มีประวัติการเรียกเก็บเงิน" loading="lazy" decoding="async"></p>
+
+Billing มี Billing History, Payment Methods และ Credits พร้อมปุ่ม Cost report <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/27-payment-methods.webp' | relative_url }}" width="1440" height="765" alt="Payment methods: ไม่มีบัตร, ปุ่ม Add credit card" loading="lazy" decoding="async"></p>
+
+ไม่มีบัตรในระบบ: แผนฟรีไม่ขอบัตร <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/28-credits.webp' | relative_url }}" width="1440" height="765" alt="แท็บ Credits ที่มีช่องรหัสคูปอง ยอดที่ใช้แล้วและยอดคงเหลือเป็น $0 ทั้งคู่" loading="lazy" decoding="async"></p>
+
+Credits: รหัสคูปองและยอดคงเหลือ ข้อเสนอ "First $200 free" ของ Pro ไม่แสดงที่นี่ก่อนที่จะมี subscription แบบ Pro <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/29-integrations.webp' | relative_url }}" width="1440" height="765" alt="หน้า Integrations: Datadog, Confluent, Grafana และ Prometheus" loading="lazy" decoding="async"></p>
+
+Integrations: Datadog และ Grafana/Prometheus สำหรับ metrics, Confluent สำหรับส่งข้อมูล Kafka เข้า Redis <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/30-settings.webp' | relative_url }}" width="1440" height="1248" alt="Account settings: ข้อมูลบัญชี, ผู้ติดต่อ, ปิด MFA enforcement, ดาวน์โหลด certificate authority, เขตเวลา UTC" loading="lazy" decoding="async"></p>
+
+Settings: ข้อมูลบัญชี ผู้ติดต่อทางธุรกิจ MFA enforcement (ปิดเป็นค่าเริ่มต้น) ชุด CA ของ Redis Cloud สำหรับไคลเอนต์ TLS และเขตเวลา <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/31-account-menu.webp' | relative_url }}" width="1440" height="765" alt="เมนูบัญชีที่เปิดอยู่: ตัวสลับบัญชี, โปรไฟล์ผู้ใช้, logout" loading="lazy" decoding="async"></p>
+
+เมนูบัญชีใช้สลับระหว่างบัญชีและเปิดโปรไฟล์ผู้ใช้ <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+
+### Lab: ฐานข้อมูลฟรีและขีดจำกัด
+
+**ตรวจสอบบน Redis 8.6.2 (แผนฟรีของ Redis Cloud, AWS ap-northeast-2) เมื่อ 2026-11-07** ไคลเอนต์: redis-py 6.1.1 จากโฮสต์ในเกาหลี ใช้เวลาไป-กลับประมาณ 2.6 ms, TCP ธรรมดา (TLS ปิดเป็นค่าเริ่มต้น) ซอร์สและผลลัพธ์ฉบับเต็ม: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database)
+
+| Advertised limit | What the client saw |
+|---|---|
+| 30 connections | การเชื่อมต่อที่ 31 ถูกปฏิเสธ: `max number of clients reached` |
+| 30 MB | การเขียนถูกปฏิเสธที่ประมาณ 28 MB ของค่าขนาด 10 kB: `OOM command not allowed when used memory > 'maxmemory'` ไม่มี key ถูกลบ (volatile-lru, ไม่มี key ใดมี TTL) |
+| 100 ops/s | ไม่ได้บังคับใช้ในการทดสอบนี้: ประมาณ 104,000 INCR/s เป็นเวลา 60 วินาที บน 8 การเชื่อมต่อ ด้วย pipeline ละ 100 คำสั่ง ไม่มีข้อผิดพลาด คอนโซลแสดง 61,806 / 100 และคำเตือน |
+
+การเชื่อมต่อเดียวที่ไม่ใช้ pipeline ได้ 249 ops/s ซึ่งเป็นผลจากเวลาไป-กลับ ไม่ใช่จากแผน ตัวเลข ops/s ดูเป็นแนวทางกำหนดขนาดที่คอนโซลใช้รายงานเทียบ ไม่ใช่ตัวจำกัดอัตรา ซึ่งอาจเปลี่ยนโดยไม่แจ้งล่วงหน้า จึงไม่ควรสร้างระบบโดยพึ่งการใช้เกินขีดจำกัด
+
+### รายการตรวจสอบสัปดาห์แรก
+
+- เปิด **TLS** และตั้ง **CIDR allow list**: ฐานข้อมูลฟรีเริ่มต้นโดยปิด TLS และใช้ 0.0.0.0/0
+- แทนที่ default user ด้วยผู้ใช้และบทบาทของ **Data Access** หรืออย่างน้อยก็เปลี่ยนรหัสผ่านของมัน
+- กำหนด **eviction policy**: volatile-lru จะปฏิเสธการเขียนเมื่อไม่มี key ใดมี TTL
+- ตั้ง **alerts** ไว้ที่ 80% หรือต่ำกว่า: แผนฟรีไม่มีการทำ replication, persistence หรือ backup ไว้รองรับ
+- เปิด **MFA enforcement** ใน Settings เมื่อมีคนเข้าร่วมมากขึ้น
+- หากเปิดใช้ **API** ให้ลบ user key ที่ไม่ใช้แล้ว: system log ระบุชื่อ key ในทุกการเรียกที่ key นั้นทำ
+
+### ที่ยังไม่ครอบคลุม
+
+Essentials ใน Seoul พร้อม replication, persistence, backup และ RBAC, lab ของ REST API และ Pro Active-Active เป็น lab แยกต่างหาก โดยมี issue ของตัวเองใน repository
+
+</div>
+
+<div class="lang" data-lang="id" markdown="1">
+
+## Bahasa Indonesia
+
+**Redis Cloud, dari pendaftaran hingga setiap menu konsol.** Diambil pada 2026-11-07 di paket gratis: satu database gratis (Redis 8.6, AWS ap-northeast-2 Seoul), konsol dalam mode gelap, tanpa biaya. Formulir Essentials dan Pro dibuka dan diambil tangkapan layarnya, tetapi tidak dikirim. Disamarkan di setiap tangkapan layar: nama, e-mail, nomor akun, ID subscription dan database, endpoint, port, alamat IP, API key. Harga di halaman ini dibaca dari konsol pada 2026-11-07.
+
+### Sekilas
+
+Sidebar kiri, dari atas ke bawah: **Databases**, **Subscriptions**, **Redis Search**, **Data Integration**; di bawah *AI services* terdapat **Iris** dengan Agent Playbooks, Agent Memory, Context Gateway, Intent Router, Lens (beta), Agent Mesh (beta), dan Access & Identity; di bawah *Reports* terdapat **Logs** dan **Usage**; di bawah *Account* terdapat **API Keys & Team**, **Data Access**, **Billing**, **Integrations**, **Settings**. Bilah atas berisi pengalih aplikasi, ikon tips, pengalih tema (terang, gelap, sistem), dan menu akun.
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/01-databases-empty.webp' | relative_url }}" width="1440" height="765" alt="Halaman Databases kosong dengan tombol New database" loading="lazy" decoding="async"></p>
+
+Akun baru terbuka di Databases tanpa isi apa pun. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+### Membuat database
+
+**New database** membuka satu halaman dengan dua kartu paket. **Essentials** adalah infrastruktur bersama, mulai dari $0.007/jam ($5/bulan). **Pro** adalah infrastruktur khusus, mulai dari $0.014/jam dengan minimum $200/bulan dan lencana "First $200 free". Di bawah kartu ada baris *Not ready? Try 30 MB for free*; tautan itu satu-satunya jalan menuju paket gratis.
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/02-create-essentials-form.webp' | relative_url }}" width="1440" height="2118" alt="Formulir pembuatan Essentials: cloud vendor dan region, nama, versi 8.6, slider ukuran, opsi high availability dan persistence, metode pembayaran" loading="lazy" decoding="async"></p>
+
+Default Essentials: AWS us-east-1, Redis 8.6, total 250 MB (dataset 125 MB ditambah replica 125 MB), 1,000 ops/s, replikasi single-zone dan AOF setiap detik, $8/bulan. Ukuran berkisar dari 250 MB hingga 100 GB; RAM+SSD (Flex) berupa toggle. Metode pembayaran diperlukan sebelum Confirm & pay. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/03-create-pro-form.webp' | relative_url }}" width="1440" height="2338" alt="Formulir pembuatan Pro: Easy create atau Custom settings, ubin cloud vendor, region, stepper ukuran dataset dan throughput, persistence, high availability, ringkasan harga" loading="lazy" decoding="async"></p>
+
+Pro dimulai dengan metode penyiapan, Easy create atau Custom settings. Default Easy create: dataset 3 GB (total memori 6 GB dengan replica), 3,000 ops/s, AOF setiap detik, high availability aktif, $0.274/jam (sekitar $200/bulan). <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/04-create-free-form.webp' | relative_url }}" width="1440" height="1259" alt="Formulir pembuatan paket gratis dengan region Asia Pacific (Seoul), nama notes-on-redis-free, dan batas yang disertakan" loading="lazy" decoding="async"></p>
+
+Formulir gratis mencantumkan apa yang disertakan: 1 database, RAM 30 MB, 30 koneksi, 100 ops/sec, $0/bulan. Pilihan region bebas (AWS, Google Cloud, atau Azure; Seoul yang dipilih). Hanya tangkapan ini yang berada dalam mode terang; formulir tidak dapat dibuka kembali setelah akun memiliki database gratisnya. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+### Layar database
+
+Create database membawa Anda ke halaman database setelah beberapa detik. Halaman ini memiliki empat tab: Configuration, Metrics, Alerts, Slowlog. Dialog kunjungan pertama menawarkan penyiapan terpandu; menutupnya tidak menerapkan apa pun.
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/05-database-setup-dialog.webp' | relative_url }}" width="1440" height="765" alt="Dialog Set up your database di atas halaman database baru" loading="lazy" decoding="async"></p>
+
+"No changes are applied until you confirm." Dialog ditutup tanpa ditinjau. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/06-database-configuration.webp' | relative_url }}" width="1440" height="1977" alt="Tab Configuration dari database gratis: kartu penggunaan, slider paket, panel ketersediaan dan backup, akses, data, keamanan, dan info database" loading="lazy" decoding="async"></p>
+
+Default database gratis seperti yang ditampilkan: tanpa replikasi, tanpa persistence, remote backup nonaktif, eviction policy volatile-lru, default user aktif, CIDR allow list nonaktif, TLS nonaktif, RESP3, Redis 8.6. Halaman Logs mencatat allow list sebagai 0.0.0.0/0. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/07-connect-dialog.webp' | relative_url }}" width="1440" height="765" alt="Drawer Connect dengan bagian klien Redis CLI, Redis Insight, dan Redis SDK" loading="lazy" decoding="async"></p>
+
+Connect memberikan perintah redis-cli yang siap pakai melalui endpoint publik; kata sandi tetap tersembunyi sampai ikon mata ditekan. Endpoint adalah nama host yang dibuat otomatis di bawah db.redis.io. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/08-database-metrics.webp' | relative_url }}" width="1440" height="1587" alt="Tab Metrics saat uji beban: ops per detik naik hingga 82 ribu, grafik latensi, koneksi, key, memori, dan jaringan" loading="lazy" decoding="async"></p>
+
+Rentang dari 5 menit hingga 3 bulan. Grafik: ops/sec, latensi (juga dipisah menjadi reads, writes, other), koneksi, objek yang di-evict dan kedaluwarsa/detik, total key, reads/sec, writes/sec, other commands/sec, read hit ratio, memori terpakai, network egress dan ingress. Diambil selama uji throughput di bawah. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/09-database-throughput-over-limit.webp' | relative_url }}" width="1440" height="765" alt="Kartu Throughput menampilkan 61,806 dari 100 ops per detik dengan ikon peringatan" loading="lazy" decoding="async"></p>
+
+Kartu throughput selama pengujian: 61,806 / 100 ops/sec. Konsol menandai kelebihan tersebut; database tetap melayani (lihat pengukuran di bawah). <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/10-database-alerts.webp' | relative_url }}" width="1440" height="765" alt="Tab Alerts dengan alert ukuran dataset dan koneksi, keduanya pada 80 persen dari batas paket" loading="lazy" decoding="async"></p>
+
+Alert paket gratis: ukuran dataset dan jumlah koneksi, masing-masing sebagai persentase dari batas paket, diatur awal pada 80%. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/11-database-slowlog.webp' | relative_url }}" width="1440" height="765" alt="Tab Slowlog tanpa entri dan tombol Clear slowlog" loading="lazy" decoding="async"></p>
+
+Slowlog tetap kosong: pengujian hanya menggunakan INCR dan SET. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+### Database dan subscription
+
+Setiap database termasuk dalam sebuah subscription. Paket gratis membuat satu subscription yang berisi satu database.
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/12-databases-list.webp' | relative_url }}" width="1440" height="765" alt="Daftar Databases dengan satu baris: notes-on-redis-free, penggunaan memori 7.4 persen dari 30 MB, versi 8.6" loading="lazy" decoding="async"></p>
+
+Kolom: status, nama database, subscription, endpoint (tombol Connect), penggunaan memori, capabilities, tags, versi, actions. Filter untuk status, subscription, plan, capabilities, versi, region, dan cloud. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/13-subscriptions.webp' | relative_url }}" width="1440" height="765" alt="Halaman Subscriptions dengan kartu subscription gratis dan daftar database-nya" loading="lazy" decoding="async"></p>
+
+Subscription gratis di ap-northeast-2, dengan tombol Plan upgrade serta tab Databases dan Overview. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+### Menu produk
+
+Tiga entri sidebar merupakan titik masuk ke produk, bukan pengaturan.
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/14-redis-search.webp' | relative_url }}" width="1440" height="818" alt="Halaman Redis Search yang memperkenalkan vector search untuk agent, dengan pemilih database" loading="lazy" decoding="async"></p>
+
+Redis Search adalah awal terpandu untuk membuat vector index pertama pada database yang sudah ada. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/15-data-integration.webp' | relative_url }}" width="1440" height="1489" alt="Halaman Data Integration: sinkronisasi hampir real-time ke Redis, $1.37 per jam, tiga langkah" loading="lazy" decoding="async"></p>
+
+Data Integration adalah RDI terkelola: $1.37/jam, perkiraan sekitar $1,000/bulan, ditagih sejak pipeline dibuat. Langkah: hubungkan database sumber, transformasi, layani pembacaan dari Redis. Tidak dibuat di sini. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/16-iris.webp' | relative_url }}" width="1440" height="1276" alt="Halaman landing Iris AI Services dengan video demo dan daftar layanan" loading="lazy" decoding="async"></p>
+
+Halaman landing Iris. Layanan yang tercantum: Agent Memory, Agent Playbooks, Intent Router, Context Gateway, Agent Mesh; Lens muncul di sidebar. Halaman Iris di situs ini menguraikan semuanya. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+### Laporan
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/17-logs-system.webp' | relative_url }}" width="1440" height="765" alt="System log: subscription dibuat, database diaktifkan, persistence dinonaktifkan, source IP ditambahkan, RESP3 diaktifkan, API diaktifkan, API key ditetapkan" loading="lazy" decoding="async"></p>
+
+System log mencantumkan setiap peristiwa konfigurasi beserta waktu, originator, dan nama API key; Export all mengunduhnya. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/18-logs-sessions.webp' | relative_url }}" width="1440" height="765" alt="Sessions log dengan dua login yang berhasil" loading="lazy" decoding="async"></p>
+
+Sessions: setiap login konsol beserta user agent, IP, peran, dan jenis login. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/19-usage.webp' | relative_url }}" width="1440" height="765" alt="Laporan Usage, tab Memory Usage, grafik harian untuk November 2026" loading="lazy" decoding="async"></p>
+
+Usage memiliki tab Memory Usage dan RBU Usage serta unduhan Cost report. Tepat setelah database dibuat, tertulis bahwa laporan akan muncul satu jam kemudian; pada tangkapan terakhir sudah menampilkan data. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+### Akun
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/20-api-keys.webp' | relative_url }}" width="1440" height="765" alt="Tab API Keys dengan account key tersembunyi dan satu user key" loading="lazy" decoding="async"></p>
+
+Enable API berfungsi di paket gratis. Panggilan membutuhkan account key dan user key; satu user key dibuat dan GET /v1/fixed/subscriptions mengembalikan 200. Subscription Free dan Essentials berada di bawah /v1/fixed, Pro di bawah /v1/subscriptions. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/21-team.webp' | relative_url }}" width="1440" height="765" alt="Tab Team dengan satu owner yang mendaftar melalui Google" loading="lazy" decoding="async"></p>
+
+Team: pengguna konsol, peran, dan jenis pendaftaran mereka. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/22-single-sign-on.webp' | relative_url }}" width="1440" height="765" alt="Tab Single Sign-On: SSO tidak diaktifkan, tombol Set up SAML SSO" loading="lazy" decoding="async"></p>
+
+SAML SSO dapat disiapkan atau digabungkan dari konfigurasi yang sudah ada; tab ini tersedia di paket gratis. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/23-data-access-users.webp' | relative_url }}" width="1440" height="765" alt="Data Access Control, tab Users, belum ada pengguna yang ditentukan" loading="lazy" decoding="async"></p>
+
+Data Access adalah RBAC tingkat database: pengguna, peran, dan Redis ACLs. Sebuah peran harus ada sebelum pengguna dapat ditambahkan. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/24-data-access-roles.webp' | relative_url }}" width="1440" height="765" alt="Tab Roles, belum ada peran yang ditentukan" loading="lazy" decoding="async"></p>
+
+Roles mengikat aturan ACL ke database. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/25-redis-acls.webp' | relative_url }}" width="1440" height="765" alt="Tab Redis ACLs dengan tiga aturan default" loading="lazy" decoding="async"></p>
+
+Tiga aturan ACL default: Full-Access +@all ~*, Read-Write +@all -@dangerous ~*, Read-Only +@read ~*. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/26-billing-history.webp' | relative_url }}" width="1440" height="765" alt="Billing history: tidak ada riwayat penagihan" loading="lazy" decoding="async"></p>
+
+Billing memiliki Billing History, Payment Methods, dan Credits, ditambah tombol Cost report. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/27-payment-methods.webp' | relative_url }}" width="1440" height="765" alt="Payment methods: tidak ada kartu, tombol Add credit card" loading="lazy" decoding="async"></p>
+
+Tidak ada kartu tersimpan: paket gratis tidak memintanya. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/28-credits.webp' | relative_url }}" width="1440" height="765" alt="Tab Credits dengan kolom kode kupon, jumlah terpakai dan sisa keduanya $0" loading="lazy" decoding="async"></p>
+
+Credits: kode kupon dan saldonya. Penawaran Pro "First $200 free" tidak muncul di sini sebelum ada subscription Pro. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/29-integrations.webp' | relative_url }}" width="1440" height="765" alt="Halaman Integrations: Datadog, Confluent, Grafana, dan Prometheus" loading="lazy" decoding="async"></p>
+
+Integrations: Datadog dan Grafana/Prometheus untuk metrik, Confluent untuk data Kafka ke Redis. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/30-settings.webp' | relative_url }}" width="1440" height="1248" alt="Account settings: info akun, kontak, MFA enforcement nonaktif, unduhan certificate authority, zona waktu UTC" loading="lazy" decoding="async"></p>
+
+Settings: info akun, kontak bisnis, MFA enforcement (nonaktif secara default), bundel CA Redis Cloud untuk klien TLS, zona waktu. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/31-account-menu.webp' | relative_url }}" width="1440" height="765" alt="Menu akun terbuka: pengalih akun, profil pengguna, logout" loading="lazy" decoding="async"></p>
+
+Menu akun beralih antar akun dan membuka profil pengguna. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+
+### Lab: database gratis dan batasnya
+
+**Diverifikasi pada Redis 8.6.2 (paket gratis Redis Cloud, AWS ap-northeast-2), 2026-11-07.** Klien: redis-py 6.1.1 dari host di Korea, round trip sekitar 2.6 ms, TCP biasa (TLS nonaktif secara default). Sumber dan keluaran lengkap: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database).
+
+| Advertised limit | What the client saw |
+|---|---|
+| 30 connections | Koneksi ke-31 ditolak: `max number of clients reached` |
+| 30 MB | Penulisan ditolak pada sekitar 28 MB nilai berukuran 10 kB: `OOM command not allowed when used memory > 'maxmemory'`; tidak ada key yang di-evict (volatile-lru, tidak ada key yang memiliki TTL) |
+| 100 ops/s | Tidak diberlakukan pada percobaan ini: sekitar 104,000 INCR/s selama 60 detik pada 8 koneksi dengan pipeline 100, tanpa error; konsol menampilkan 61,806 / 100 dan sebuah peringatan |
+
+Satu koneksi tanpa pipeline mencapai 249 ops/s, yang ditentukan oleh round trip, bukan oleh paket. Angka ops/s tampaknya merupakan panduan ukuran yang dilaporkan konsol, bukan pembatas laju; hal ini dapat berubah tanpa pemberitahuan, jadi jangan membangun sesuatu di atas kelebihan tersebut.
+
+### Daftar periksa minggu pertama
+
+- Aktifkan **TLS** dan atur **CIDR allow list**: database gratis dimulai dengan TLS nonaktif dan 0.0.0.0/0.
+- Ganti default user dengan pengguna dan peran **Data Access**, atau setidaknya ganti kata sandinya.
+- Tentukan **eviction policy**: volatile-lru menolak penulisan ketika tidak ada key yang memiliki TTL.
+- Jaga **alerts** pada 80% atau lebih rendah; paket gratis tidak memiliki replikasi, persistence, atau backup sebagai cadangan.
+- Aktifkan **MFA enforcement** di Settings setelah lebih banyak orang bergabung.
+- Jika Anda mengaktifkan **API**, hapus user key yang tidak lagi digunakan; system log mencantumkan nama key pada setiap panggilan yang dibuatnya.
+
+### Belum dibahas
+
+Essentials di Seoul dengan replikasi, persistence, backup, dan RBAC, lab REST API, dan Pro Active-Active adalah lab terpisah dengan issue masing-masing di repositori.
+
+</div>
+
+<div class="lang" data-lang="ms" markdown="1">
+
+## Bahasa Melayu
+
+**Redis Cloud, dari pendaftaran hingga setiap menu konsol.** Ditangkap pada 2026-11-07 di pelan percuma: satu pangkalan data percuma (Redis 8.6, AWS ap-northeast-2 Seoul), konsol dalam mod gelap, tiada bayaran. Borang Essentials dan Pro dibuka dan ditangkap tetapi tidak dihantar. Disamarkan dalam setiap tangkapan skrin: nama, e-mel, nombor akaun, ID subscription dan pangkalan data, endpoint, port, alamat IP, API key. Harga pada halaman ini dibaca dalam konsol pada 2026-11-07.
+
+### Sekilas pandang
+
+Bar sisi kiri, dari atas ke bawah: **Databases**, **Subscriptions**, **Redis Search**, **Data Integration**; di bawah *AI services* terdapat **Iris** dengan Agent Playbooks, Agent Memory, Context Gateway, Intent Router, Lens (beta), Agent Mesh (beta) dan Access & Identity; di bawah *Reports* terdapat **Logs** dan **Usage**; di bawah *Account* terdapat **API Keys & Team**, **Data Access**, **Billing**, **Integrations**, **Settings**. Bar atas mengandungi penukar aplikasi, ikon petua, penukar tema (cerah, gelap, sistem) dan menu akaun.
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/01-databases-empty.webp' | relative_url }}" width="1440" height="765" alt="Halaman Databases kosong dengan butang New database" loading="lazy" decoding="async"></p>
+
+Akaun baharu dibuka pada Databases tanpa sebarang kandungan. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+### Cipta pangkalan data
+
+**New database** membuka satu halaman dengan dua kad pelan. **Essentials** ialah infrastruktur kongsi, bermula dari $0.007/jam ($5/bulan). **Pro** ialah infrastruktur khusus, bermula dari $0.014/jam dengan minimum $200/bulan dan lencana "First $200 free". Di bawah kad terdapat baris *Not ready? Try 30 MB for free*; pautan itu satu-satunya jalan ke pelan percuma.
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/02-create-essentials-form.webp' | relative_url }}" width="1440" height="2118" alt="Borang penciptaan Essentials: cloud vendor dan region, nama, versi 8.6, peluncur saiz, pilihan high availability dan persistence, kaedah pembayaran" loading="lazy" decoding="async"></p>
+
+Lalai Essentials: AWS us-east-1, Redis 8.6, jumlah 250 MB (dataset 125 MB ditambah replica 125 MB), 1,000 ops/s, replikasi single-zone dan AOF setiap saat, $8/bulan. Saiz dari 250 MB hingga 100 GB; RAM+SSD (Flex) ialah togol. Kaedah pembayaran diperlukan sebelum Confirm & pay. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/03-create-pro-form.webp' | relative_url }}" width="1440" height="2338" alt="Borang penciptaan Pro: Easy create atau Custom settings, jubin cloud vendor, region, stepper saiz dataset dan throughput, persistence, high availability, ringkasan harga" loading="lazy" decoding="async"></p>
+
+Pro bermula dengan kaedah persediaan, Easy create atau Custom settings. Lalai Easy create: dataset 3 GB (jumlah memori 6 GB dengan replica), 3,000 ops/s, AOF setiap saat, high availability dihidupkan, $0.274/jam (kira-kira $200/bulan). <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/04-create-free-form.webp' | relative_url }}" width="1440" height="1259" alt="Borang penciptaan pelan percuma dengan region Asia Pacific (Seoul), nama notes-on-redis-free, dan had yang disertakan" loading="lazy" decoding="async"></p>
+
+Borang percuma menyenaraikan apa yang disertakan: 1 pangkalan data, RAM 30 MB, 30 sambungan, 100 ops/sec, $0/bulan. Pilihan region adalah bebas (AWS, Google Cloud atau Azure; Seoul dipilih). Hanya tangkapan ini dalam mod cerah; borang tidak boleh dibuka semula sebaik sahaja akaun mempunyai pangkalan data percuma. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+### Skrin pangkalan data
+
+Create database membawa anda ke halaman pangkalan data selepas beberapa saat. Halaman ini mempunyai empat tab: Configuration, Metrics, Alerts, Slowlog. Dialog lawatan pertama menawarkan persediaan berpandu; menutupnya tidak menggunakan sebarang perubahan.
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/05-database-setup-dialog.webp' | relative_url }}" width="1440" height="765" alt="Dialog Set up your database di atas halaman pangkalan data baharu" loading="lazy" decoding="async"></p>
+
+"No changes are applied until you confirm." Dialog ditutup tanpa disemak. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/06-database-configuration.webp' | relative_url }}" width="1440" height="1977" alt="Tab Configuration pangkalan data percuma: kad penggunaan, peluncur pelan, panel ketersediaan dan sandaran, akses, data, keselamatan dan maklumat pangkalan data" loading="lazy" decoding="async"></p>
+
+Lalai pangkalan data percuma seperti yang dipaparkan: tiada replikasi, tiada persistence, remote backup dimatikan, eviction policy volatile-lru, default user dihidupkan, CIDR allow list dimatikan, TLS dimatikan, RESP3, Redis 8.6. Halaman Logs merekodkan allow list sebagai 0.0.0.0/0. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/07-connect-dialog.webp' | relative_url }}" width="1440" height="765" alt="Laci Connect dengan bahagian klien Redis CLI, Redis Insight dan Redis SDK" loading="lazy" decoding="async"></p>
+
+Connect memberikan arahan redis-cli yang sedia digunakan melalui endpoint awam; kata laluan kekal tersembunyi sehingga ikon mata ditekan. Endpoint ialah nama hos yang dijana di bawah db.redis.io. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/08-database-metrics.webp' | relative_url }}" width="1440" height="1587" alt="Tab Metrics semasa ujian beban: ops sesaat meningkat kepada 82 ribu, graf kependaman, sambungan, key, memori dan rangkaian" loading="lazy" decoding="async"></p>
+
+Julat dari 5 minit hingga 3 bulan. Graf: ops/sec, kependaman (juga dipecahkan kepada reads, writes, other), sambungan, objek dikeluarkan dan tamat tempoh/saat, jumlah key, reads/sec, writes/sec, other commands/sec, read hit ratio, memori digunakan, network egress dan ingress. Ditangkap semasa ujian throughput di bawah. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/09-database-throughput-over-limit.webp' | relative_url }}" width="1440" height="765" alt="Kad Throughput menunjukkan 61,806 daripada 100 ops sesaat dengan ikon amaran" loading="lazy" decoding="async"></p>
+
+Kad throughput semasa ujian: 61,806 / 100 ops/sec. Konsol menandakan lebihan itu; pangkalan data terus berfungsi (lihat ukuran di bawah). <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/10-database-alerts.webp' | relative_url }}" width="1440" height="765" alt="Tab Alerts dengan alert saiz dataset dan sambungan, kedua-duanya pada 80 peratus had pelan" loading="lazy" decoding="async"></p>
+
+Alert pelan percuma: saiz dataset dan bilangan sambungan, masing-masing sebagai peratusan had pelan, ditetapkan awal pada 80%. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/11-database-slowlog.webp' | relative_url }}" width="1440" height="765" alt="Tab Slowlog tanpa entri dan butang Clear slowlog" loading="lazy" decoding="async"></p>
+
+Slowlog kekal kosong: ujian hanya menggunakan INCR dan SET. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+### Pangkalan data dan subscription
+
+Setiap pangkalan data tergolong dalam sebuah subscription. Pelan percuma mencipta satu subscription yang mengandungi satu pangkalan data.
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/12-databases-list.webp' | relative_url }}" width="1440" height="765" alt="Senarai Databases dengan satu baris: notes-on-redis-free, penggunaan memori 7.4 peratus daripada 30 MB, versi 8.6" loading="lazy" decoding="async"></p>
+
+Lajur: status, nama pangkalan data, subscription, endpoint (butang Connect), penggunaan memori, capabilities, tags, versi, actions. Penapis untuk status, subscription, plan, capabilities, versi, region dan cloud. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/13-subscriptions.webp' | relative_url }}" width="1440" height="765" alt="Halaman Subscriptions dengan kad subscription percuma dan senarai pangkalan datanya" loading="lazy" decoding="async"></p>
+
+Subscription percuma di ap-northeast-2, dengan butang Plan upgrade serta tab Databases dan Overview. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+### Menu produk
+
+Tiga entri bar sisi ialah pintu masuk ke produk, bukan tetapan.
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/14-redis-search.webp' | relative_url }}" width="1440" height="818" alt="Halaman Redis Search yang memperkenalkan vector search untuk agent, dengan pemilih pangkalan data" loading="lazy" decoding="async"></p>
+
+Redis Search ialah permulaan berpandu untuk mencipta vector index pertama pada pangkalan data sedia ada. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/15-data-integration.webp' | relative_url }}" width="1440" height="1489" alt="Halaman Data Integration: penyegerakan hampir masa nyata ke Redis, $1.37 sejam, tiga langkah" loading="lazy" decoding="async"></p>
+
+Data Integration ialah RDI terurus: $1.37/jam, anggaran kira-kira $1,000/bulan, dibilkan sejak pipeline dicipta. Langkah: sambung pangkalan data sumber, ubah, layani bacaan daripada Redis. Tidak dicipta di sini. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/16-iris.webp' | relative_url }}" width="1440" height="1276" alt="Halaman landing Iris AI Services dengan video demo dan senarai perkhidmatan" loading="lazy" decoding="async"></p>
+
+Halaman landing Iris. Perkhidmatan yang disenaraikan: Agent Memory, Agent Playbooks, Intent Router, Context Gateway, Agent Mesh; Lens muncul dalam bar sisi. Halaman Iris di tapak ini menerangkan kesemuanya. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+### Laporan
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/17-logs-system.webp' | relative_url }}" width="1440" height="765" alt="System log: subscription dicipta, pangkalan data diaktifkan, persistence dimatikan, source IP ditambah, RESP3 didayakan, API didayakan, API key ditetapkan" loading="lazy" decoding="async"></p>
+
+System log menyenaraikan setiap peristiwa konfigurasi dengan masa, originator dan nama API key; Export all memuat turunnya. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/18-logs-sessions.webp' | relative_url }}" width="1440" height="765" alt="Sessions log dengan dua log masuk yang berjaya" loading="lazy" decoding="async"></p>
+
+Sessions: setiap log masuk konsol dengan user agent, IP, peranan dan jenis log masuk. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/19-usage.webp' | relative_url }}" width="1440" height="765" alt="Laporan Usage, tab Memory Usage, graf harian untuk November 2026" loading="lazy" decoding="async"></p>
+
+Usage mempunyai tab Memory Usage dan RBU Usage serta muat turun Cost report. Sejurus selepas pangkalan data dicipta, ia menyatakan laporan akan muncul sejam kemudian; pada tangkapan akhir ia telah menunjukkan data. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+### Akaun
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/20-api-keys.webp' | relative_url }}" width="1440" height="765" alt="Tab API Keys dengan account key tersembunyi dan satu user key" loading="lazy" decoding="async"></p>
+
+Enable API berfungsi pada pelan percuma. Panggilan memerlukan account key dan user key; satu user key dicipta dan GET /v1/fixed/subscriptions memulangkan 200. Subscription Free dan Essentials berada di bawah /v1/fixed, Pro di bawah /v1/subscriptions. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/21-team.webp' | relative_url }}" width="1440" height="765" alt="Tab Team dengan seorang owner yang mendaftar melalui Google" loading="lazy" decoding="async"></p>
+
+Team: pengguna konsol, peranan dan jenis pendaftaran mereka. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/22-single-sign-on.webp' | relative_url }}" width="1440" height="765" alt="Tab Single Sign-On: SSO tidak didayakan, butang Set up SAML SSO" loading="lazy" decoding="async"></p>
+
+SAML SSO boleh disediakan atau disertai daripada konfigurasi sedia ada; tab ini terdapat pada pelan percuma. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/23-data-access-users.webp' | relative_url }}" width="1440" height="765" alt="Data Access Control, tab Users, tiada pengguna ditakrifkan" loading="lazy" decoding="async"></p>
+
+Data Access ialah RBAC peringkat pangkalan data: pengguna, peranan dan Redis ACLs. Satu peranan mesti wujud sebelum pengguna boleh ditambah. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/24-data-access-roles.webp' | relative_url }}" width="1440" height="765" alt="Tab Roles, tiada peranan ditakrifkan" loading="lazy" decoding="async"></p>
+
+Roles mengikat peraturan ACL kepada pangkalan data. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/25-redis-acls.webp' | relative_url }}" width="1440" height="765" alt="Tab Redis ACLs dengan tiga peraturan lalai" loading="lazy" decoding="async"></p>
+
+Tiga peraturan ACL lalai: Full-Access +@all ~*, Read-Write +@all -@dangerous ~*, Read-Only +@read ~*. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/26-billing-history.webp' | relative_url }}" width="1440" height="765" alt="Billing history: tiada sejarah pengebilan" loading="lazy" decoding="async"></p>
+
+Billing mempunyai Billing History, Payment Methods dan Credits, serta butang Cost report. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/27-payment-methods.webp' | relative_url }}" width="1440" height="765" alt="Payment methods: tiada kad, butang Add credit card" loading="lazy" decoding="async"></p>
+
+Tiada kad dalam fail: pelan percuma tidak memintanya. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/28-credits.webp' | relative_url }}" width="1440" height="765" alt="Tab Credits dengan medan kod kupon, jumlah digunakan dan baki kedua-duanya $0" loading="lazy" decoding="async"></p>
+
+Credits: kod kupon dan bakinya. Tawaran Pro "First $200 free" tidak dipaparkan di sini sebelum subscription Pro wujud. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/29-integrations.webp' | relative_url }}" width="1440" height="765" alt="Halaman Integrations: Datadog, Confluent, Grafana dan Prometheus" loading="lazy" decoding="async"></p>
+
+Integrations: Datadog dan Grafana/Prometheus untuk metrik, Confluent untuk data Kafka ke dalam Redis. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/30-settings.webp' | relative_url }}" width="1440" height="1248" alt="Account settings: maklumat akaun, kenalan, MFA enforcement dimatikan, muat turun certificate authority, zon waktu UTC" loading="lazy" decoding="async"></p>
+
+Settings: maklumat akaun, kenalan perniagaan, MFA enforcement (dimatikan secara lalai), bundle CA Redis Cloud untuk klien TLS, zon waktu. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+<p class="shot"><img src="{{ '/assets/img/cloud-console/31-account-menu.webp' | relative_url }}" width="1440" height="765" alt="Menu akaun dibuka: penukar akaun, profil pengguna, logout" loading="lazy" decoding="async"></p>
+
+Menu akaun bertukar antara akaun dan membuka profil pengguna. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+
+### Makmal: pangkalan data percuma dan hadnya
+
+**Disahkan pada Redis 8.6.2 (pelan percuma Redis Cloud, AWS ap-northeast-2), 2026-11-07.** Klien: redis-py 6.1.1 dari hos di Korea, round trip kira-kira 2.6 ms, TCP biasa (TLS dimatikan secara lalai). Sumber dan output penuh: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database).
+
+| Advertised limit | What the client saw |
+|---|---|
+| 30 connections | Sambungan ke-31 ditolak: `max number of clients reached` |
+| 30 MB | Penulisan ditolak pada kira-kira 28 MB nilai 10 kB: `OOM command not allowed when used memory > 'maxmemory'`; tiada key dikeluarkan (volatile-lru, tiada key yang mempunyai TTL) |
+| 100 ops/s | Tidak dikuatkuasakan dalam larian ini: kira-kira 104,000 INCR/s selama 60 saat pada 8 sambungan dengan pipeline 100, tiada ralat; konsol menunjukkan 61,806 / 100 dan satu amaran |
+
+Satu sambungan tanpa pipeline mencapai 249 ops/s, iaitu round trip, bukan pelan. Angka ops/s kelihatan seperti panduan saiz yang dilaporkan oleh konsol, bukan pendikit; ini mungkin berubah tanpa notis, jadi jangan membina sesuatu berdasarkan lebihan itu.
+
+### Senarai semak minggu pertama
+
+- Hidupkan **TLS** dan tetapkan **CIDR allow list**: pangkalan data percuma bermula dengan TLS dimatikan dan 0.0.0.0/0.
+- Gantikan default user dengan pengguna dan peranan **Data Access**, atau sekurang-kurangnya tukar kata laluannya.
+- Tentukan **eviction policy**: volatile-lru menolak penulisan apabila tiada key yang mempunyai TTL.
+- Kekalkan **alerts** pada 80% atau lebih rendah; pelan percuma tidak mempunyai replikasi, persistence atau sandaran sebagai pilihan terakhir.
+- Hidupkan **MFA enforcement** dalam Settings apabila lebih ramai orang menyertai.
+- Jika anda mendayakan **API**, padam user key yang tidak lagi digunakan; system log menamakan key pada setiap panggilan yang dibuatnya.
+
+### Belum diliputi
+
+Essentials di Seoul dengan replikasi, persistence, sandaran dan RBAC, makmal REST API, dan Pro Active-Active ialah makmal berasingan dengan isu masing-masing dalam repositori.
+
+</div>

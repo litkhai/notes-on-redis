@@ -103,6 +103,15 @@ body {
    않는다. 글자 단위로 끊고, `strict` 로 닫는 문장부호가 줄 머리에 오지 않게 한다.
    언어마다 해당 문자권 폰트를 앞에 두어 공통 한자가 그 언어의 자형으로 나온다. */
 .lang[data-lang="zh"], .lang[data-lang="ja"] { word-break: normal; line-break: strict; }
+/* Thai has no spaces between words either; the browser's dictionary finds the
+   breaks, so only `keep-all` (meant for Korean) has to be undone (#22).
+   태국어도 단어 사이 공백이 없다. 줄바꿈 위치는 브라우저 사전이 찾으므로 한국어용
+   `keep-all` 만 되돌린다. */
+.lang[data-lang="th"] { word-break: normal; }
+html:lang(th) body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Leelawadee UI", "Thonburi",
+               "Noto Sans Thai", "Noto Sans Thai UI", Roboto, sans-serif;
+}
 html:lang(zh-Hans) body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
                "Microsoft YaHei", "Noto Sans SC", "Noto Sans CJK SC", Roboto, sans-serif;
