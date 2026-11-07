@@ -62,7 +62,7 @@ The throughput card during the test: 61,806 / 100 ops/sec. The console flags the
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/10-database-alerts.webp' | relative_url }}" width="1440" height="765" alt="Alerts tab with dataset size and connections alerts, both at 80 percent of plan limit" loading="lazy" decoding="async"></p>
 
-Free plan alerts: dataset size and number of connections, each as a percent of the plan limit, preset to 80%. <small>Captured 2026-11-07, Redis Cloud free plan.</small>
+Free plan alerts: dataset size and number of connections, each as a percent of the plan limit, preset to 80%. On 2026-11-07 the connections alert arrived by email from Redis: "The number of connections for your database has reached 93.33% of the connections limit" (28 of 30). The Iris services were holding them ([Iris]({{ '/iris/' | relative_url }})). <small>Captured 2026-11-07, Redis Cloud free plan.</small>
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/11-database-slowlog.webp' | relative_url }}" width="1440" height="765" alt="Slowlog tab with no entries and a Clear slowlog button" loading="lazy" decoding="async"></p>
 
@@ -243,7 +243,7 @@ Connect는 공개 엔드포인트로 접속하는 redis-cli 명령을 바로 준
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/10-database-alerts.webp' | relative_url }}" width="1440" height="765" alt="데이터 크기와 커넥션 알림이 각각 플랜 한도의 80%로 설정된 Alerts 탭" loading="lazy" decoding="async"></p>
 
-무료 플랜 알림: 데이터 크기와 커넥션 수, 각각 플랜 한도 대비 %로 80%가 미리 설정돼 있다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
+무료 플랜 알림: 데이터 크기와 커넥션 수, 각각 플랜 한도 대비 %로 80%가 미리 설정돼 있다. 2026-11-07에 커넥션 알림이 Redis의 이메일로 왔다: "The number of connections for your database has reached 93.33% of the connections limit"(30개 중 28개). Iris 서비스들이 잡고 있던 연결이다([Iris]({{ '/iris/' | relative_url }})). <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/11-database-slowlog.webp' | relative_url }}" width="1440" height="765" alt="항목 없는 Slowlog 탭과 Clear slowlog 버튼" loading="lazy" decoding="async"></p>
 
@@ -424,7 +424,7 @@ Connect 直接给出通过公网 endpoint 连接的 redis-cli 命令；密码在
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/10-database-alerts.webp' | relative_url }}" width="1440" height="765" alt="Alerts 标签页，数据集大小和连接数两个告警，均为计划限制的 80%" loading="lazy" decoding="async"></p>
 
-免费计划的告警：数据集大小和连接数，均为计划限制的百分比，预设为 80%。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
+免费计划的告警：数据集大小和连接数，均为计划限制的百分比，预设为 80%。2026-11-07，连接数告警通过电子邮件从 Redis 送达："The number of connections for your database has reached 93.33% of the connections limit"（30 个中的 28 个）。这些连接是由 Iris 服务占用的（[Iris]({{ '/iris/' | relative_url }})）。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/11-database-slowlog.webp' | relative_url }}" width="1440" height="765" alt="没有条目的 Slowlog 标签页，带有 Clear slowlog 按钮" loading="lazy" decoding="async"></p>
 
@@ -605,7 +605,7 @@ Connect は、パブリックエンドポイント経由の redis-cli コマン�
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/10-database-alerts.webp' | relative_url }}" width="1440" height="765" alt="Alerts タブ。データセットサイズと接続数のアラートが、どちらもプラン上限の 80% に設定されている" loading="lazy" decoding="async"></p>
 
-無料プランのアラート：データセットサイズと接続数。それぞれプラン上限に対する % で、80% にプリセットされています。 <small>2026-11-07 キャプチャ、Redis Cloud 無料プラン。</small>
+無料プランのアラート：データセットサイズと接続数。それぞれプラン上限に対する % で、80% にプリセットされています。2026-11-07 に、接続数のアラートが Redis からメールで届きました："The number of connections for your database has reached 93.33% of the connections limit"（30 件中 28 件）。これらの接続は Iris のサービスが保持していました（[Iris]({{ '/iris/' | relative_url }})）。 <small>2026-11-07 キャプチャ、Redis Cloud 無料プラン。</small>
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/11-database-slowlog.webp' | relative_url }}" width="1440" height="765" alt="エントリのない Slowlog タブと Clear slowlog ボタン" loading="lazy" decoding="async"></p>
 
@@ -786,7 +786,7 @@ Connect ให้คำสั่ง redis-cli ที่พร้อมใช้�
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/10-database-alerts.webp' | relative_url }}" width="1440" height="765" alt="แท็บ Alerts ที่มี alert ขนาด dataset และจำนวนการเชื่อมต่อ ทั้งคู่ที่ 80 เปอร์เซ็นต์ของขีดจำกัดแผน" loading="lazy" decoding="async"></p>
 
-alert ของแผนฟรี: ขนาด dataset และจำนวนการเชื่อมต่อ แต่ละรายการเป็นเปอร์เซ็นต์ของขีดจำกัดแผน ตั้งไว้ล่วงหน้าที่ 80% <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
+alert ของแผนฟรี: ขนาด dataset และจำนวนการเชื่อมต่อ แต่ละรายการเป็นเปอร์เซ็นต์ของขีดจำกัดแผน ตั้งไว้ล่วงหน้าที่ 80% เมื่อ 2026-11-07 alert จำนวนการเชื่อมต่อถูกส่งมาทางอีเมลจาก Redis: "The number of connections for your database has reached 93.33% of the connections limit" (28 จาก 30) การเชื่อมต่อเหล่านี้ถูกถือไว้โดยบริการของ Iris ([Iris]({{ '/iris/' | relative_url }})) <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/11-database-slowlog.webp' | relative_url }}" width="1440" height="765" alt="แท็บ Slowlog ที่ไม่มีรายการและมีปุ่ม Clear slowlog" loading="lazy" decoding="async"></p>
 
@@ -967,7 +967,7 @@ Kartu throughput selama pengujian: 61,806 / 100 ops/sec. Konsol menandai kelebih
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/10-database-alerts.webp' | relative_url }}" width="1440" height="765" alt="Tab Alerts dengan alert ukuran dataset dan koneksi, keduanya pada 80 persen dari batas paket" loading="lazy" decoding="async"></p>
 
-Alert paket gratis: ukuran dataset dan jumlah koneksi, masing-masing sebagai persentase dari batas paket, diatur awal pada 80%. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
+Alert paket gratis: ukuran dataset dan jumlah koneksi, masing-masing sebagai persentase dari batas paket, diatur awal pada 80%. Pada 2026-11-07, alert koneksi tiba melalui email dari Redis: "The number of connections for your database has reached 93.33% of the connections limit" (28 dari 30). Koneksi tersebut dipegang oleh layanan Iris ([Iris]({{ '/iris/' | relative_url }})). <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/11-database-slowlog.webp' | relative_url }}" width="1440" height="765" alt="Tab Slowlog tanpa entri dan tombol Clear slowlog" loading="lazy" decoding="async"></p>
 
@@ -1148,7 +1148,7 @@ Kad throughput semasa ujian: 61,806 / 100 ops/sec. Konsol menandakan lebihan itu
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/10-database-alerts.webp' | relative_url }}" width="1440" height="765" alt="Tab Alerts dengan alert saiz dataset dan sambungan, kedua-duanya pada 80 peratus had pelan" loading="lazy" decoding="async"></p>
 
-Alert pelan percuma: saiz dataset dan bilangan sambungan, masing-masing sebagai peratusan had pelan, ditetapkan awal pada 80%. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
+Alert pelan percuma: saiz dataset dan bilangan sambungan, masing-masing sebagai peratusan had pelan, ditetapkan awal pada 80%. Pada 2026-11-07, alert sambungan tiba melalui e-mel daripada Redis: "The number of connections for your database has reached 93.33% of the connections limit" (28 daripada 30). Sambungan tersebut dipegang oleh perkhidmatan Iris ([Iris]({{ '/iris/' | relative_url }})). <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/11-database-slowlog.webp' | relative_url }}" width="1440" height="765" alt="Tab Slowlog tanpa entri dan butang Clear slowlog" loading="lazy" decoding="async"></p>
 
