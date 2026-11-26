@@ -140,7 +140,7 @@ The cache lived about 31 minutes. By the price list: about 0.2 GB-hours of stora
 
 Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey와 for Redis OSS(≤ 7.1), Azure Managed Redis(안은 Redis Enterprise), Memorystore for Valkey — 셀마다 출처가 있는 매트릭스(라이선스, 모듈, Active-Active, 티어링, SLA, 가격 모델), 라이선스 연표(BSD-3 → 7.4에서 RSALv2/SSPL → 8.0에서 AGPLv3 추가; Valkey는 7.2.4를 BSD-3로 포크), 그리고 Redis 8.10과 Valkey 9.1에 같은 워크로드를 나란히. Dragonfly, KeyDB, Garnet은 한 문단씩.
 
-### Redis 8.10과 Valkey 9.1, 로컬에서
+### Redis 8.10과 Valkey 9.1, 로컬에서 {#ko-redis-810-and-valkey-91-locally}
 
 **확인: Redis 8.10.3, Valkey 9.1.3, Valkey 번들 9.1, 2026-11-07.** 24코어 호스트 하나의 Docker, 기본 설정, 영속성 없음. 소스와 전체 출력: [`compare/01-valkey-vs-redis-local`](https://github.com/litkhai/notes-on-redis/tree/main/compare/01-valkey-vs-redis-local).
 
@@ -160,15 +160,15 @@ Valkey에만 있는 것: `CLUSTERSCAN`, 원자적 슬롯 이전(`CLUSTER MIGRATE
 
 **가용성 나란히 보기**(`compare/01-valkey-vs-redis-local/ha.py`). 같은 스크립트로 두 엔진을 돌렸다. 클러스터 노드 타임아웃 3초에서 둘 다 4.2초에 복제본이 승격됐고, Sentinel은 4.3초(Redis)와 4.4초(Valkey)에 새 마스터를 지목했으며, `appendfsync everysec`의 AOF는 둘 다 키 약 632,000개를 1.3초에 다시 읽었다. 다른 것은 바이너리 이름뿐이고 클러스터와 Sentinel 명령은 같다.
 
-### 기능 매트릭스
+### 기능 매트릭스 {#ko-feature-matrix}
 
 Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache for Valkey와 for Redis OSS, Azure Managed Redis, Memorystore for Valkey를 한 표에 담았다. 칸마다 출처가 있다. 2026-11-07에 여기서 잰 값, 그날 읽은 공급사 문서, 또는 "확인 안 됨" 표시. 칸 단위로 늘려 가도록 저장소에 둔다: [`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md).
 
-### ElastiCache Serverless for Valkey, Redis Cloud 무료 DB와 나란히
+### ElastiCache Serverless for Valkey, Redis Cloud 무료 DB와 나란히 {#ko-elasticache-serverless-for-valkey-next-to-the-redis-cloud-free-database}
 
 **2026-11-07, AWS ap-northeast-2(서울)에서 실행.** 서버리스 캐시 하나(Valkey 9.0)를 콘솔에서 만들고 지웠다. 약 31분 살아 있었다. [Redis Cloud 무료 DB 실습]({{ '/cloud/' | relative_url }})과 같은 측정 스크립트, 같은 한국의 클라이언트 호스트를 썼다. 가격은 2026-10-28에 게시된 서울 리전 AWS 가격표를 2026-11-07에 읽었다. 가린 것: 계정 ID와 별칭, ARN, 엔드포인트.
 
-#### 다른 점
+#### 다른 점 {#ko-what-differed}
 
 | | Redis Cloud 무료 DB | ElastiCache Serverless for Valkey |
 |---|---|---|
@@ -185,7 +185,7 @@ Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache for Valkey와 for Redis 
 | 지표 | 콘솔 차트 16개, 5분부터 3개월 | CloudWatch. 캐시 화면에 지표 50개 중 16개 |
 | 프로그램 접근 | 계정 키와 사용자 키로 REST API, Terraform과 Pulumi | AWS API, CLI, CloudFormation. ElastiCache용 MCP 서버 |
 
-#### 클라이언트 측정
+#### 클라이언트 측정 {#ko-client-measurements}
 
 | 측정 | Redis Cloud 무료, 평문 TCP | ElastiCache Serverless, TLS + IAM |
 |---|---|---|
@@ -198,7 +198,7 @@ Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache for Valkey와 for Redis 
 
 처리량 행은 어느 서비스에 대한 판정도 아니다. 한쪽은 평문 TCP, 다른 쪽은 TLS이고, 클라이언트는 한국의 파이썬 프로세스 하나이며, 서버리스 캐시는 초당 200,000 ECPU로 상한을 걸었다(0 구간은 그 상한보다 낮은 초당 약 40,000 INCR에서 나왔고 원인은 밝히지 못했다). 파이프라인 없는 수치는 양쪽 모두 왕복 시간에 묶인다.
 
-#### 콘솔, 화면 순서대로
+#### 콘솔, 화면 순서대로 {#ko-the-console-screen-by-screen}
 
 <p class="shot"><img src="{{ '/assets/img/elasticache-console/01-elasticache-dashboard.webp' | relative_url }}" width="1440" height="765" alt="리소스가 없는 서울 리전 ElastiCache 대시보드" loading="lazy" decoding="async"></p>
 
@@ -248,7 +248,7 @@ Public을 고르면 사용자 그룹에 IAM 인증 사용자만 있어야 한다
 
 삭제는 캐시 이름 입력을 요구하고 기본으로 마지막 백업을 만든다. No를 골랐다. 약 3분 뒤 목록에서 사라졌다. <small>2026-11-07 캡처, AWS ap-northeast-2.</small>
 
-#### 비용
+#### 비용 {#ko-cost}
 
 캐시는 약 31분 살아 있었다. 가격표로 계산하면 저장 약 0.2 GB-시간(최소 100 MB와 메모리 시험)과 ECPU 약 500만 개, 합쳐 약 $0.05다. 이 글을 쓸 때는 AWS 청구서에 아직 나타나지 않았다. 나타나면 청구액을 `STATUS.md`에 적는다.
 
@@ -264,7 +264,7 @@ Public을 고르면 사용자 그룹에 IAM 인증 사용자만 있어야 한다
 
 Redis Open Source 8.x、Redis Cloud / Software、Valkey 9.x、ElastiCache for Valkey 与 for Redis OSS（≤ 7.1）、Azure Managed Redis（内核为 Redis Enterprise）、Memorystore for Valkey — 每格有来源的矩阵（许可证、模块、Active-Active、分层、SLA、定价模型）、许可证时间线（BSD-3 → 7.4 起 RSALv2/SSPL → 8.0 加入 AGPLv3；Valkey 自 7.2.4 以 BSD-3 分叉），以及在 Redis 8.10 与 Valkey 9.1 上并排运行同一负载。Dragonfly、KeyDB、Garnet 各一段。
 
-### 在本地运行 Redis 8.10 与 Valkey 9.1
+### 在本地运行 Redis 8.10 与 Valkey 9.1 {#zh-redis-810-and-valkey-91-locally}
 
 **已于 2026-11-07 在 Redis 8.10.3、Valkey 9.1.3 和 Valkey bundle 9.1 上验证，** 在一台 24 核主机上用 Docker 运行，使用默认配置，不启用持久化。源码与完整输出：[`compare/01-valkey-vs-redis-local`](https://github.com/litkhai/notes-on-redis/tree/main/compare/01-valkey-vs-redis-local)。
 
@@ -284,15 +284,15 @@ Redis Open Source 8.x、Redis Cloud / Software、Valkey 9.x、ElastiCache for Va
 
 **可用性并排对比**（`compare/01-valkey-vs-redis-local/ha.py`）。同一个脚本运行了两个引擎：集群节点超时设为 3 秒时，两者都在 4.2 秒后提升了副本；Sentinel 分别在 4.3 秒（Redis）和 4.4 秒（Valkey）后指定了新的 master；使用 `appendfsync everysec` 的 AOF 在两者上都用 1.3 秒重新加载了约 632,000 个键。只有二进制文件的名称不同，集群和 Sentinel 的命令是一样的。
 
-### 功能矩阵
+### 功能矩阵 {#zh-feature-matrix}
 
 一张表涵盖 Redis Open Source 8、Redis Cloud、Valkey 9、ElastiCache for Valkey 与 for Redis OSS、Azure Managed Redis 和 Memorystore for Valkey，每个单元格都有来源：2026-11-07 在此实测，或当天读取的厂商文档，或标为“未确认”。它放在仓库中，因此可以逐格扩充：[`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md)。
 
-### ElastiCache Serverless for Valkey 与 Redis Cloud 免费数据库的对比
+### ElastiCache Serverless for Valkey 与 Redis Cloud 免费数据库的对比 {#zh-elasticache-serverless-for-valkey-next-to-the-redis-cloud-free-database}
 
 **2026-11-07 在 AWS ap-northeast-2（首尔）运行。** 在控制台创建并删除了一个 Serverless 缓存，Valkey 9.0，存续约 31 分钟。使用与 [Redis Cloud 免费数据库实验]({{ '/cloud/' | relative_url }}) 相同的探测脚本和位于韩国的同一台客户端主机。价格取自 2026-10-28 发布的 AWS 首尔价格表，2026-11-07 读取。已隐去：账户 ID 和别名、ARN、端点。
 
-#### 差异
+#### 差异 {#zh-what-differed}
 
 | | Redis Cloud free database | ElastiCache Serverless for Valkey |
 |---|---|---|
@@ -309,7 +309,7 @@ Redis Open Source 8.x、Redis Cloud / Software、Valkey 9.x、ElastiCache for Va
 | 指标 | 控制台 16 张图表，5 分钟到 3 个月 | CloudWatch；缓存页面显示 50 项指标中的 16 项 |
 | 编程访问 | 使用账户密钥和用户密钥的 REST API，Terraform 和 Pulumi | AWS API、CLI、CloudFormation；ElastiCache 的 MCP 服务器 |
 
-#### 客户端测量
+#### 客户端测量 {#zh-client-measurements}
 
 | Probe | Redis Cloud free, plain TCP | ElastiCache Serverless, TLS + IAM |
 |---|---|---|
@@ -322,7 +322,7 @@ Redis Open Source 8.x、Redis Cloud / Software、Valkey 9.x、ElastiCache for Va
 
 吞吐量各行不是对任一服务的结论：一方是明文 TCP，另一方是 TLS，客户端是位于韩国的单个 Python 进程，且 Serverless 缓存被限制在 200,000 ECPUs/s（为零的窗口出现在约 40,000 INCR/s 时，低于该上限；原因未能解释）。未使用 pipeline 的数值在两侧都受往返时间限制。
 
-#### 控制台，逐屏查看
+#### 控制台，逐屏查看 {#zh-the-console-screen-by-screen}
 
 <p class="shot"><img src="{{ '/assets/img/elasticache-console/01-elasticache-dashboard.webp' | relative_url }}" width="1440" height="765" alt="首尔区域中没有资源的 ElastiCache 控制面板" loading="lazy" decoding="async"></p>
 
@@ -372,7 +372,7 @@ Valkey caches 是一个带有 Create cache 按钮的列表。 <small>2026-11-07 
 
 删除时需要输入缓存名称，且默认创建最终备份；此处选择了 No。约 3 分钟后缓存从列表中消失。 <small>2026-11-07 截图，AWS ap-northeast-2。</small>
 
-#### 费用
+#### 费用 {#zh-cost}
 
 缓存存续约 31 分钟。按价格表计算：约 0.2 GB 小时的存储（最低 100 MB，加上内存测试）和约 500 万 ECPU，合计约 $0.05。撰写本文时 AWS 账单尚未显示该费用；显示后，实际计费金额会记入 `STATUS.md`。
 
@@ -388,7 +388,7 @@ Valkey caches 是一个带有 Create cache 按钮的列表。 <small>2026-11-07 
 
 Redis Open Source 8.x、Redis Cloud / Software、Valkey 9.x、ElastiCache for Valkey と for Redis OSS（≤ 7.1）、Azure Managed Redis（中身は Redis Enterprise）、Memorystore for Valkey — セルごとに出典のあるマトリクス（ライセンス、モジュール、Active-Active、階層化、SLA、価格モデル）、ライセンスの年表（BSD-3 → 7.4 で RSALv2/SSPL → 8.0 で AGPLv3 追加、Valkey は 7.2.4 を BSD-3 でフォーク）、そして Redis 8.10 と Valkey 9.1 で同じワークロードを並べて実行。Dragonfly、KeyDB、Garnet は一段落ずつ。
 
-### Redis 8.10 と Valkey 9.1 をローカルで
+### Redis 8.10 と Valkey 9.1 をローカルで {#ja-redis-810-and-valkey-91-locally}
 
 **2026-11-07 に Redis 8.10.3、Valkey 9.1.3、Valkey bundle 9.1 で検証済み。** 24 コアのホスト 1 台で Docker を使い、デフォルト設定、永続化なしで実行した。ソースと全出力: [`compare/01-valkey-vs-redis-local`](https://github.com/litkhai/notes-on-redis/tree/main/compare/01-valkey-vs-redis-local)。
 
@@ -408,15 +408,15 @@ Valkey のみにあるもの: `CLUSTERSCAN`、アトミックなスロット移�
 
 **可用性の比較**（`compare/01-valkey-vs-redis-local/ha.py`）。同じスクリプトで両方のエンジンを動かした。クラスターのノードタイムアウト 3 秒では、どちらも 4.2 秒でレプリカが昇格し、Sentinel は 4.3 秒（Redis）と 4.4 秒（Valkey）で新しいマスターを指名し、`appendfsync everysec` の AOF は、どちらも約 632,000 個のキーを 1.3 秒で再読み込みした。違ったのはバイナリ名だけで、クラスターと Sentinel のコマンドは同じである。
 
-### 機能マトリクス
+### 機能マトリクス {#ja-feature-matrix}
 
 Redis Open Source 8、Redis Cloud、Valkey 9、ElastiCache for Valkey と for Redis OSS、Azure Managed Redis、Memorystore for Valkey を 1 つの表にまとめ、すべてのセルに出典を付けた。ここで 2026-11-07 に測定したもの、その日に読んだベンダーのドキュメント、または「未確認」と記したもののいずれかである。リポジトリに置いてあるので、セルごとに増やしていける: [`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md)。
 
-### ElastiCache Serverless for Valkey と Redis Cloud 無料データベースの比較
+### ElastiCache Serverless for Valkey と Redis Cloud 無料データベースの比較 {#ja-elasticache-serverless-for-valkey-next-to-the-redis-cloud-free-database}
 
 **2026-11-07 に AWS ap-northeast-2（ソウル）で実施。** コンソールで Serverless キャッシュを 1 つ、Valkey 9.0 で作成して削除した。存続時間は約 31 分。[Redis Cloud 無料データベースのラボ]({{ '/cloud/' | relative_url }}) と同じプローブスクリプト、同じ韓国内のクライアントホストを使った。価格は 2026-10-28 公開の AWS ソウル価格表によるもので、2026-11-07 に確認した。マスク済み：アカウント ID とエイリアス、ARN、エンドポイント。
 
-#### 異なった点
+#### 異なった点 {#ja-what-differed}
 
 | | Redis Cloud free database | ElastiCache Serverless for Valkey |
 |---|---|---|
@@ -433,7 +433,7 @@ Redis Open Source 8、Redis Cloud、Valkey 9、ElastiCache for Valkey と for Re
 | メトリクス | コンソールに 16 チャート、5 分から 3 か月 | CloudWatch。キャッシュページには 50 メトリクスのうち 16 を表示 |
 | プログラムからのアクセス | アカウントキーとユーザーキーを使う REST API、Terraform と Pulumi | AWS API、CLI、CloudFormation。ElastiCache 用の MCP サーバー |
 
-#### クライアント側の測定
+#### クライアント側の測定 {#ja-client-measurements}
 
 | Probe | Redis Cloud free, plain TCP | ElastiCache Serverless, TLS + IAM |
 |---|---|---|
@@ -446,7 +446,7 @@ Redis Open Source 8、Redis Cloud、Valkey 9、ElastiCache for Valkey と for Re
 
 スループットの各行はどちらのサービスの優劣を示すものではない。片方は平文 TCP、もう片方は TLS であり、クライアントは韓国内の単一の Python プロセスで、Serverless キャッシュは 200,000 ECPUs/s に制限されていた（ゼロのウィンドウは約 40,000 INCR/s のときに発生し、この上限を下回っていた。原因は説明できていない）。パイプラインなしの数値は、どちら側もラウンドトリップで律速される。
 
-#### コンソールを画面ごとに見る
+#### コンソールを画面ごとに見る {#ja-the-console-screen-by-screen}
 
 <p class="shot"><img src="{{ '/assets/img/elasticache-console/01-elasticache-dashboard.webp' | relative_url }}" width="1440" height="765" alt="リソースがないソウルリージョンの ElastiCache ダッシュボード" loading="lazy" decoding="async"></p>
 
@@ -496,7 +496,7 @@ Public を選ぶと、ユーザーグループには IAM 認証ユーザーの�
 
 削除ではキャッシュ名の入力が求められ、既定で最終バックアップが作成される。ここでは No を選んだ。約 3 分後にキャッシュが一覧から消えた。 <small>2026-11-07 キャプチャ、AWS ap-northeast-2。</small>
 
-#### 費用
+#### 費用 {#ja-cost}
 
 キャッシュは約 31 分存続した。価格表で計算すると、ストレージは約 0.2 GB 時間（最低 100 MB とメモリテスト分）、ECPU は約 500 万で、合計およそ $0.05 になる。本稿の執筆時点では AWS の請求にまだ表示されていなかった。表示された時点で、請求額を `STATUS.md` に記録する。
 
@@ -512,7 +512,7 @@ Public を選ぶと、ユーザーグループには IAM 認証ユーザーの�
 
 Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey และ for Redis OSS (≤ 7.1), Azure Managed Redis (Redis Enterprise อยู่ภายใน), Memorystore for Valkey — ตารางเปรียบเทียบที่มีแหล่งอ้างอิงในทุกช่อง (ใบอนุญาต, โมดูล, Active-Active, tiering, SLA, รูปแบบราคา), ไทม์ไลน์ใบอนุญาต (BSD-3 → RSALv2/SSPL ที่ 7.4 → เพิ่ม AGPLv3 ที่ 8.0; Valkey แยกจาก 7.2.4 ภายใต้ BSD-3) และเวิร์กโหลดเดียวกันที่รันบน Redis 8.10 และ Valkey 9.1 เทียบกัน ส่วน Dragonfly, KeyDB และ Garnet อธิบายอย่างละหนึ่งย่อหน้า
 
-### Redis 8.10 และ Valkey 9.1 บนเครื่อง
+### Redis 8.10 และ Valkey 9.1 บนเครื่อง {#th-redis-810-and-valkey-91-locally}
 
 **ตรวจสอบแล้วบน Redis 8.10.3, Valkey 9.1.3 และ Valkey bundle 9.1 เมื่อ 2026-11-07** ใน Docker บนโฮสต์ 24 คอร์หนึ่งเครื่อง ใช้ค่าเริ่มต้นและไม่เปิดการเก็บข้อมูลถาวร ซอร์สและผลลัพธ์ทั้งหมด: [`compare/01-valkey-vs-redis-local`](https://github.com/litkhai/notes-on-redis/tree/main/compare/01-valkey-vs-redis-local)
 
@@ -532,15 +532,15 @@ Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valke
 
 **ความพร้อมใช้งาน เทียบกันแบบเคียงข้างกัน** (`compare/01-valkey-vs-redis-local/ha.py`) รันสคริปต์เดียวกันกับทั้งสองเอนจิน: เมื่อตั้ง node timeout ของคลัสเตอร์ที่ 3 วินาที ทั้งคู่เลื่อนระดับเรพลิกาหลังผ่านไป 4.2 วินาที, Sentinel ระบุ master ใหม่หลังผ่านไป 4.3 วินาที (Redis) และ 4.4 วินาที (Valkey) และ AOF ที่ใช้ `appendfsync everysec` โหลดคีย์ราว 632,000 คีย์กลับเข้ามาใน 1.3 วินาทีเท่ากันทั้งคู่ ที่ต่างกันมีแค่ชื่อไบนารี คำสั่งของคลัสเตอร์และ Sentinel เหมือนกัน
 
-### ตารางคุณสมบัติ
+### ตารางคุณสมบัติ {#th-feature-matrix}
 
 ตารางเดียวครอบคลุม Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache for Valkey และ for Redis OSS, Azure Managed Redis และ Memorystore for Valkey ทุกเซลล์มีแหล่งที่มา คือวัดจริงที่นี่เมื่อ 2026-11-07 หรือเอกสารของผู้ให้บริการที่อ่านในวันนั้น หรือทำเครื่องหมายว่า "ยังไม่ยืนยัน" ตารางอยู่ในรีโพซิทอรี จึงเพิ่มทีละเซลล์ได้: [`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md)
 
-### ElastiCache Serverless for Valkey เทียบกับฐานข้อมูลฟรีของ Redis Cloud
+### ElastiCache Serverless for Valkey เทียบกับฐานข้อมูลฟรีของ Redis Cloud {#th-elasticache-serverless-for-valkey-next-to-the-redis-cloud-free-database}
 
 **รันเมื่อ 2026-11-07 ใน AWS ap-northeast-2 (โซล)** แคชแบบ serverless หนึ่งตัว Valkey 9.0 สร้างและลบผ่านคอนโซล มีอายุประมาณ 31 นาที ใช้สคริปต์ probe เดียวกันและเครื่องไคลเอนต์เครื่องเดิมในเกาหลีเหมือนกับ[แล็บฐานข้อมูลฟรีของ Redis Cloud]({{ '/cloud/' | relative_url }}) ราคามาจากรายการราคา AWS สำหรับโซลที่เผยแพร่เมื่อ 2026-10-28 และอ่านเมื่อ 2026-11-07 ข้อมูลที่ปกปิด: account ID และ alias, ARN, endpoint
 
-#### สิ่งที่แตกต่าง
+#### สิ่งที่แตกต่าง {#th-what-differed}
 
 | | ฐานข้อมูลฟรีของ Redis Cloud | ElastiCache Serverless for Valkey |
 |---|---|---|
@@ -557,7 +557,7 @@ Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valke
 | เมตริก | 16 กราฟในคอนโซล, 5 นาทีถึง 3 เดือน | CloudWatch; 16 จาก 50 เมตริกในหน้าแคช |
 | การเข้าถึงด้วยโปรแกรม | REST API พร้อมคีย์ระดับบัญชีและผู้ใช้, Terraform และ Pulumi | AWS API, CLI, CloudFormation; MCP server สำหรับ ElastiCache |
 
-#### ผลการวัดฝั่งไคลเอนต์
+#### ผลการวัดฝั่งไคลเอนต์ {#th-client-measurements}
 
 | Probe | Redis Cloud ฟรี, TCP ธรรมดา | ElastiCache Serverless, TLS + IAM |
 |---|---|---|
@@ -570,7 +570,7 @@ Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valke
 
 แถวของ throughput ไม่ใช่คำตัดสินของบริการใดบริการหนึ่ง: ฝั่งหนึ่งเป็น TCP ธรรมดาและอีกฝั่งเป็น TLS, ไคลเอนต์เป็นโปรเซส Python เดียวในเกาหลี และแคช serverless ถูกจำกัดไว้ที่ 200,000 ECPU/s (ช่วงที่เป็นศูนย์เกิดขึ้นที่ประมาณ 40,000 INCR/s ซึ่งต่ำกว่าขีดจำกัดนั้น และยังไม่มีคำอธิบาย) ตัวเลขที่ไม่ใช้ pipeline ถูกจำกัดด้วยเวลาไป-กลับทั้งสองฝั่ง
 
-#### คอนโซลทีละหน้าจอ
+#### คอนโซลทีละหน้าจอ {#th-the-console-screen-by-screen}
 
 <p class="shot"><img src="{{ '/assets/img/elasticache-console/01-elasticache-dashboard.webp' | relative_url }}" width="1440" height="765" alt="แดชบอร์ด ElastiCache ในโซลที่ไม่มีทรัพยากร" loading="lazy" decoding="async"></p>
 
@@ -620,7 +620,7 @@ Monitoring หลังการทดสอบ: ข้อมูลที่จ�
 
 การลบต้องพิมพ์ชื่อแคชและมีค่าเริ่มต้นเป็นการสร้างการสำรองครั้งสุดท้าย; เลือก No แคชหายไปจากรายการหลังจากนั้นประมาณ 3 นาที <small>จับภาพเมื่อ 2026-11-07, AWS ap-northeast-2.</small>
 
-#### ค่าใช้จ่าย
+#### ค่าใช้จ่าย {#th-cost}
 
 แคชมีอายุประมาณ 31 นาที ตามรายการราคา: พื้นที่จัดเก็บประมาณ 0.2 GB-hour (ขั้นต่ำ 100 MB บวกการทดสอบหน่วยความจำ) และประมาณ 5 ล้าน ECPU รวมกันราว $0.05 ขณะเขียนนี้ใบเรียกเก็บเงินของ AWS ยังไม่แสดงรายการนี้ เมื่อแสดงแล้ว จำนวนเงินที่เรียกเก็บจะบันทึกลงใน `STATUS.md`
 
@@ -636,7 +636,7 @@ Monitoring หลังการทดสอบ: ข้อมูลที่จ�
 
 Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey dan for Redis OSS (≤ 7.1), Azure Managed Redis (berisi Redis Enterprise), Memorystore for Valkey — sebuah matriks dengan sumber pada setiap sel (lisensi, modul, Active-Active, tiering, SLA, model harga), linimasa lisensi (BSD-3 → RSALv2/SSPL pada 7.4 → AGPLv3 ditambahkan pada 8.0; Valkey di-fork dari 7.2.4 di bawah BSD-3), dan beban kerja yang sama dijalankan berdampingan pada Redis 8.10 dan Valkey 9.1. Dragonfly, KeyDB, dan Garnet masing-masing satu paragraf.
 
-### Redis 8.10 dan Valkey 9.1 secara lokal
+### Redis 8.10 dan Valkey 9.1 secara lokal {#id-redis-810-and-valkey-91-locally}
 
 **Diverifikasi pada Redis 8.10.3, Valkey 9.1.3, dan Valkey bundle 9.1, 2026-11-07,** di Docker pada satu host 24 core dengan pengaturan bawaan dan tanpa persistensi. Sumber dan keluaran lengkap: [`compare/01-valkey-vs-redis-local`](https://github.com/litkhai/notes-on-redis/tree/main/compare/01-valkey-vs-redis-local).
 
@@ -656,15 +656,15 @@ Hanya ada di Valkey: `CLUSTERSCAN`, migrasi slot atomik (`CLUSTER MIGRATESLOTS`)
 
 **Ketersediaan, berdampingan** (`compare/01-valkey-vs-redis-local/ha.py`). Skrip yang sama dijalankan pada kedua mesin: dengan node timeout klaster 3 dtk, replika dipromosikan setelah 4.2 dtk pada keduanya, Sentinel menunjuk master baru setelah 4.3 dtk (Redis) dan 4.4 dtk (Valkey), dan AOF dengan `appendfsync everysec` memuat ulang sekitar 632,000 key dalam 1.3 dtk pada keduanya. Hanya nama binernya yang berbeda; perintah klaster dan Sentinel sama.
 
-### Matriks fitur
+### Matriks fitur {#id-feature-matrix}
 
 Satu tabel yang mencakup Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache for Valkey dan for Redis OSS, Azure Managed Redis, dan Memorystore for Valkey, dengan sumber di setiap sel: diukur di sini pada 2026-11-07, atau dokumentasi vendor yang dibaca pada hari itu, atau ditandai "belum terkonfirmasi". Tabel ini disimpan di repositori sehingga dapat bertambah sel demi sel: [`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md).
 
-### ElastiCache Serverless for Valkey, dibandingkan dengan database gratis Redis Cloud
+### ElastiCache Serverless for Valkey, dibandingkan dengan database gratis Redis Cloud {#id-elasticache-serverless-for-valkey-next-to-the-redis-cloud-free-database}
 
 **Dijalankan pada 2026-11-07 di AWS ap-northeast-2 (Seoul).** Satu cache serverless, Valkey 9.0, dibuat dan dihapus melalui konsol; umurnya sekitar 31 menit. Skrip probe yang sama dan host klien yang sama di Korea seperti pada [lab database gratis Redis Cloud]({{ '/cloud/' | relative_url }}). Harga dari daftar harga AWS untuk Seoul yang terbit pada 2026-10-28, dibaca pada 2026-11-07. Disamarkan: ID dan alias akun, ARN, endpoint.
 
-#### Yang berbeda
+#### Yang berbeda {#id-what-differed}
 
 | | Database gratis Redis Cloud | ElastiCache Serverless for Valkey |
 |---|---|---|
@@ -681,7 +681,7 @@ Satu tabel yang mencakup Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache
 | Metrik | 16 grafik di konsol, 5 menit hingga 3 bulan | CloudWatch; 16 dari 50 metrik di halaman cache |
 | Akses terprogram | REST API dengan key akun dan pengguna, Terraform dan Pulumi | AWS API, CLI, CloudFormation; sebuah MCP server untuk ElastiCache |
 
-#### Pengukuran klien
+#### Pengukuran klien {#id-client-measurements}
 
 | Probe | Redis Cloud gratis, TCP biasa | ElastiCache Serverless, TLS + IAM |
 |---|---|---|
@@ -694,7 +694,7 @@ Satu tabel yang mencakup Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache
 
 Baris throughput bukan vonis untuk salah satu layanan: satu sisi memakai TCP biasa dan sisi lain TLS, klien adalah satu proses Python di Korea, dan cache serverless dibatasi pada 200,000 ECPU/s (jendela nol terjadi pada sekitar 40,000 INCR/s, di bawah batas itu; penyebabnya belum dijelaskan). Angka tanpa pipeline dibatasi oleh round trip di kedua sisi.
 
-#### Konsol, layar demi layar
+#### Konsol, layar demi layar {#id-the-console-screen-by-screen}
 
 <p class="shot"><img src="{{ '/assets/img/elasticache-console/01-elasticache-dashboard.webp' | relative_url }}" width="1440" height="765" alt="Dasbor ElastiCache di Seoul tanpa sumber daya" loading="lazy" decoding="async"></p>
 
@@ -744,7 +744,7 @@ Monitoring setelah pengujian: data tersimpan mencapai puncak 649 MB pada satu da
 
 Penghapusan meminta nama cache dan secara default membuat backup akhir; dipilih No. Cache hilang dari daftar sekitar 3 menit kemudian. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
 
-#### Biaya
+#### Biaya {#id-cost}
 
 Cache hidup sekitar 31 menit. Menurut daftar harga: sekitar 0.2 GB-hour penyimpanan (minimum 100 MB, ditambah uji memori) dan sekitar 5 juta ECPU, totalnya kira-kira $0.05. Tagihan AWS belum menampilkannya saat ini ditulis; jumlah yang ditagih akan dimasukkan ke `STATUS.md` ketika sudah muncul.
 
@@ -760,7 +760,7 @@ Cache hidup sekitar 31 menit. Menurut daftar harga: sekitar 0.2 GB-hour penyimpa
 
 Redis Open Source 8.x, Redis Cloud / Software, Valkey 9.x, ElastiCache for Valkey dan for Redis OSS (≤ 7.1), Azure Managed Redis (mengandungi Redis Enterprise), Memorystore for Valkey — satu matriks dengan sumber bagi setiap sel (lesen, modul, Active-Active, tiering, SLA, model harga), garis masa lesen (BSD-3 → RSALv2/SSPL pada 7.4 → AGPLv3 ditambah pada 8.0; Valkey dipecahkan daripada 7.2.4 di bawah BSD-3), dan beban kerja yang sama dijalankan secara bersebelahan pada Redis 8.10 dan Valkey 9.1. Dragonfly, KeyDB dan Garnet masing-masing satu perenggan.
 
-### Redis 8.10 dan Valkey 9.1 secara setempat
+### Redis 8.10 dan Valkey 9.1 secara setempat {#ms-redis-810-and-valkey-91-locally}
 
 **Disahkan pada Redis 8.10.3, Valkey 9.1.3 dan Valkey bundle 9.1, 2026-11-07,** dalam Docker pada satu hos 24 teras dengan tetapan lalai dan tanpa kegigihan data. Sumber dan output penuh: [`compare/01-valkey-vs-redis-local`](https://github.com/litkhai/notes-on-redis/tree/main/compare/01-valkey-vs-redis-local).
 
@@ -780,15 +780,15 @@ Hanya ada dalam Valkey: `CLUSTERSCAN`, pemindahan slot atomik (`CLUSTER MIGRATES
 
 **Ketersediaan, bersebelahan** (`compare/01-valkey-vs-redis-local/ha.py`). Skrip yang sama dijalankan pada kedua-dua enjin: dengan tamat masa nod kluster 3 s, replika dinaikkan taraf selepas 4.2 s pada kedua-duanya, Sentinel menamakan master baharu selepas 4.3 s (Redis) dan 4.4 s (Valkey), dan AOF dengan `appendfsync everysec` memuat semula kira-kira 632,000 kunci dalam 1.3 s pada kedua-duanya. Hanya nama binari yang berbeza; perintah kluster dan Sentinel adalah sama.
 
-### Matriks ciri
+### Matriks ciri {#ms-feature-matrix}
 
 Satu jadual merangkumi Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache for Valkey dan for Redis OSS, Azure Managed Redis dan Memorystore for Valkey, dengan sumber pada setiap sel: diukur di sini pada 2026-11-07, atau dokumentasi vendor yang dibaca pada hari itu, atau ditandakan "belum disahkan". Jadual ini disimpan dalam repositori supaya boleh bertambah sel demi sel: [`compare/matrix.md`](https://github.com/litkhai/notes-on-redis/blob/main/compare/matrix.md).
 
-### ElastiCache Serverless for Valkey, bersebelahan dengan pangkalan data percuma Redis Cloud
+### ElastiCache Serverless for Valkey, bersebelahan dengan pangkalan data percuma Redis Cloud {#ms-elasticache-serverless-for-valkey-next-to-the-redis-cloud-free-database}
 
 **Dijalankan pada 2026-11-07 di AWS ap-northeast-2 (Seoul).** Satu cache serverless, Valkey 9.0, dicipta dan dipadam melalui konsol; hayatnya kira-kira 31 minit. Skrip probe yang sama dan hos klien yang sama di Korea seperti dalam [makmal pangkalan data percuma Redis Cloud]({{ '/cloud/' | relative_url }}). Harga daripada senarai harga AWS untuk Seoul yang diterbitkan pada 2026-10-28, dibaca pada 2026-11-07. Disamarkan: ID dan alias akaun, ARN, endpoint.
 
-#### Perbezaannya
+#### Perbezaannya {#ms-what-differed}
 
 | | Pangkalan data percuma Redis Cloud | ElastiCache Serverless for Valkey |
 |---|---|---|
@@ -805,7 +805,7 @@ Satu jadual merangkumi Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache f
 | Metrik | 16 carta dalam konsol, 5 minit hingga 3 bulan | CloudWatch; 16 daripada 50 metrik pada halaman cache |
 | Akses secara atur cara | REST API dengan kunci akaun dan pengguna, Terraform dan Pulumi | AWS API, CLI, CloudFormation; sebuah pelayan MCP untuk ElastiCache |
 
-#### Ukuran klien
+#### Ukuran klien {#ms-client-measurements}
 
 | Probe | Redis Cloud percuma, TCP biasa | ElastiCache Serverless, TLS + IAM |
 |---|---|---|
@@ -818,7 +818,7 @@ Satu jadual merangkumi Redis Open Source 8, Redis Cloud, Valkey 9, ElastiCache f
 
 Baris throughput bukan penentu bagi mana-mana perkhidmatan: satu pihak menggunakan TCP biasa dan satu lagi TLS, klien ialah satu proses Python di Korea, dan cache serverless dihadkan pada 200,000 ECPU/s (tetingkap sifar berlaku pada kira-kira 40,000 INCR/s, di bawah had itu; puncanya tidak dapat dijelaskan). Angka tanpa pipeline dihadkan oleh pergi balik pada kedua-dua pihak.
 
-#### Konsol, skrin demi skrin
+#### Konsol, skrin demi skrin {#ms-the-console-screen-by-screen}
 
 <p class="shot"><img src="{{ '/assets/img/elasticache-console/01-elasticache-dashboard.webp' | relative_url }}" width="1440" height="765" alt="Papan pemuka ElastiCache di Seoul tanpa sumber" loading="lazy" decoding="async"></p>
 
@@ -868,7 +868,7 @@ Monitoring selepas ujian: data disimpan memuncak pada 649 MB dalam satu titik da
 
 Pemadaman meminta nama cache dan secara lalai mencipta sandaran akhir; No dipilih. Cache hilang daripada senarai kira-kira 3 minit kemudian. <small>Ditangkap 2026-11-07, AWS ap-northeast-2.</small>
 
-#### Kos
+#### Kos {#ms-cost}
 
 Cache hidup kira-kira 31 minit. Mengikut senarai harga: kira-kira 0.2 GB-hour storan (minimum 100 MB, ditambah ujian memori) dan kira-kira 5 juta ECPU, jumlahnya lebih kurang $0.05. Bil AWS belum menunjukkannya ketika ini ditulis; jumlah yang dibilkan akan dimasukkan ke dalam `STATUS.md` apabila ia muncul.
 

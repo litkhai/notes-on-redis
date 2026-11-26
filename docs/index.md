@@ -11,7 +11,7 @@ permalink: /
 ## English
 
 <div class="note" markdown="1">
-**Status: design only.** Nothing on this page has been run yet. The plan is in [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+**Status: run.** Every track below was run on 2026-11-07 in local Docker, on a local kind cluster or on the Redis Cloud free plan. The paid Redis Cloud plans (Essentials, Pro) wait for a spending decision. What was run, with versions: [`STATUS.md`](https://github.com/litkhai/notes-on-redis/blob/main/STATUS.md).
 </div>
 
 Practical labs for [Redis](https://redis.io) — Redis Open Source, Redis Cloud, Redis Software, and **Redis Iris**, the context engine for AI agents. Everything that reaches this site is verified by running it; every price, limit and version carries the date it was read.
@@ -50,12 +50,12 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 ## 한국어
 
 <div class="note" markdown="1">
-**상태: 설계만.** 이 페이지의 내용은 아직 아무것도 실행하지 않았다. 계획은 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)에 있다.
+**상태: 실행함.** 아래 트랙은 모두 2026-11-07에 로컬 Docker, 로컬 kind 클러스터 또는 Redis Cloud 무료 플랜에서 실행했다. 유료 Redis Cloud 플랜(Essentials, Pro)은 비용 결정을 기다리고 있다. 무엇을 어떤 버전으로 실행했는지: [`STATUS.md`](https://github.com/litkhai/notes-on-redis/blob/main/STATUS.md).
 </div>
 
 [Redis](https://redis.io)를 손으로 익히는 실습 — Redis Open Source, Redis Cloud, Redis Software, 그리고 AI 에이전트용 컨텍스트 엔진 **Redis Iris**. 이 사이트에 올라오는 것은 모두 실행해 확인한 것이고, 가격·한도·버전에는 읽은 날짜가 붙는다.
 
-### 2026년의 Redis
+### 2026년의 Redis {#ko-what-redis-is-in-2026}
 
 8.0(GA 2025-05-01)부터 배포판은 하나, Redis Open Source다. 핵심 자료형에 Search, JSON, Time series, 확률형 자료구조 다섯, 벡터 셋(베타)이 들어 있고 RSALv2 / SSPLv1 / AGPLv3 중 고른다. 2026-11-07에 읽은 최신 GA는 8.10.3([releases](https://github.com/redis/redis/releases)). 실행 방식은 셋:
 
@@ -66,7 +66,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | 더해 주는 것 | — | Active-Active, Flex, DMC 프록시, RBAC/LDAP, RDI, 오퍼레이터 | 같은 것을 관리형으로; Iris 서비스 |
 | 쓰는 트랙 | `local/`, `deep-dive/`, `compare/01` | `enterprise/` | `cloud/`, `iris/` |
 
-### 트랙
+### 트랙 {#ko-tracks}
 
 | 트랙 | 상태 | 내용 |
 |---|---|---|
@@ -89,16 +89,16 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 ## 简体中文
 
 <div class="note" markdown="1">
-**状态：仅有设计。** 本页内容尚未实际运行。计划见 [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)。
+**状态：已运行。** 下列各部分均于 2026-11-07 在本地 Docker、本地 kind 集群或 Redis Cloud 免费计划上运行。付费 Redis Cloud 计划（Essentials、Pro）尚待费用决定。运行了什么、用的哪个版本：[`STATUS.md`](https://github.com/litkhai/notes-on-redis/blob/main/STATUS.md)。
 </div>
 
 [Redis](https://redis.io) 动手实验 — Redis Open Source、Redis Cloud、Redis Software，以及面向 AI 代理的上下文引擎 **Redis Iris**。本站内容均经实际运行验证；每个价格、限制和版本都标注读取日期。
 
-### 2026 年的 Redis
+### 2026 年的 Redis {#zh-what-redis-is-in-2026}
 
 自 8.0（2025-05-01 GA）起只有一个发行版 Redis Open Source：核心数据结构加 Search、JSON、Time series、五种概率型结构和向量集（beta），许可证可选 RSALv2 / SSPLv1 / AGPLv3。2026-11-07 读取的最新 GA 为 8.10.3。三种运行方式：自己运行 Open Source、自己运行 Redis Software（商业许可，增加 Active-Active、Flex、DMC 代理、RDI、operator），或由 Redis Ltd. 托管的 Redis Cloud（Essentials 每月 $5 起，Pro 最低每月 $200；Iris 服务在此）。
 
-### 实验分类
+### 实验分类 {#zh-tracks}
 
 | 分类 | 状态 | 内容 |
 |---|---|---|
@@ -121,16 +121,16 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 ## 日本語
 
 <div class="note" markdown="1">
-**状態: 設計のみ。** このページの内容はまだ何も実行していない。計画は [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md) にある。
+**状態: 実行済み。** 以下のトラックはすべて 2026-11-07 にローカル Docker、ローカル kind クラスタ、または Redis Cloud 無料プランで実行した。有料の Redis Cloud プラン（Essentials、Pro）は費用の判断待ち。何をどのバージョンで実行したか: [`STATUS.md`](https://github.com/litkhai/notes-on-redis/blob/main/STATUS.md)。
 </div>
 
 [Redis](https://redis.io) のハンズオンラボ — Redis Open Source、Redis Cloud、Redis Software、そして AI エージェント向けコンテキストエンジン **Redis Iris**。このサイトの内容はすべて実行して確認したもので、価格・上限・バージョンには読んだ日付が付く。
 
-### 2026 年の Redis
+### 2026 年の Redis {#ja-what-redis-is-in-2026}
 
 8.0（2025-05-01 GA）以降、ディストリビューションは Redis Open Source ひとつ。コアのデータ型に Search、JSON、Time series、確率的データ構造 5 種、ベクトルセット（ベータ）が含まれ、ライセンスは RSALv2 / SSPLv1 / AGPLv3 から選ぶ。2026-11-07 に読んだ最新 GA は 8.10.3。実行方法は三つ: Open Source を自分で、Redis Software を自分のホストや Kubernetes で（商用ライセンス、Active-Active・Flex・DMC プロキシ・RDI・オペレーターを追加）、Redis Ltd. が運用する Redis Cloud（Essentials 月 $5 から、Pro 最低月 $200、Iris サービスはここ）。
 
-### トラック
+### トラック {#ja-tracks}
 
 | トラック | 状態 | 内容 |
 |---|---|---|
@@ -153,12 +153,12 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 ## ภาษาไทย
 
 <div class="note" markdown="1">
-**สถานะ: มีเฉพาะการออกแบบ** ยังไม่ได้รันสิ่งใดในหน้านี้ แผนอยู่ใน [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md)
+**สถานะ: รันแล้ว** ทุกแทร็กด้านล่างรันเมื่อ 2026-11-07 บน Docker ในเครื่อง คลัสเตอร์ kind ในเครื่อง หรือ Redis Cloud แพลนฟรี แพลน Redis Cloud แบบเสียเงิน (Essentials, Pro) ยังรอการตัดสินใจเรื่องค่าใช้จ่าย สิ่งที่รันพร้อมเวอร์ชัน: [`STATUS.md`](https://github.com/litkhai/notes-on-redis/blob/main/STATUS.md)
 </div>
 
 แล็บภาคปฏิบัติสำหรับ [Redis](https://redis.io) ครอบคลุม Redis Open Source, Redis Cloud, Redis Software และ **Redis Iris** ซึ่งเป็น context engine สำหรับ AI agent ทุกอย่างที่ขึ้นเว็บไซต์นี้ผ่านการรันตรวจสอบจริง และทุกราคา ขีดจำกัด และเวอร์ชันจะระบุวันที่ที่อ่านข้อมูลนั้น
 
-### Redis ในปี 2026 คืออะไร
+### Redis ในปี 2026 คืออะไร {#th-what-redis-is-in-2026}
 
 ตั้งแต่เวอร์ชัน 8.0 (GA 2025-05-01) มีการแจกจ่ายเพียงแบบเดียวคือ Redis Open Source ประกอบด้วยโครงสร้างข้อมูลหลัก พร้อม Search, JSON, Time series, ชนิดข้อมูลเชิงความน่าจะเป็นห้าชนิด และ vector sets (beta) โดยเลือกใช้สัญญาอนุญาตได้ระหว่าง RSALv2, SSPLv1 หรือ AGPLv3 เวอร์ชัน GA ล่าสุดที่อ่านเมื่อ 2026-11-07 คือ 8.10.3 ([releases](https://github.com/redis/redis/releases)) มีสามวิธีในการรัน:
 
@@ -169,7 +169,7 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 | สิ่งที่เพิ่ม | — | Active-Active, Flex, DMC proxy, RBAC/LDAP, RDI, operator | เหมือนกัน แต่มีผู้ให้บริการจัดการให้ พร้อมบริการ Iris |
 | ใช้โดย | `local/`, `deep-dive/`, `compare/01` | `enterprise/` | `cloud/`, `iris/` |
 
-### แทร็ก
+### แทร็ก {#th-tracks}
 
 | แทร็ก | สถานะ | เนื้อหา |
 |---|---|---|
@@ -192,12 +192,12 @@ Since 8.0 (GA 2025-05-01) there is one distribution, Redis Open Source: the core
 ## Bahasa Indonesia
 
 <div class="note" markdown="1">
-**Status: baru desain.** Belum ada isi halaman ini yang dijalankan. Rencananya ada di [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+**Status: sudah dijalankan.** Semua jalur di bawah dijalankan pada 2026-11-07 di Docker lokal, klaster kind lokal, atau paket gratis Redis Cloud. Paket Redis Cloud berbayar (Essentials, Pro) masih menunggu keputusan biaya. Apa yang dijalankan, beserta versinya: [`STATUS.md`](https://github.com/litkhai/notes-on-redis/blob/main/STATUS.md).
 </div>
 
 Lab praktik untuk [Redis](https://redis.io): Redis Open Source, Redis Cloud, Redis Software, dan **Redis Iris**, context engine untuk agen AI. Semua yang masuk ke situs ini diverifikasi dengan menjalankannya; setiap harga, batas, dan versi mencantumkan tanggal saat dibaca.
 
-### Redis pada 2026
+### Redis pada 2026 {#id-what-redis-is-in-2026}
 
 Sejak 8.0 (GA 2025-05-01) hanya ada satu distribusi, yaitu Redis Open Source: struktur data inti ditambah Search, JSON, Time series, lima tipe probabilistik, dan vector sets (beta), dengan pilihan lisensi RSALv2, SSPLv1, atau AGPLv3. GA terbaru yang dibaca pada 2026-11-07: 8.10.3 ([releases](https://github.com/redis/redis/releases)). Ada tiga cara menjalankannya:
 
@@ -208,7 +208,7 @@ Sejak 8.0 (GA 2025-05-01) hanya ada satu distribusi, yaitu Redis Open Source: st
 | Tambahan | — | Active-Active, Flex, DMC proxy, RBAC/LDAP, RDI, operator | sama, dikelola penyedia; layanan Iris |
 | Dipakai oleh | `local/`, `deep-dive/`, `compare/01` | `enterprise/` | `cloud/`, `iris/` |
 
-### Jalur
+### Jalur {#id-tracks}
 
 | Jalur | Status | Isi |
 |---|---|---|
@@ -231,12 +231,12 @@ Sejak 8.0 (GA 2025-05-01) hanya ada satu distribusi, yaitu Redis Open Source: st
 ## Bahasa Melayu
 
 <div class="note" markdown="1">
-**Status: reka bentuk sahaja.** Belum ada kandungan halaman ini yang dijalankan. Pelannya terdapat dalam [`design/DESIGN.md`](https://github.com/litkhai/notes-on-redis/blob/main/design/DESIGN.md).
+**Status: telah dijalankan.** Semua laluan di bawah dijalankan pada 2026-11-07 dalam Docker tempatan, kluster kind tempatan atau pelan percuma Redis Cloud. Pelan Redis Cloud berbayar (Essentials, Pro) masih menunggu keputusan kos. Apa yang dijalankan, berserta versinya: [`STATUS.md`](https://github.com/litkhai/notes-on-redis/blob/main/STATUS.md).
 </div>
 
 Makmal amali untuk [Redis](https://redis.io): Redis Open Source, Redis Cloud, Redis Software dan **Redis Iris**, context engine untuk ejen AI. Semua yang sampai ke tapak ini disahkan dengan menjalankannya; setiap harga, had dan versi mencatatkan tarikh ia dibaca.
 
-### Redis pada 2026
+### Redis pada 2026 {#ms-what-redis-is-in-2026}
 
 Sejak 8.0 (GA 2025-05-01) hanya ada satu pengedaran, iaitu Redis Open Source: struktur data teras ditambah Search, JSON, Time series, lima jenis kebarangkalian dan vector sets (beta), dengan pilihan lesen RSALv2, SSPLv1 atau AGPLv3. GA terkini yang dibaca pada 2026-11-07: 8.10.3 ([releases](https://github.com/redis/redis/releases)). Terdapat tiga cara untuk menjalankannya:
 
@@ -247,7 +247,7 @@ Sejak 8.0 (GA 2025-05-01) hanya ada satu pengedaran, iaitu Redis Open Source: st
 | Tambahan | — | Active-Active, Flex, DMC proxy, RBAC/LDAP, RDI, operator | sama, diurus oleh penyedia; perkhidmatan Iris |
 | Digunakan oleh | `local/`, `deep-dive/`, `compare/01` | `enterprise/` | `cloud/`, `iris/` |
 
-### Trek
+### Trek {#ms-tracks}
 
 | Trek | Status | Kandungan |
 |---|---|---|

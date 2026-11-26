@@ -116,7 +116,7 @@ Redis Insight desktop (the Docker image is the same application) and clients oth
 
 **로컬 Redis 8과 무료 클라우드 DB, 둘 다 Python과 Node에서 응답한다.** 2026-11-07 실행: Docker의 Redis Open Source 8.10.3과 Redis Insight 3.8.0, `redis-cli`, redis-py 6.1.1과 node-redis 6.3.1, 그리고 [Redis Cloud 페이지]({{ '/cloud/' | relative_url }})의 무료 DB. 소스: [`setup/`](https://github.com/litkhai/notes-on-redis/tree/main/setup), [`local/01`](https://github.com/litkhai/notes-on-redis/tree/main/local/01-redis-8-docker), [`local/02`](https://github.com/litkhai/notes-on-redis/tree/main/local/02-data-types-tour).
 
-### 로컬 스택
+### 로컬 스택 {#ko-the-local-stack}
 
 compose 파일 하나로 두 컨테이너를 띄운다. 호스트 포트는 기본값 대신 16379와 15540이라 Docker 호스트를 함께 쓸 수 있다.
 
@@ -129,7 +129,7 @@ docker exec -it nor-redis8 redis-cli PING        # PONG
 
 **다른 클라이언트**(`go/`, `java/`). go-redis 9.23.0(Go 1.26 필요)과 Jedis 8.0.2가 `redis://` URL로 두 서버에 붙었고, go-redis는 RESP3로 협상했다. `RedisProtocol.RESP3`와 `CacheConfig`를 준 Jedis는 redis-py의 클라이언트 캐시처럼 읽기 1,001번에 GET 1번만 보냈다.
 
-### Redis Insight
+### Redis Insight {#ko-redis-insight}
 
 <p class="shot"><img src="{{ '/assets/img/setup/01-insight-databases.webp' | relative_url }}" width="1440" height="765" alt="local-redis-8이 등록된 Redis Insight DB 목록" loading="lazy" decoding="async"></p>
 
@@ -147,7 +147,7 @@ JSON 키는 트리로 열린다. "Make searchable"은 그 위에 Search 인덱�
 
 Workbench는 명령을 실행하고 Search 결과를 표로 보여 준다. 검색과 벡터 검색 튜토리얼이 들어 있다. <small>2026-11-07 캡처, Redis Insight 3.8.0, 로컬 Redis 8.10.3.</small>
 
-### 클라이언트와 클라우드 DB
+### 클라이언트와 클라우드 DB {#ko-clients-and-the-cloud-database}
 
 `smoke.py`와 `smoke.mjs`는 두 대상에 PING, SET/GET을 하고 서버 버전을 읽는다. 클라우드 URL은 gitignore된 `.env`에서 읽는다.
 
@@ -159,7 +159,7 @@ Workbench는 명령을 실행하고 Search 결과를 표로 보여 준다. 검�
 
 **무료 플랜에는 TLS가 없다.** REST API로 켜려 하자 `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`("Selected subscription plan does not support database 'enableTls'")으로 실패했다. 그래서 클라우드 스모크 테스트는 평문 TCP다. 무료 DB에는 시험 데이터만 둔다.
 
-### 실습: 이미지가 돌리는 것과 io-threads
+### 실습: 이미지가 돌리는 것과 io-threads {#ko-lab-what-the-image-runs-and-io-threads}
 
 **확인: Redis 8.10.3, 2026-11-07.** 컨테이너 안의 `redis-benchmark`, SET/GET, 64바이트 값, 24코어 호스트:
 
@@ -170,7 +170,7 @@ Workbench는 명령을 실행하고 Search 결과를 표로 보여 준다. 검�
 
 클라이언트 스레드 4에서는 io-threads 4의 수치가 매번 같았다. 클라이언트가 한계였고, 스레드 8로 늘리자 올라갔다. 서버와 클라이언트가 같은 기계에 있으므로 그 기계에서 잰 값으로 읽어야 한다. 규칙이 아니다.
 
-### 실습: 자료형마다 명령 하나
+### 실습: 자료형마다 명령 하나 {#ko-lab-one-command-per-data-type}
 
 **확인: Redis 8.10.3, 2026-11-07.** `local/02-data-types-tour/tour.sh`가 기본 이미지에서 자료형마다 명령 하나를 돌린다. 모두 오류 없이 응답했다.
 
@@ -191,7 +191,7 @@ Workbench는 명령을 실행하고 Search 결과를 표로 보여 준다. 검�
 
 **나머지 확률형 자료형**(`local/02-data-types-tour/probabilistic.sh`). 56 KB짜리 count-min sketch가 조회 100,000건을 확인한 페이지들에 대해 정확히 셌다(10,000, 91, 99, 0). Cuckoo filter는 Bloom과 달리 항목을 지울 수 있었고, 없는 사용자 10,000명에 대해 오탐률 0.69%였다. 10 KB짜리 t-digest는 중앙값과 p99.9를 1% 안으로 맞혔지만, p99는 실제 257 ms에 325 ms였다. 데이터가 건너뛰어 점이 거의 없는 구간이다.
 
-### 실습: 검색과 벡터 검색
+### 실습: 검색과 벡터 검색 {#ko-lab-search-and-vector-search}
 
 **확인: Redis 8.10.3, 2026-11-07.** `local/03-search-vector/lab.py`는 이 사이트의 한 줄 메모 30개를 해시와 JSON으로 색인한다. 임베딩은 작은 공개 모델로 로컬에서 만든다(API 키 없음).
 
@@ -208,7 +208,7 @@ redis-py 8.1.0은 RESP3로 협상했고, 그래서 `FT.SEARCH` 응답이 예전 
 
 **검색 부가 기능**(`extras.py`). `FT.AGGREGATE`는 묶고 계산했다. 동의어는 백그라운드 재검사가 끝나자 "switchover"로 장애 조치 메모를 찾게 했다. `FT.SPELLCHECK`는 오타에 `failover`, `eviction`, `replica`를 제안했다. `FLOAT16`, `INT8`, `LVQ8`의 `SVS-VAMANA`도 `FLOAT32`와 같은 상위 3개를 돌려줬다. 한국어 질문은 다국어 모델일 때만, 그것도 일부 질문만 맞는 영어 메모를 찾았다.
 
-### 아직 다루지 않은 것
+### 아직 다루지 않은 것 {#ko-not-covered-yet}
 
 Redis Insight 데스크톱(Docker 이미지가 같은 애플리케이션)과 redis-py·node-redis 외의 클라이언트.
 
@@ -220,7 +220,7 @@ Redis Insight 데스크톱(Docker 이미지가 같은 애플리케이션)과 red
 
 **本地 Redis 8 和免费云数据库，都能从 Python 和 Node 得到响应。** 运行于 2026-11-07：Docker 中的 Redis Open Source 8.10.3 和 Redis Insight 3.8.0、`redis-cli`、redis-py 6.1.1 和 node-redis 6.3.1，以及 [Redis Cloud 页面]({{ '/cloud/' | relative_url }})中的 Redis Cloud 免费数据库。源码：[`setup/`](https://github.com/litkhai/notes-on-redis/tree/main/setup), [`local/01`](https://github.com/litkhai/notes-on-redis/tree/main/local/01-redis-8-docker), [`local/02`](https://github.com/litkhai/notes-on-redis/tree/main/local/02-data-types-tour)。
 
-### 本地环境
+### 本地环境 {#zh-the-local-stack}
 
 一个 compose 文件启动两个容器。主机端口用 16379 和 15540 而不是默认值，这样该环境可以与其他服务共用同一台 Docker 主机。
 
@@ -233,7 +233,7 @@ docker exec -it nor-redis8 redis-cli PING        # PONG
 
 **更多客户端**（`go/`、`java/`）。go-redis 9.23.0（需要 Go 1.26）和 Jedis 8.0.2 都通过 `redis://` URL 连接到两台服务器；go-redis 协商使用了 RESP3。使用 `RedisProtocol.RESP3` 和 `CacheConfig` 的 Jedis，对 1,001 次读取只发送了一次 GET，与 redis-py 的客户端缓存一样。
 
-### Redis Insight
+### Redis Insight {#zh-redis-insight}
 
 <p class="shot"><img src="{{ '/assets/img/setup/01-insight-databases.webp' | relative_url }}" width="1440" height="765" alt="已注册 local-redis-8 的 Redis Insight 数据库列表" loading="lazy" decoding="async"></p>
 
@@ -251,7 +251,7 @@ JSON 键以树形展开；“Make searchable”可以为它创建 Search 索引�
 
 Workbench 可以运行命令，并把 Search 结果显示为表格；它自带搜索和向量搜索的教程。 <small>2026-11-07 截图，Redis Insight 3.8.0，本地 Redis 8.10.3。</small>
 
-### 客户端和云数据库
+### 客户端和云数据库 {#zh-clients-and-the-cloud-database}
 
 `smoke.py` 和 `smoke.mjs` 对两个目标执行 PING、SET/GET 并读取服务器版本；云数据库的 URL 来自被 gitignore 的 `.env`。
 
@@ -263,7 +263,7 @@ Workbench 可以运行命令，并把 Search 结果显示为表格；它自带�
 
 **免费方案不支持 TLS。** 通过 REST API 开启时失败，返回 `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`（"Selected subscription plan does not support database 'enableTls'"），因此云端冒烟测试使用明文 TCP。免费数据库中只放测试数据。
 
-### 实验：镜像运行的内容与 io-threads
+### 实验：镜像运行的内容与 io-threads {#zh-lab-what-the-image-runs-and-io-threads}
 
 **已在 Redis 8.10.3 上验证，2026-11-07。** 在容器内运行 `redis-benchmark`，SET/GET，64 字节的值，24 核主机：
 
@@ -274,7 +274,7 @@ Workbench 可以运行命令，并把 Search 结果显示为表格；它自带�
 
 使用 4 个客户端线程时，io-threads 4 的数值每次运行都相同：瓶颈在客户端，改用 8 个客户端线程后数值上升。服务器和客户端在同一台机器上，所以请把这些数字当作该机器上的测量结果，而不是通用规律。
 
-### 实验：每种数据类型一条命令
+### 实验：每种数据类型一条命令 {#zh-lab-one-command-per-data-type}
 
 **已在 Redis 8.10.3 上验证，2026-11-07。** `local/02-data-types-tour/tour.sh` 在原版镜像上为每种类型运行一条命令，全部没有报错：
 
@@ -295,7 +295,7 @@ Workbench 可以运行命令，并把 Search 结果显示为表格；它自带�
 
 **其他概率型数据类型**（`local/02-data-types-tour/probabilistic.sh`）。一个 56 KB 的 count-min sketch 对检查过的页面精确统计了 100,000 次浏览（10,000、91、99、0）。与 Bloom 不同，cuckoo filter 可以删除一个条目，对 10,000 个不存在的用户，误报率为 0.69%。一个 10 KB 的 t-digest 给出的中位数和 p99.9 误差在 1% 以内，但 p99 为 325 ms，而精确值是 257 ms，这是数据出现跳变、点很少的区间。
 
-### 实验：搜索与向量搜索
+### 实验：搜索与向量搜索 {#zh-lab-search-and-vector-search}
 
 **已在 Redis 8.10.3 上验证，2026-11-07。** `local/03-search-vector/lab.py` 将本站的 30 条单行笔记分别以 hash 和 JSON 形式建立索引，并使用一个小型开源模型在本地生成嵌入（无需 API key）。
 
@@ -312,7 +312,7 @@ redis-py 8.1.0 协商使用了 RESP3，因此 `FT.SEARCH` 的回复以 map 形�
 
 **更多搜索功能**（`extras.py`）。`FT.AGGREGATE` 完成了分组和计算；同义词让 "switchover" 在后台重新扫描完成后能找到 failover 笔记；`FT.SPELLCHECK` 针对拼写错误建议了 `failover`、`eviction` 和 `replica`；`FLOAT16`、`INT8` 以及带 `LVQ8` 的 `SVS-VAMANA` 返回的前 3 名与 `FLOAT32` 相同。韩语问题只有使用多语言模型才能找到正确的英文笔记，而且并非每个问题都能找到。
 
-### 尚未涵盖
+### 尚未涵盖 {#zh-not-covered-yet}
 
 Redis Insight 桌面版（Docker 镜像是同一个应用），以及 redis-py 和 node-redis 之外的客户端。
 
@@ -324,7 +324,7 @@ Redis Insight 桌面版（Docker 镜像是同一个应用），以及 redis-py �
 
 **ローカルの Redis 8 と無料のクラウドデータベースは、どちらも Python と Node から応答する。** 2026-11-07 に実行：Docker 上の Redis Open Source 8.10.3 と Redis Insight 3.8.0、`redis-cli`、redis-py 6.1.1、node-redis 6.3.1、そして [Redis Cloud ページ]({{ '/cloud/' | relative_url }})の Redis Cloud 無料データベース。ソース：[`setup/`](https://github.com/litkhai/notes-on-redis/tree/main/setup), [`local/01`](https://github.com/litkhai/notes-on-redis/tree/main/local/01-redis-8-docker), [`local/02`](https://github.com/litkhai/notes-on-redis/tree/main/local/02-data-types-tour)。
 
-### ローカル環境
+### ローカル環境 {#ja-the-local-stack}
 
 compose ファイル 1 つで 2 つのコンテナを起動する。ホストのポートはデフォルトではなく 16379 と 15540 を使うので、Docker ホストを他と共有できる。
 
@@ -337,7 +337,7 @@ docker exec -it nor-redis8 redis-cli PING        # PONG
 
 **さらに多くのクライアント**（`go/`、`java/`）。go-redis 9.23.0（Go 1.26 が必要）と Jedis 8.0.2 は、どちらも `redis://` URL で両方のサーバーに接続できた。go-redis は RESP3 をネゴシエートした。`RedisProtocol.RESP3` と `CacheConfig` を指定した Jedis は、redis-py のクライアントサイドキャッシュと同じく、1,001 回の読み取りに対して GET を 1 回だけ送った。
 
-### Redis Insight
+### Redis Insight {#ja-redis-insight}
 
 <p class="shot"><img src="{{ '/assets/img/setup/01-insight-databases.webp' | relative_url }}" width="1440" height="765" alt="local-redis-8 が登録された Redis Insight のデータベース一覧" loading="lazy" decoding="async"></p>
 
@@ -355,7 +355,7 @@ JSON キーはツリーとして開く。「Make searchable」を使うと、そ
 
 Workbench はコマンドを実行し、Search の結果を表として表示する。検索とベクトル検索のチュートリアルが付属している。 <small>2026-11-07 取得、Redis Insight 3.8.0、ローカル Redis 8.10.3。</small>
 
-### クライアントとクラウドデータベース
+### クライアントとクラウドデータベース {#ja-clients-and-the-cloud-database}
 
 `smoke.py` と `smoke.mjs` は両方の対象に対して PING と SET/GET を実行し、サーバーのバージョンを読み取る。クラウドの URL は gitignore 済みの `.env` から取得する。
 
@@ -367,7 +367,7 @@ Workbench はコマンドを実行し、Search の結果を表として表示す
 
 **無料プランには TLS がない。** REST API で有効にしようとすると `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`（"Selected subscription plan does not support database 'enableTls'"）で失敗したため、クラウドのスモークテストは平文の TCP で行っている。無料データベースにはテストデータだけを置くこと。
 
-### ラボ：イメージが実行する内容と io-threads
+### ラボ：イメージが実行する内容と io-threads {#ja-lab-what-the-image-runs-and-io-threads}
 
 **Redis 8.10.3 で確認、2026-11-07。** コンテナ内で `redis-benchmark` を実行、SET/GET、64 バイトの値、24 コアのホスト：
 
@@ -378,7 +378,7 @@ Workbench はコマンドを実行し、Search の結果を表として表示す
 
 クライアントスレッド 4 では、io-threads 4 の値はどの実行でも同じだった。限界はクライアント側にあり、クライアントスレッドを 8 にすると上がった。サーバーとクライアントは同じマシンにあるため、この数値はそのマシンでの測定値として読み、一般的な規則とは考えないこと。
 
-### ラボ：データ型ごとにコマンド 1 つ
+### ラボ：データ型ごとにコマンド 1 つ {#ja-lab-one-command-per-data-type}
 
 **Redis 8.10.3 で確認、2026-11-07。** `local/02-data-types-tour/tour.sh` は標準イメージ上で型ごとにコマンドを 1 つ実行し、すべてエラーなしで終わった：
 
@@ -399,7 +399,7 @@ Workbench はコマンドを実行し、Search の結果を表として表示す
 
 **そのほかの確率的データ型**（`local/02-data-types-tour/probabilistic.sh`）。56 KB の count-min sketch は、確認したページについて 100,000 件のページビューを正確に数えた（10,000、91、99、0）。Cuckoo filter は Bloom と違って項目を削除でき、存在しないユーザー 10,000 人に対する偽陽性率は 0.69% だった。10 KB の t-digest は中央値と p99.9 を 1% 以内で示したが、p99 は正確な値 257 ms に対して 325 ms だった。データが飛んでいて点が少ない区間である。
 
-### ラボ：検索とベクトル検索
+### ラボ：検索とベクトル検索 {#ja-lab-search-and-vector-search}
 
 **Redis 8.10.3 で確認、2026-11-07。** `local/03-search-vector/lab.py` は、このサイトの 1 行ノート 30 件をハッシュと JSON の両方でインデックスし、小さなオープンモデルでローカルに埋め込みを作成する（API キー不要）。
 
@@ -416,7 +416,7 @@ redis-py 8.1.0 は RESP3 をネゴシエートしたため、`FT.SEARCH` の応�
 
 **さらに多くの検索機能**（`extras.py`）。`FT.AGGREGATE` はグループ化と計算ができた。同義語により、バックグラウンドの再スキャンが終わると "switchover" で failover のノートが見つかった。`FT.SPELLCHECK` は綴りの誤りに対して `failover`、`eviction`、`replica` を提案した。`FLOAT16`、`INT8`、そして `LVQ8` 付きの `SVS-VAMANA` は、`FLOAT32` と同じ上位 3 件を返した。韓国語の質問で正しい英語のノートが見つかったのは多言語モデルを使った場合だけで、すべての質問で見つかったわけではない。
 
-### まだ扱っていないこと
+### まだ扱っていないこと {#ja-not-covered-yet}
 
 Redis Insight デスクトップ版（Docker イメージは同じアプリケーション）と、redis-py と node-redis 以外のクライアント。
 
@@ -428,7 +428,7 @@ Redis Insight デスクトップ版（Docker イメージは同じアプリケ�
 
 **Redis 8 ในเครื่องและฐานข้อมูลคลาวด์ฟรี ตอบสนองได้ทั้งจาก Python และ Node** รันเมื่อ 2026-11-07: Redis Open Source 8.10.3 และ Redis Insight 3.8.0 ใน Docker, `redis-cli`, redis-py 6.1.1 และ node-redis 6.3.1 รวมถึงฐานข้อมูลฟรีของ Redis Cloud จาก[หน้า Redis Cloud]({{ '/cloud/' | relative_url }}) ซอร์ส: [`setup/`](https://github.com/litkhai/notes-on-redis/tree/main/setup), [`local/01`](https://github.com/litkhai/notes-on-redis/tree/main/local/01-redis-8-docker), [`local/02`](https://github.com/litkhai/notes-on-redis/tree/main/local/02-data-types-tour)
 
-### สแตกในเครื่อง
+### สแตกในเครื่อง {#th-the-local-stack}
 
 ไฟล์ compose ไฟล์เดียวเริ่มคอนเทนเนอร์ทั้งสองตัว พอร์ตของโฮสต์คือ 16379 และ 15540 แทนค่าเริ่มต้น เพื่อให้สแตกนี้ใช้โฮสต์ Docker ร่วมกับงานอื่นได้
 
@@ -441,7 +441,7 @@ docker exec -it nor-redis8 redis-cli PING        # PONG
 
 **ไคลเอนต์เพิ่มเติม** (`go/`, `java/`) go-redis 9.23.0 (ต้องใช้ Go 1.26) และ Jedis 8.0.2 เชื่อมต่อกับเซิร์ฟเวอร์ทั้งสองด้วย URL แบบ `redis://` โดย go-redis เจรจาใช้ RESP3 ส่วน Jedis ที่ใช้ `RedisProtocol.RESP3` และ `CacheConfig` ส่ง GET เพียงครั้งเดียวสำหรับการอ่าน 1,001 ครั้ง เหมือน client-side cache ของ redis-py
 
-### Redis Insight
+### Redis Insight {#th-redis-insight}
 
 <p class="shot"><img src="{{ '/assets/img/setup/01-insight-databases.webp' | relative_url }}" width="1440" height="765" alt="รายการฐานข้อมูลของ Redis Insight ที่ลงทะเบียน local-redis-8 แล้ว" loading="lazy" decoding="async"></p>
 
@@ -459,7 +459,7 @@ Browse หลังจากทัวร์ชนิดข้อมูล: ค�
 
 Workbench รันคำสั่งและแสดงผลลัพธ์ของ Search เป็นตาราง มีบทเรียนสำหรับการค้นหาและการค้นหาเวกเตอร์มาให้ในตัว <small>บันทึกเมื่อ 2026-11-07, Redis Insight 3.8.0, Redis ในเครื่อง 8.10.3</small>
 
-### ไคลเอนต์และฐานข้อมูลคลาวด์
+### ไคลเอนต์และฐานข้อมูลคลาวด์ {#th-clients-and-the-cloud-database}
 
 `smoke.py` และ `smoke.mjs` รัน PING, SET/GET และอ่านเวอร์ชันของเซิร์ฟเวอร์กับทั้งสองเป้าหมาย URL ของคลาวด์มาจากไฟล์ `.env` ที่ถูก gitignore
 
@@ -471,7 +471,7 @@ Workbench รันคำสั่งและแสดงผลลัพธ์�
 
 **แผนฟรีไม่มี TLS** การเปิดใช้ผ่าน REST API ล้มเหลวพร้อมข้อผิดพลาด `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN` ("Selected subscription plan does not support database 'enableTls'") ดังนั้นการทดสอบ smoke บนคลาวด์จึงใช้ TCP แบบไม่เข้ารหัส ให้เก็บเฉพาะข้อมูลทดสอบไว้ในฐานข้อมูลฟรี
 
-### แล็บ: อิมเมจรันอะไร และ io-threads
+### แล็บ: อิมเมจรันอะไร และ io-threads {#th-lab-what-the-image-runs-and-io-threads}
 
 **ตรวจสอบบน Redis 8.10.3, 2026-11-07** รัน `redis-benchmark` ภายในคอนเทนเนอร์, SET/GET, ค่าขนาด 64 ไบต์, บนโฮสต์ 24 คอร์:
 
@@ -482,7 +482,7 @@ Workbench รันคำสั่งและแสดงผลลัพธ์�
 
 เมื่อใช้เธรดไคลเอนต์ 4 ตัว ตัวเลขของ io-threads 4 เท่ากันทุกครั้งที่รัน: ไคลเอนต์เป็นขีดจำกัด และเมื่อใช้เธรดไคลเอนต์ 8 ตัวก็สูงขึ้น เซิร์ฟเวอร์และไคลเอนต์อยู่บนเครื่องเดียวกัน จึงควรอ่านตัวเลขเหล่านี้เป็นผลวัดบนเครื่องนั้น ไม่ใช่กฎทั่วไป
 
-### แล็บ: หนึ่งคำสั่งต่อหนึ่งชนิดข้อมูล
+### แล็บ: หนึ่งคำสั่งต่อหนึ่งชนิดข้อมูล {#th-lab-one-command-per-data-type}
 
 **ตรวจสอบบน Redis 8.10.3, 2026-11-07** `local/02-data-types-tour/tour.sh` รันหนึ่งคำสั่งต่อหนึ่งชนิดบนอิมเมจมาตรฐาน โดยไม่มีข้อผิดพลาดเลย:
 
@@ -503,7 +503,7 @@ Workbench รันคำสั่งและแสดงผลลัพธ์�
 
 **ชนิดข้อมูลเชิงความน่าจะเป็นอื่น ๆ** (`local/02-data-types-tour/probabilistic.sh`) count-min sketch ขนาด 56 KB นับการดูหน้า 100,000 ครั้งได้ตรงเป๊ะสำหรับหน้าที่ตรวจสอบ (10,000, 91, 99, 0) cuckoo filter ต่างจาก Bloom ตรงที่ลบรายการได้ โดยมีอัตราผลบวกลวง 0.69% จากผู้ใช้ที่ไม่มีอยู่จริง 10,000 คน t-digest ขนาด 10 KB ให้ค่ามัธยฐานและ p99.9 คลาดเคลื่อนไม่เกิน 1% แต่ p99 ได้ 325 ms เทียบกับค่าจริง 257 ms ซึ่งเป็นช่วงที่ข้อมูลกระโดดและมีจุดอยู่น้อย
 
-### แล็บ: การค้นหาและการค้นหาเวกเตอร์
+### แล็บ: การค้นหาและการค้นหาเวกเตอร์ {#th-lab-search-and-vector-search}
 
 **ตรวจสอบบน Redis 8.10.3, 2026-11-07** `local/03-search-vector/lab.py` สร้างดัชนีโน้ตหนึ่งบรรทัดจำนวน 30 รายการจากไซต์นี้ทั้งแบบ hash และ JSON โดยสร้าง embedding ในเครื่องด้วยโมเดลโอเพนขนาดเล็ก (ไม่ต้องใช้ API key)
 
@@ -520,7 +520,7 @@ redis-py 8.1.0 เจรจาใช้ RESP3 ดังนั้นการต�
 
 **ฟีเจอร์ค้นหาเพิ่มเติม** (`extras.py`) `FT.AGGREGATE` จัดกลุ่มและคำนวณได้ ส่วน synonym ทำให้ "switchover" ค้นเจอโน้ตเรื่อง failover เมื่อการสแกนใหม่เบื้องหลังเสร็จสิ้น `FT.SPELLCHECK` แนะนำ `failover`, `eviction` และ `replica` สำหรับคำที่สะกดผิด `FLOAT16`, `INT8` และ `SVS-VAMANA` กับ `LVQ8` คืน 3 อันดับแรกเหมือนกับ `FLOAT32` คำถามภาษาเกาหลีค้นเจอโน้ตภาษาอังกฤษที่ถูกต้องเฉพาะเมื่อใช้โมเดลหลายภาษา และไม่ใช่กับทุกคำถาม
 
-### ยังไม่ครอบคลุม
+### ยังไม่ครอบคลุม {#th-not-covered-yet}
 
 Redis Insight เวอร์ชันเดสก์ท็อป (อิมเมจ Docker เป็นแอปพลิเคชันเดียวกัน) และไคลเอนต์อื่นนอกเหนือจาก redis-py และ node-redis
 
@@ -532,7 +532,7 @@ Redis Insight เวอร์ชันเดสก์ท็อป (อิมเ�
 
 **Redis 8 lokal dan basis data cloud gratis, keduanya menjawab dari Python dan Node.** Dijalankan pada 2026-11-07: Redis Open Source 8.10.3 dan Redis Insight 3.8.0 di Docker, `redis-cli`, redis-py 6.1.1 dan node-redis 6.3.1, serta basis data gratis Redis Cloud dari [halaman Redis Cloud]({{ '/cloud/' | relative_url }}). Sumber: [`setup/`](https://github.com/litkhai/notes-on-redis/tree/main/setup), [`local/01`](https://github.com/litkhai/notes-on-redis/tree/main/local/01-redis-8-docker), [`local/02`](https://github.com/litkhai/notes-on-redis/tree/main/local/02-data-types-tour).
 
-### Stack lokal
+### Stack lokal {#id-the-local-stack}
 
 Satu berkas compose menjalankan kedua kontainer. Port host adalah 16379 dan 15540, bukan port bawaan, sehingga stack ini dapat berbagi host Docker dengan layanan lain.
 
@@ -545,7 +545,7 @@ Pada 2026-11-07, `redis:latest`, `redis:8`, dan `redis:8.10.3` memiliki digest y
 
 **Klien lainnya** (`go/`, `java/`). go-redis 9.23.0 (membutuhkan Go 1.26) dan Jedis 8.0.2 terhubung ke kedua server dengan URL `redis://`; go-redis menegosiasikan RESP3. Jedis dengan `RedisProtocol.RESP3` dan `CacheConfig` mengirim satu GET untuk 1,001 pembacaan, seperti client-side cache milik redis-py.
 
-### Redis Insight
+### Redis Insight {#id-redis-insight}
 
 <p class="shot"><img src="{{ '/assets/img/setup/01-insight-databases.webp' | relative_url }}" width="1440" height="765" alt="Daftar basis data Redis Insight dengan local-redis-8 terdaftar" loading="lazy" decoding="async"></p>
 
@@ -563,7 +563,7 @@ Key JSON terbuka sebagai pohon; "Make searchable" menawarkan pembuatan indeks Se
 
 Workbench menjalankan perintah dan menampilkan hasil Search sebagai tabel; tersedia tutorial untuk pencarian dan pencarian vektor. <small>Diambil 2026-11-07, Redis Insight 3.8.0, Redis lokal 8.10.3.</small>
 
-### Klien dan basis data cloud
+### Klien dan basis data cloud {#id-clients-and-the-cloud-database}
 
 `smoke.py` dan `smoke.mjs` menjalankan PING, SET/GET, dan membaca versi server pada kedua target; URL cloud berasal dari `.env` yang di-gitignore.
 
@@ -575,7 +575,7 @@ Workbench menjalankan perintah dan menampilkan hasil Search sebagai tabel; terse
 
 **Paket gratis tidak memiliki TLS.** Mengaktifkannya melalui REST API gagal dengan `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN` ("Selected subscription plan does not support database 'enableTls'"), sehingga smoke test cloud menggunakan TCP biasa. Simpan hanya data uji di basis data gratis.
 
-### Lab: apa yang dijalankan image, dan io-threads
+### Lab: apa yang dijalankan image, dan io-threads {#id-lab-what-the-image-runs-and-io-threads}
 
 **Diverifikasi pada Redis 8.10.3, 2026-11-07.** `redis-benchmark` di dalam kontainer, SET/GET, nilai 64 byte, pada host 24 core:
 
@@ -586,7 +586,7 @@ Workbench menjalankan perintah dan menampilkan hasil Search sebagai tabel; terse
 
 Dengan 4 thread klien, angka io-threads 4 sama pada setiap kali dijalankan: klien menjadi batasnya, dan 8 thread klien menaikkannya. Server dan klien berada pada satu mesin, jadi baca angka ini sebagai hasil pengukuran pada mesin tersebut, bukan sebagai aturan umum.
 
-### Lab: satu perintah per tipe data
+### Lab: satu perintah per tipe data {#id-lab-one-command-per-data-type}
 
 **Diverifikasi pada Redis 8.10.3, 2026-11-07.** `local/02-data-types-tour/tour.sh` menjalankan satu perintah per tipe pada image bawaan, semuanya tanpa error:
 
@@ -607,7 +607,7 @@ Dengan 4 thread klien, angka io-threads 4 sama pada setiap kali dijalankan: klie
 
 **Tipe probabilistik lainnya** (`local/02-data-types-tour/probabilistic.sh`). Count-min sketch sebesar 56 KB menghitung 100.000 tayangan halaman secara persis untuk halaman yang diperiksa (10.000, 91, 99, 0). Cuckoo filter, tidak seperti Bloom, dapat menghapus sebuah item, dengan tingkat positif palsu 0,69% pada 10.000 pengguna yang tidak ada. T-digest sebesar 10 KB memberikan median dan p99.9 dengan selisih dalam 1%, tetapi p99 sebesar 325 ms dibandingkan nilai persis 257 ms, di rentang tempat data melompat dan hanya sedikit titik.
 
-### Lab: pencarian dan pencarian vektor
+### Lab: pencarian dan pencarian vektor {#id-lab-search-and-vector-search}
 
 **Diverifikasi pada Redis 8.10.3, 2026-11-07.** `local/03-search-vector/lab.py` mengindeks 30 catatan satu baris dari situs ini sebagai hash dan sebagai JSON, dengan embedding yang dibuat secara lokal memakai model terbuka kecil (tanpa API key).
 
@@ -624,7 +624,7 @@ redis-py 8.1.0 menegosiasikan RESP3, sehingga balasan `FT.SEARCH` tiba sebagai m
 
 **Fitur pencarian lainnya** (`extras.py`). `FT.AGGREGATE` mengelompokkan dan menghitung; sinonim membuat "switchover" menemukan catatan failover setelah pemindaian ulang di latar belakang selesai; `FT.SPELLCHECK` menyarankan `failover`, `eviction` dan `replica` untuk salah ketik; `FLOAT16`, `INT8` dan `SVS-VAMANA` dengan `LVQ8` mengembalikan 3 teratas yang sama seperti `FLOAT32`. Pertanyaan berbahasa Korea menemukan catatan bahasa Inggris yang benar hanya dengan model multibahasa, dan tidak untuk setiap pertanyaan.
 
-### Belum dibahas
+### Belum dibahas {#id-not-covered-yet}
 
 Redis Insight desktop (image Docker adalah aplikasi yang sama) dan klien selain redis-py dan node-redis.
 
@@ -636,7 +636,7 @@ Redis Insight desktop (image Docker adalah aplikasi yang sama) dan klien selain 
 
 **Redis 8 tempatan dan pangkalan data awan percuma, kedua-duanya memberi respons daripada Python dan Node.** Dijalankan pada 2026-11-07: Redis Open Source 8.10.3 dan Redis Insight 3.8.0 dalam Docker, `redis-cli`, redis-py 6.1.1 dan node-redis 6.3.1, serta pangkalan data percuma Redis Cloud daripada [halaman Redis Cloud]({{ '/cloud/' | relative_url }}). Sumber: [`setup/`](https://github.com/litkhai/notes-on-redis/tree/main/setup), [`local/01`](https://github.com/litkhai/notes-on-redis/tree/main/local/01-redis-8-docker), [`local/02`](https://github.com/litkhai/notes-on-redis/tree/main/local/02-data-types-tour).
 
-### Tindanan tempatan
+### Tindanan tempatan {#ms-the-local-stack}
 
 Satu fail compose memulakan kedua-dua kontena. Port hos ialah 16379 dan 15540, bukan port lalai, supaya tindanan ini boleh berkongsi hos Docker dengan perkhidmatan lain.
 
@@ -649,7 +649,7 @@ Pada 2026-11-07, `redis:latest`, `redis:8` dan `redis:8.10.3` mempunyai digest y
 
 **Lebih banyak klien** (`go/`, `java/`). go-redis 9.23.0 (memerlukan Go 1.26) dan Jedis 8.0.2 bersambung ke kedua-dua pelayan dengan URL `redis://`; go-redis merundingkan RESP3. Jedis dengan `RedisProtocol.RESP3` dan `CacheConfig` menghantar satu GET untuk 1,001 bacaan, seperti client-side cache milik redis-py.
 
-### Redis Insight
+### Redis Insight {#ms-redis-insight}
 
 <p class="shot"><img src="{{ '/assets/img/setup/01-insight-databases.webp' | relative_url }}" width="1440" height="765" alt="Senarai pangkalan data Redis Insight dengan local-redis-8 didaftarkan" loading="lazy" decoding="async"></p>
 
@@ -667,7 +667,7 @@ Kunci JSON dibuka sebagai pepohon; "Make searchable" menawarkan pembuatan indeks
 
 Workbench menjalankan arahan dan memaparkan hasil Search sebagai jadual; ia disertakan dengan tutorial untuk carian dan carian vektor. <small>Dirakam 2026-11-07, Redis Insight 3.8.0, Redis tempatan 8.10.3.</small>
 
-### Klien dan pangkalan data awan
+### Klien dan pangkalan data awan {#ms-clients-and-the-cloud-database}
 
 `smoke.py` dan `smoke.mjs` menjalankan PING, SET/GET dan membaca versi pelayan pada kedua-dua sasaran; URL awan datang daripada `.env` yang di-gitignore.
 
@@ -679,7 +679,7 @@ Workbench menjalankan arahan dan memaparkan hasil Search sebagai jadual; ia dise
 
 **Pelan percuma tiada TLS.** Mengaktifkannya melalui REST API gagal dengan `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN` ("Selected subscription plan does not support database 'enableTls'"), jadi ujian asap awan menggunakan TCP biasa. Simpan data ujian sahaja dalam pangkalan data percuma.
 
-### Makmal: apa yang dijalankan imej, dan io-threads
+### Makmal: apa yang dijalankan imej, dan io-threads {#ms-lab-what-the-image-runs-and-io-threads}
 
 **Disahkan pada Redis 8.10.3, 2026-11-07.** `redis-benchmark` di dalam kontena, SET/GET, nilai 64 bait, pada hos 24 teras:
 
@@ -690,7 +690,7 @@ Workbench menjalankan arahan dan memaparkan hasil Search sebagai jadual; ia dise
 
 Dengan 4 thread klien, angka io-threads 4 sama dalam setiap larian: klien menjadi had, dan 8 thread klien menaikkannya. Pelayan dan klien berkongsi satu mesin, jadi baca angka ini sebagai ukuran pada mesin itu, bukan sebagai peraturan umum.
 
-### Makmal: satu arahan setiap jenis data
+### Makmal: satu arahan setiap jenis data {#ms-lab-one-command-per-data-type}
 
 **Disahkan pada Redis 8.10.3, 2026-11-07.** `local/02-data-types-tour/tour.sh` menjalankan satu arahan bagi setiap jenis pada imej asal, semuanya tanpa ralat:
 
@@ -711,7 +711,7 @@ Dengan 4 thread klien, angka io-threads 4 sama dalam setiap larian: klien menjad
 
 **Jenis kebarangkalian yang lain** (`local/02-data-types-tour/probabilistic.sh`). Count-min sketch sebesar 56 KB mengira 100,000 paparan halaman dengan tepat bagi halaman yang disemak (10,000, 91, 99, 0). Cuckoo filter, tidak seperti Bloom, dapat memadam satu item, dengan kadar positif palsu 0.69% pada 10,000 pengguna yang tidak wujud. T-digest sebesar 10 KB memberikan median dan p99.9 dalam lingkungan 1%, tetapi p99 sebanyak 325 ms berbanding nilai tepat 257 ms, di rentang tempat data melompat dan hanya sedikit titik.
 
-### Makmal: carian dan carian vektor
+### Makmal: carian dan carian vektor {#ms-lab-search-and-vector-search}
 
 **Disahkan pada Redis 8.10.3, 2026-11-07.** `local/03-search-vector/lab.py` mengindeks 30 nota satu baris daripada tapak ini sebagai hash dan sebagai JSON, dengan benaman (embedding) dijana secara setempat menggunakan model terbuka yang kecil (tanpa API key).
 
@@ -728,7 +728,7 @@ redis-py 8.1.0 merundingkan RESP3, jadi balasan `FT.SEARCH` tiba sebagai map, bu
 
 **Lebih banyak ciri carian** (`extras.py`). `FT.AGGREGATE` mengumpulkan dan mengira; sinonim membuat "switchover" menemui nota failover selepas imbasan semula di latar belakang selesai; `FT.SPELLCHECK` mencadangkan `failover`, `eviction` dan `replica` bagi ejaan yang salah; `FLOAT16`, `INT8` dan `SVS-VAMANA` dengan `LVQ8` memulangkan 3 teratas yang sama seperti `FLOAT32`. Soalan bahasa Korea menemui nota bahasa Inggeris yang betul hanya dengan model berbilang bahasa, dan tidak bagi setiap soalan.
 
-### Belum diliputi
+### Belum diliputi {#ms-not-covered-yet}
 
 Redis Insight desktop (imej Docker ialah aplikasi yang sama) dan klien selain redis-py dan node-redis.
 

@@ -208,7 +208,7 @@ Essentials in Seoul with replication, persistence, backups and RBAC, and Pro Act
 
 **Redis Cloud 시작하기: 가입부터 콘솔 메뉴 전체까지.** 2026-11-07에 무료 플랜으로 캡처했다. 무료 DB 하나(Redis 8.6, AWS ap-northeast-2 서울), 콘솔은 다크 모드, 결제한 것은 없다. Essentials와 Pro 양식은 열어서 캡처만 하고 제출하지 않았다. 모든 캡처에서 가린 것: 이름, 이메일, 계정 번호, 구독·DB ID, 엔드포인트, 포트, IP 주소, API 키. 이 페이지의 가격은 2026-11-07에 콘솔에서 읽었다.
 
-### 한눈에 보기
+### 한눈에 보기 {#ko-at-a-glance}
 
 왼쪽 사이드바를 위에서부터: **Databases**, **Subscriptions**, **Redis Search**, **Data Integration**. *AI services* 아래 **Iris**와 그 하위 Agent Playbooks, Agent Memory, Context Gateway, Intent Router, Lens(베타), Agent Mesh(베타), Access & Identity. *Reports* 아래 **Logs**, **Usage**. *Account* 아래 **API Keys & Team**, **Data Access**, **Billing**, **Integrations**, **Settings**. 위쪽 막대에는 앱 전환, 팁 아이콘, 테마 스위치(밝게·어둡게·시스템), 계정 메뉴가 있다.
 
@@ -216,7 +216,7 @@ Essentials in Seoul with replication, persistence, backups and RBAC, and Pro Act
 
 새 계정은 비어 있는 Databases 화면에서 시작한다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
 
-### DB 만들기
+### DB 만들기 {#ko-create-a-database}
 
 **New database**를 누르면 플랜 카드 두 장이 있는 한 페이지가 열린다. **Essentials**는 공유 인프라로 시간당 $0.007(월 $5)부터. **Pro**는 전용 인프라로 시간당 $0.014부터, 월 최소 $200, "First $200 free" 표시가 붙어 있다. 카드 아래 *Not ready? Try 30 MB for free* 문구의 링크가 무료 플랜으로 가는 유일한 길이다.
 
@@ -232,7 +232,7 @@ Pro는 설정 방식부터 고른다. Easy create 또는 Custom settings. Easy c
 
 무료 양식은 포함된 것을 보여 준다. DB 1개, RAM 30 MB, 커넥션 30개, 100 ops/sec, 월 $0. 리전은 고를 수 있다(AWS, Google Cloud, Azure 중 서울 선택). 이 캡처만 밝은 테마다. 계정에 무료 DB가 생기면 이 양식은 다시 열리지 않는다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
 
-### DB 화면
+### DB 화면 {#ko-the-database-screen}
 
 Create database를 누르면 몇 초 뒤 DB 페이지로 넘어간다. 탭은 Configuration, Metrics, Alerts, Slowlog 네 개다. 처음 들어가면 설정 안내 창이 뜨고, 닫아도 아무것도 적용되지 않는다.
 
@@ -264,7 +264,7 @@ Connect는 공개 엔드포인트로 접속하는 redis-cli 명령을 바로 준
 
 시험이 INCR과 SET만 써서 Slowlog는 비어 있었다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
 
-### DB와 구독
+### DB와 구독 {#ko-databases-and-subscriptions}
 
 모든 DB는 구독에 속한다. 무료 플랜은 DB 하나를 담은 구독 하나를 만든다.
 
@@ -276,7 +276,7 @@ Connect는 공개 엔드포인트로 접속하는 redis-cli 명령을 바로 준
 
 ap-northeast-2의 무료 구독. Plan upgrade 버튼과 Databases, Overview 탭. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
 
-### 제품 메뉴
+### 제품 메뉴 {#ko-product-menus}
 
 사이드바 세 항목은 설정이 아니라 제품으로 들어가는 입구다.
 
@@ -292,7 +292,7 @@ Data Integration은 관리형 RDI다. 시간당 $1.37, 월 약 $1,000(추정), �
 
 Iris 첫 화면. 나열된 서비스: Agent Memory, Agent Playbooks, Intent Router, Context Gateway, Agent Mesh. Lens는 사이드바에 있다. 이 사이트의 Iris 페이지에서 하나씩 다룬다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
 
-### 리포트
+### 리포트 {#ko-reports}
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/17-logs-system.webp' | relative_url }}" width="1440" height="765" alt="시스템 로그: 구독 생성, DB 활성화, 영속성 끔, 원본 IP 추가, RESP3 켬, API 켬, API 키 할당" loading="lazy" decoding="async"></p>
 
@@ -306,7 +306,7 @@ Sessions: 콘솔 로그인마다 사용자 에이전트, IP, 역할, 로그인 �
 
 Usage에는 Memory Usage, RBU Usage 탭과 Cost report 내려받기가 있다. DB를 막 만들었을 때는 한 시간 뒤에 리포트가 나온다고 했고, 마지막 캡처 때는 데이터가 보였다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
 
-### 계정
+### 계정 {#ko-account}
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/20-api-keys.webp' | relative_url }}" width="1440" height="765" alt="계정 키가 가려진 API Keys 탭과 사용자 키 한 개" loading="lazy" decoding="async"></p>
 
@@ -356,7 +356,7 @@ Settings: 계정 정보, 사업자 연락처, MFA 강제(기본 꺼짐), TLS 클
 
 계정 메뉴에서 계정을 바꾸고 사용자 프로필을 연다. <small>2026-11-07 캡처, Redis Cloud 무료 플랜.</small>
 
-### 실습: 무료 DB와 그 한도
+### 실습: 무료 DB와 그 한도 {#ko-lab-the-free-database-and-its-limits}
 
 **확인: Redis 8.6.2(Redis Cloud 무료 플랜, AWS ap-northeast-2), 2026-11-07.** 클라이언트: 한국의 호스트에서 redis-py 6.1.1, 왕복 약 2.6 ms, 평문 TCP(무료 플랜에는 TLS가 없음). 소스와 전체 출력: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database).
 
@@ -370,7 +370,7 @@ Settings: 계정 정보, 사업자 연락처, MFA 강제(기본 꺼짐), TLS 클
 
 **10분**(`long_window.py`). 연결 하나에 파이프라인 100으로 600초 동안 초당 9,563–22,250 INCR를 오류 없이 유지했다. 더 긴 구간에서도 가격 페이지의 100 ops/s는 적용되지 않았다.
 
-### 실습: 무료 플랜의 REST API
+### 실습: 무료 플랜의 REST API {#ko-lab-the-rest-api-on-the-free-plan}
 
 **확인: Redis Cloud REST API v1, 무료 플랜, 2026-11-07.** **Enable API**를 켜고 사용자 키를 만든 뒤, 호출마다 계정 키(`x-api-key`)와 사용자 키(`x-api-secret-key`)를 보낸다. 문서의 표현: "All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously".
 
@@ -383,7 +383,7 @@ Settings: 계정 정보, 사업자 연락처, MFA 강제(기본 꺼짐), TLS 클
 
 클라이언트를 짜기 전에 알 것 둘. HTTP 상태가 아니라 태스크를 확인한다. 거절된 요청도 202를 돌려준다. 그리고 `alerts`는 목록 전체를 바꾼다. 커넥션 알림만 보냈더니 데이터셋 크기 알림이 꺼졌고 시스템 로그에 그대로 남았다. 바로 되돌렸다. 문서: [REST API](https://redis.io/docs/latest/operate/rc/api/), [API lifecycle](https://redis.io/docs/latest/operate/rc/api/get-started/process-lifecycle/). 실습: [`cloud/04-rest-api`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/04-rest-api).
 
-### 첫 주 체크리스트
+### 첫 주 체크리스트 {#ko-first-week-checklist}
 
 - **CIDR 허용 목록**을 정한다. 무료 DB는 0.0.0.0/0으로 시작한다. 무료 플랜에서는 **TLS**를 켤 수 없으므로(API가 `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`으로 거절) 시험 데이터만 두거나, 유료 플랜으로 옮겨 거기서 TLS를 켠다.
 - 기본 사용자 대신 **Data Access**의 사용자와 역할을 쓰거나, 최소한 비밀번호를 바꾼다.
@@ -392,7 +392,7 @@ Settings: 계정 정보, 사업자 연락처, MFA 강제(기본 꺼짐), TLS 클
 - 사람이 늘면 Settings에서 **MFA 강제**를 켠다.
 - **API**를 켰다면 안 쓰는 사용자 키를 지운다. 시스템 로그는 호출마다 키 이름을 남긴다.
 
-### 아직 다루지 않은 것
+### 아직 다루지 않은 것 {#ko-not-covered-yet}
 
 서울 Essentials의 복제·영속·백업·RBAC와 Pro Active-Active는 저장소에 각자의 이슈가 있는 별도 실습이다.
 
@@ -404,7 +404,7 @@ Settings: 계정 정보, 사업자 연락처, MFA 강제(기본 꺼짐), TLS 클
 
 **Redis Cloud：从注册到控制台的每个菜单。** 2026-11-07 在免费计划上截取：一个免费数据库（Redis 8.6，AWS ap-northeast-2 首尔），控制台为深色模式，未产生任何付费。Essentials 和 Pro 的表单已打开并截图，但没有提交。每张截图中都已遮盖：姓名、电子邮件、账号编号、订阅和数据库 ID、endpoint、端口、IP 地址、API 密钥。本页的价格均于 2026-11-07 在控制台中读取。
 
-### 概览
+### 概览 {#zh-at-a-glance}
 
 左侧边栏从上到下：**Databases**、**Subscriptions**、**Redis Search**、**Data Integration**；在 *AI services* 下是 **Iris**，包含 Agent Playbooks、Agent Memory、Context Gateway、Intent Router、Lens (beta)、Agent Mesh (beta) 和 Access & Identity；在 *Reports* 下是 **Logs** 和 **Usage**；在 *Account* 下是 **API Keys & Team**、**Data Access**、**Billing**、**Integrations**、**Settings**。顶部栏包含应用切换器、提示图标、主题切换（浅色、深色、跟随系统）和账户菜单。
 
@@ -412,7 +412,7 @@ Settings: 계정 정보, 사업자 연락처, MFA 강제(기본 꺼짐), TLS 클
 
 新账户首先进入的是空的 Databases 页面。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
-### 创建数据库
+### 创建数据库 {#zh-create-a-database}
 
 **New database** 会打开一个带有两张计划卡片的页面。**Essentials** 是共享基础设施，起价 $0.007/小时（$5/月）。**Pro** 是专用基础设施，起价 $0.014/小时，最低 $200/月，并带有 “First $200 free” 标记。卡片下方有一行 *Not ready? Try 30 MB for free*；这个链接是进入免费计划的唯一途径。
 
@@ -428,7 +428,7 @@ Pro 首先要选择设置方式：Easy create 或 Custom settings。Easy create 
 
 免费表单列出了包含的内容：1 个数据库、30 MB RAM、30 个连接、100 ops/sec、$0/月。区域可以选择（AWS、Google Cloud 或 Azure；这里选了首尔）。只有这张截图是浅色模式；账户有了免费数据库之后，这个表单就无法再次打开。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
-### 数据库页面
+### 数据库页面 {#zh-the-database-screen}
 
 点击 Create database 后，几秒钟内会进入数据库页面。页面有四个标签页：Configuration、Metrics、Alerts、Slowlog。首次访问时会弹出引导设置对话框；关闭它不会应用任何更改。
 
@@ -460,7 +460,7 @@ Connect 直接给出通过公网 endpoint 连接的 redis-cli 命令；密码在
 
 Slowlog 一直为空：测试只使用了 INCR 和 SET。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
-### Databases 与 subscriptions
+### Databases 与 subscriptions {#zh-databases-and-subscriptions}
 
 每个数据库都属于一个 subscription。免费计划会创建一个包含一个数据库的 subscription。
 
@@ -472,7 +472,7 @@ Slowlog 一直为空：测试只使用了 INCR 和 SET。 <small>2026-11-07 截�
 
 位于 ap-northeast-2 的免费订阅，带有 Plan upgrade 按钮以及 Databases 和 Overview 标签页。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
-### 产品菜单
+### 产品菜单 {#zh-product-menus}
 
 侧边栏中有三个条目是产品的入口，而不是设置项。
 
@@ -488,7 +488,7 @@ Data Integration 是托管的 RDI：$1.37/小时，预估约 $1,000/月，从创
 
 Iris 首页。列出的服务：Agent Memory、Agent Playbooks、Intent Router、Context Gateway、Agent Mesh；Lens 出现在侧边栏中。本站的 Iris 页面会逐一介绍它们。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
-### Reports
+### Reports {#zh-reports}
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/17-logs-system.webp' | relative_url }}" width="1440" height="765" alt="系统日志：订阅已创建、数据库已激活、持久化已禁用、已添加源 IP、已启用 RESP3、已启用 API、已分配 API 密钥" loading="lazy" decoding="async"></p>
 
@@ -502,7 +502,7 @@ Sessions：每次控制台登录，包含 user agent、IP、角色和登录类�
 
 Usage 有 Memory Usage 和 RBU Usage 两个标签页，以及 Cost report 下载。数据库刚创建后，它提示报告将在一小时后出现；到最后一次截图时已经有数据。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
-### Account
+### Account {#zh-account}
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/20-api-keys.webp' | relative_url }}" width="1440" height="765" alt="API Keys 标签页，账户密钥已隐藏，另有一个用户密钥" loading="lazy" decoding="async"></p>
 
@@ -552,7 +552,7 @@ Settings：账户信息、业务联系人、MFA enforcement（默认关闭）、
 
 账户菜单可在多个账户之间切换，并打开用户资料。 <small>2026-11-07 截图，Redis Cloud 免费计划。</small>
 
-### 实验：免费数据库及其限制
+### 实验：免费数据库及其限制 {#zh-lab-the-free-database-and-its-limits}
 
 **已在 Redis 8.6.2 上验证（Redis Cloud 免费计划，AWS ap-northeast-2），2026-11-07。** 客户端：来自韩国主机的 redis-py 6.1.1，往返约 2.6 ms，明文 TCP（免费计划没有 TLS）。源码和完整输出：[`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database)。
 
@@ -566,7 +566,7 @@ Settings：账户信息、业务联系人、MFA enforcement（默认关闭）、
 
 **十分钟**（`long_window.py`）。一个连接使用 100 的 pipeline，在 600 秒内持续每秒 9,563–22,250 次 INCR，没有出现任何错误：在更长的时间窗口里，定价页面上的 100 ops/s 同样没有被强制执行。
 
-### 实验：免费计划上的 REST API
+### 实验：免费计划上的 REST API {#zh-lab-the-rest-api-on-the-free-plan}
 
 **已在 Redis Cloud REST API v1 上验证（免费计划），2026-11-07。** 打开 **Enable API**，创建用户密钥，并在每次调用中同时发送账户密钥（`x-api-key`）和用户密钥（`x-api-secret-key`）。文档中写道："All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously"。
 
@@ -579,7 +579,7 @@ Settings：账户信息、业务联系人、MFA enforcement（默认关闭）、
 
 编写客户端之前有两点需要了解。要检查任务，而不是 HTTP 状态：被拒绝的请求同样返回 202。另外 `alerts` 会替换整个列表。只发送连接数告警会关闭数据集大小告警，系统日志中可以看到这一点；已立即恢复。文档：[REST API](https://redis.io/docs/latest/operate/rc/api/)、[API lifecycle](https://redis.io/docs/latest/operate/rc/api/get-started/process-lifecycle/)。实验：[`cloud/04-rest-api`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/04-rest-api)。
 
-### 第一周检查清单
+### 第一周检查清单 {#zh-first-week-checklist}
 
 - 设置 **CIDR allow list**：免费数据库默认为 0.0.0.0/0。免费计划无法开启 **TLS**（API 会以 `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN` 拒绝），所以只放测试数据，或者升级到付费计划并在那里开启 TLS。
 - 用 **Data Access** 的用户和角色替换默认用户，或者至少轮换它的密码。
@@ -588,7 +588,7 @@ Settings：账户信息、业务联系人、MFA enforcement（默认关闭）、
 - 当有更多人加入时，在 Settings 中开启 **MFA enforcement**。
 - 如果启用了 **API**，请删除不再使用的用户密钥；系统日志会记录每次调用所用的密钥名称。
 
-### 尚未涵盖
+### 尚未涵盖 {#zh-not-covered-yet}
 
 首尔的 Essentials（带复制、持久化、备份和 RBAC）以及 Pro Active-Active 是各自独立的实验，在仓库中都有对应的 issue。
 
@@ -600,7 +600,7 @@ Settings：账户信息、业务联系人、MFA enforcement（默认关闭）、
 
 **Redis Cloud のサインアップからコンソールの全メニューまで。** 2026-11-07 に無料プランで取得しました。無料データベース 1 つ（Redis 8.6、AWS ap-northeast-2 ソウル）、コンソールはダークモードで、有料のものは使っていません。Essentials と Pro のフォームは開いてキャプチャしましたが、送信していません。すべてのスクリーンショットで、氏名、メールアドレス、アカウント番号、サブスクリプションとデータベースの ID、エンドポイント、ポート、IP アドレス、API キーをマスクしています。このページの価格は 2026-11-07 にコンソールで確認したものです。
 
-### 全体像
+### 全体像 {#ja-at-a-glance}
 
 左サイドバーは上から順に、**Databases**、**Subscriptions**、**Redis Search**、**Data Integration**。*AI services* の下に **Iris** があり、Agent Playbooks、Agent Memory、Context Gateway、Intent Router、Lens (beta)、Agent Mesh (beta)、Access & Identity が並びます。*Reports* の下は **Logs** と **Usage**、*Account* の下は **API Keys & Team**、**Data Access**、**Billing**、**Integrations**、**Settings** です。トップバーには、アプリスイッチャー、ヒントアイコン、テーマ切り替え（ライト、ダーク、システム）、アカウントメニューがあります。
 
@@ -608,7 +608,7 @@ Settings：账户信息、业务联系人、MFA enforcement（默认关闭）、
 
 新しいアカウントは、何もない Databases 画面から始まります。 <small>2026-11-07 キャプチャ、Redis Cloud 無料プラン。</small>
 
-### データベースを作成する
+### データベースを作成する {#ja-create-a-database}
 
 **New database** を押すと、2 枚のプランカードがある 1 ページが開きます。**Essentials** は共有インフラで、$0.007/時間（$5/月）から。**Pro** は専用インフラで、$0.014/時間から、最低 $200/月で、「First $200 free」のバッジが付いています。カードの下に *Not ready? Try 30 MB for free* という行があり、このリンクが無料プランへの唯一の入口です。
 
@@ -624,7 +624,7 @@ Pro はまずセットアップ方法を選びます。Easy create または Cus
 
 無料フォームには含まれるものが表示されます。データベース 1 つ、RAM 30 MB、30 接続、100 ops/sec、$0/月。リージョンは選べます（AWS、Google Cloud、Azure。ここではソウルを選択）。このキャプチャだけライトモードです。アカウントに無料データベースができると、このフォームは再度開けません。 <small>2026-11-07 キャプチャ、Redis Cloud 無料プラン。</small>
 
-### データベース画面
+### データベース画面 {#ja-the-database-screen}
 
 Create database を押すと、数秒でデータベースのページに移ります。ページには Configuration、Metrics、Alerts、Slowlog の 4 つのタブがあります。初回訪問時にはガイド付きセットアップのダイアログが表示されますが、閉じても何も適用されません。
 
@@ -656,7 +656,7 @@ Connect は、パブリックエンドポイント経由の redis-cli コマン�
 
 試験では INCR と SET しか使わなかったため、Slowlog は空のままでした。 <small>2026-11-07 キャプチャ、Redis Cloud 無料プラン。</small>
 
-### Databases と subscriptions
+### Databases と subscriptions {#ja-databases-and-subscriptions}
 
 すべてのデータベースは subscription に属します。無料プランでは、データベース 1 つを含む subscription が 1 つ作られます。
 
@@ -668,7 +668,7 @@ Connect は、パブリックエンドポイント経由の redis-cli コマン�
 
 ap-northeast-2 の無料サブスクリプション。Plan upgrade ボタンと、Databases、Overview タブがあります。 <small>2026-11-07 キャプチャ、Redis Cloud 無料プラン。</small>
 
-### プロダクトメニュー
+### プロダクトメニュー {#ja-product-menus}
 
 サイドバーの 3 つの項目は、設定ではなくプロダクトへの入口です。
 
@@ -684,7 +684,7 @@ Data Integration はマネージド RDI です。$1.37/時間、月約 $1,000（
 
 Iris のランディングページ。掲載されているサービス：Agent Memory、Agent Playbooks、Intent Router、Context Gateway、Agent Mesh。Lens はサイドバーにあります。このサイトの Iris ページで 1 つずつ取り上げます。 <small>2026-11-07 キャプチャ、Redis Cloud 無料プラン。</small>
 
-### Reports
+### Reports {#ja-reports}
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/17-logs-system.webp' | relative_url }}" width="1440" height="765" alt="システムログ：サブスクリプション作成、データベース有効化、永続化無効化、ソース IP 追加、RESP3 有効化、API 有効化、API キー割り当て" loading="lazy" decoding="async"></p>
 
@@ -698,7 +698,7 @@ Sessions：コンソールへのログインごとに、ユーザーエージェ
 
 Usage には Memory Usage と RBU Usage のタブと、Cost report のダウンロードがあります。データベースを作成した直後は、レポートが 1 時間後に表示されると案内されていましたが、最後のキャプチャ時にはデータが表示されていました。 <small>2026-11-07 キャプチャ、Redis Cloud 無料プラン。</small>
 
-### Account
+### Account {#ja-account}
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/20-api-keys.webp' | relative_url }}" width="1440" height="765" alt="アカウントキーが隠れていて、ユーザーキーが 1 つある API Keys タブ" loading="lazy" decoding="async"></p>
 
@@ -748,7 +748,7 @@ Settings：アカウント情報、ビジネス連絡先、MFA enforcement（デ
 
 アカウントメニューでは、アカウントを切り替えたり、ユーザープロフィールを開いたりできます。 <small>2026-11-07 キャプチャ、Redis Cloud 無料プラン。</small>
 
-### ラボ：無料データベースとその制限
+### ラボ：無料データベースとその制限 {#ja-lab-the-free-database-and-its-limits}
 
 **Redis 8.6.2（Redis Cloud 無料プラン、AWS ap-northeast-2）で検証、2026-11-07。** クライアント：韓国のホストから redis-py 6.1.1、往復約 2.6 ms、平文 TCP（無料プランには TLS がありません）。ソースと全出力：[`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database)。
 
@@ -762,7 +762,7 @@ pipeline を使わない 1 接続では 249 ops/s で、これは往復時間に
 
 **10 分間**（`long_window.py`）。1 本の接続でパイプライン 100 を使い、600 秒間にわたって毎秒 9,563–22,250 回の INCR をエラーなしで維持した。より長い区間でも、料金ページの 100 ops/s は適用されなかった。
 
-### ラボ：無料プランでの REST API
+### ラボ：無料プランでの REST API {#ja-lab-the-rest-api-on-the-free-plan}
 
 **Redis Cloud REST API v1（無料プラン）で検証、2026-11-07。** **Enable API** をオンにしてユーザーキーを作成し、すべての呼び出しでアカウントキー（`x-api-key`）とユーザーキー（`x-api-secret-key`）の両方を送ります。ドキュメントには次のようにあります："All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously"。
 
@@ -775,7 +775,7 @@ pipeline を使わない 1 接続では 249 ops/s で、これは往復時間に
 
 クライアントを書く前に知っておくべき点が 2 つあります。HTTP ステータスではなくタスクを確認してください。拒否されたリクエストでも 202 が返ります。また、`alerts` はリスト全体を置き換えます。接続数アラートだけを送ったところ、システムログのとおりデータセットサイズのアラートがオフになりました。すぐに元に戻しました。ドキュメント：[REST API](https://redis.io/docs/latest/operate/rc/api/)、[API lifecycle](https://redis.io/docs/latest/operate/rc/api/get-started/process-lifecycle/)。ラボ：[`cloud/04-rest-api`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/04-rest-api)。
 
-### 最初の 1 週間のチェックリスト
+### 最初の 1 週間のチェックリスト {#ja-first-week-checklist}
 
 - **CIDR allow list** を設定する：無料データベースは 0.0.0.0/0 で始まります。無料プランでは **TLS** をオンにできない（API は `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN` で拒否します）ため、テストデータだけを置くか、有料プランに移ってそこで TLS をオンにします。
 - デフォルトユーザーを **Data Access** のユーザーとロールに置き換えるか、少なくともそのパスワードをローテーションする。
@@ -784,7 +784,7 @@ pipeline を使わない 1 接続では 249 ops/s で、これは往復時間に
 - 参加者が増えたら、Settings で **MFA enforcement** をオンにする。
 - **API** を有効にした場合、使わなくなったユーザーキーは削除する：システムログには、呼び出しごとにそのキー名が記録されます。
 
-### まだ扱っていないこと
+### まだ扱っていないこと {#ja-not-covered-yet}
 
 ソウルの Essentials（レプリケーション、永続化、バックアップ、RBAC 付き）と Pro Active-Active は別のラボで、それぞれリポジトリに専用の issue があります。
 
@@ -796,7 +796,7 @@ pipeline を使わない 1 接続では 249 ops/s で、これは往復時間に
 
 **Redis Cloud ตั้งแต่สมัครใช้งานจนถึงทุกเมนูของคอนโซล** บันทึกเมื่อ 2026-11-07 บนแผนฟรี: ฐานข้อมูลฟรี 1 ฐาน (Redis 8.6, AWS ap-northeast-2 Seoul) คอนโซลในโหมดมืด ไม่มีการชำระเงินใดๆ ฟอร์มของ Essentials และ Pro ถูกเปิดและบันทึกภาพไว้แต่ไม่ได้ส่งข้อมูล ข้อมูลที่ปิดบังในภาพหน้าจอทุกภาพ: ชื่อ อีเมล หมายเลขบัญชี ID ของ subscription และฐานข้อมูล endpoint พอร์ต ที่อยู่ IP และ API keys ราคาในหน้านี้อ่านจากคอนโซลเมื่อ 2026-11-07
 
-### ภาพรวม
+### ภาพรวม {#th-at-a-glance}
 
 แถบด้านซ้าย จากบนลงล่าง: **Databases**, **Subscriptions**, **Redis Search**, **Data Integration** ใต้ *AI services* คือ **Iris** ซึ่งมี Agent Playbooks, Agent Memory, Context Gateway, Intent Router, Lens (beta), Agent Mesh (beta) และ Access & Identity ใต้ *Reports* คือ **Logs** และ **Usage** ใต้ *Account* คือ **API Keys & Team**, **Data Access**, **Billing**, **Integrations**, **Settings** แถบด้านบนมีตัวสลับแอป ไอคอนเคล็ดลับ ตัวสลับธีม (สว่าง มืด ตามระบบ) และเมนูบัญชี
 
@@ -804,7 +804,7 @@ pipeline を使わない 1 接続では 249 ops/s で、これは往復時間に
 
 บัญชีใหม่เปิดมาที่ Databases ซึ่งยังไม่มีอะไรอยู่ <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
-### สร้างฐานข้อมูล
+### สร้างฐานข้อมูล {#th-create-a-database}
 
 **New database** เปิดหน้าเดียวที่มีการ์ดแผนสองใบ **Essentials** เป็นโครงสร้างพื้นฐานแบบใช้ร่วมกัน เริ่มที่ $0.007/ชั่วโมง ($5/เดือน) **Pro** เป็นโครงสร้างพื้นฐานเฉพาะ เริ่มที่ $0.014/ชั่วโมง โดยมีขั้นต่ำ $200/เดือน และป้าย "First $200 free" ใต้การ์ดมีบรรทัด *Not ready? Try 30 MB for free* ลิงก์นี้เป็นทางเดียวที่นำไปสู่แผนฟรี
 
@@ -820,7 +820,7 @@ Pro เริ่มต้นด้วยการเลือกวิธีต�
 
 ฟอร์มแผนฟรีแสดงสิ่งที่รวมอยู่: 1 ฐานข้อมูล, RAM 30 MB, 30 การเชื่อมต่อ, 100 ops/sec, $0/เดือน เลือก region ได้อิสระ (AWS, Google Cloud หรือ Azure; เลือก Seoul) ภาพนี้เป็นภาพเดียวที่บันทึกในโหมดสว่าง และไม่สามารถเปิดฟอร์มนี้ซ้ำได้เมื่อบัญชีมีฐานข้อมูลฟรีแล้ว <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
-### หน้าฐานข้อมูล
+### หน้าฐานข้อมูล {#th-the-database-screen}
 
 หลังกด Create database ระบบจะเข้าสู่หน้าฐานข้อมูลภายในไม่กี่วินาที หน้านี้มีสี่แท็บ: Configuration, Metrics, Alerts, Slowlog เมื่อเข้าครั้งแรกจะมีกล่องโต้ตอบเสนอการตั้งค่าแบบนำทาง การปิดกล่องนี้ไม่ได้ใช้การเปลี่ยนแปลงใดๆ
 
@@ -852,7 +852,7 @@ alert ของแผนฟรี: ขนาด dataset และจำนวน
 
 Slowlog ยังคงว่าง: การทดสอบใช้เพียง INCR และ SET <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
-### ฐานข้อมูลและ subscription
+### ฐานข้อมูลและ subscription {#th-databases-and-subscriptions}
 
 ทุกฐานข้อมูลเป็นของ subscription หนึ่ง แผนฟรีสร้าง subscription หนึ่งรายการที่มีฐานข้อมูลหนึ่งฐาน
 
@@ -864,7 +864,7 @@ Slowlog ยังคงว่าง: การทดสอบใช้เพี�
 
 subscription ฟรีใน ap-northeast-2 พร้อมปุ่ม Plan upgrade และแท็บ Databases และ Overview <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
-### เมนูผลิตภัณฑ์
+### เมนูผลิตภัณฑ์ {#th-product-menus}
 
 รายการในแถบด้านข้างสามรายการเป็นจุดเริ่มต้นของผลิตภัณฑ์ ไม่ใช่หน้าการตั้งค่า
 
@@ -880,7 +880,7 @@ Data Integration คือ RDI แบบมีผู้ดูแลให้: $1
 
 หน้า landing ของ Iris บริการที่แสดง: Agent Memory, Agent Playbooks, Intent Router, Context Gateway, Agent Mesh; Lens ปรากฏในแถบด้านข้าง หน้า Iris ของเว็บไซต์นี้อธิบายแต่ละบริการ <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
-### รายงาน
+### รายงาน {#th-reports}
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/17-logs-system.webp' | relative_url }}" width="1440" height="765" alt="System log: สร้าง subscription, เปิดใช้งานฐานข้อมูล, ปิด persistence, เพิ่ม source IP, เปิด RESP3, เปิด API, กำหนด API key" loading="lazy" decoding="async"></p>
 
@@ -894,7 +894,7 @@ Sessions: การเข้าสู่ระบบคอนโซลแต่�
 
 Usage มีแท็บ Memory Usage และ RBU Usage และการดาวน์โหลด Cost report ทันทีหลังสร้างฐานข้อมูล ระบบแจ้งว่ารายงานจะปรากฏในอีกหนึ่งชั่วโมง เมื่อถึงการบันทึกภาพครั้งสุดท้ายก็มีข้อมูลแสดงแล้ว <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
-### บัญชี
+### บัญชี {#th-account}
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/20-api-keys.webp' | relative_url }}" width="1440" height="765" alt="แท็บ API Keys ที่ซ่อน account key และมี user key หนึ่งรายการ" loading="lazy" decoding="async"></p>
 
@@ -944,7 +944,7 @@ Settings: ข้อมูลบัญชี ผู้ติดต่อทาง
 
 เมนูบัญชีใช้สลับระหว่างบัญชีและเปิดโปรไฟล์ผู้ใช้ <small>บันทึกเมื่อ 2026-11-07 บนแผนฟรีของ Redis Cloud</small>
 
-### Lab: ฐานข้อมูลฟรีและขีดจำกัด
+### Lab: ฐานข้อมูลฟรีและขีดจำกัด {#th-lab-the-free-database-and-its-limits}
 
 **ตรวจสอบบน Redis 8.6.2 (แผนฟรีของ Redis Cloud, AWS ap-northeast-2) เมื่อ 2026-11-07** ไคลเอนต์: redis-py 6.1.1 จากโฮสต์ในเกาหลี ใช้เวลาไป-กลับประมาณ 2.6 ms, TCP ธรรมดา (แผนฟรีไม่มี TLS) ซอร์สและผลลัพธ์ฉบับเต็ม: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database)
 
@@ -958,7 +958,7 @@ Settings: ข้อมูลบัญชี ผู้ติดต่อทาง
 
 **สิบนาที** (`long_window.py`) การเชื่อมต่อเดียวที่ใช้ pipeline ขนาด 100 รักษาอัตรา 9,563–22,250 INCR ต่อวินาทีได้นาน 600 วินาทีโดยไม่มีข้อผิดพลาด: ขีดจำกัด 100 ops/s ในหน้าราคาก็ไม่ได้ถูกบังคับใช้ในช่วงเวลาที่ยาวขึ้นเช่นกัน
 
-### Lab: REST API บนแผนฟรี
+### Lab: REST API บนแผนฟรี {#th-lab-the-rest-api-on-the-free-plan}
 
 **ตรวจสอบบน Redis Cloud REST API v1 (แผนฟรี) เมื่อ 2026-11-07** เปิด **Enable API** สร้าง user key แล้วส่ง account key (`x-api-key`) และ user key (`x-api-secret-key`) ในทุกการเรียก เอกสารระบุว่า: "All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously"
 
@@ -971,7 +971,7 @@ Settings: ข้อมูลบัญชี ผู้ติดต่อทาง
 
 สองเรื่องที่ควรรู้ก่อนเขียนไคลเอนต์ ให้ตรวจสอบงาน (task) ไม่ใช่สถานะ HTTP: คำขอที่ถูกปฏิเสธก็ยังคืน 202 และ `alerts` จะแทนที่ทั้งรายการ การส่งเฉพาะการแจ้งเตือนจำนวนการเชื่อมต่อทำให้การแจ้งเตือนขนาดชุดข้อมูลถูกปิด ดังที่ system log แสดงไว้ และได้คืนค่าทันที เอกสาร: [REST API](https://redis.io/docs/latest/operate/rc/api/), [API lifecycle](https://redis.io/docs/latest/operate/rc/api/get-started/process-lifecycle/) Lab: [`cloud/04-rest-api`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/04-rest-api)
 
-### รายการตรวจสอบสัปดาห์แรก
+### รายการตรวจสอบสัปดาห์แรก {#th-first-week-checklist}
 
 - ตั้ง **CIDR allow list**: ฐานข้อมูลฟรีเริ่มต้นที่ 0.0.0.0/0 แผนฟรีเปิด **TLS** ไม่ได้ (API ปฏิเสธด้วย `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`) จึงควรเก็บเฉพาะข้อมูลทดสอบ หรือย้ายไปใช้แผนแบบชำระเงินแล้วเปิด TLS ที่นั่น
 - แทนที่ default user ด้วยผู้ใช้และบทบาทของ **Data Access** หรืออย่างน้อยก็เปลี่ยนรหัสผ่านของมัน
@@ -980,7 +980,7 @@ Settings: ข้อมูลบัญชี ผู้ติดต่อทาง
 - เปิด **MFA enforcement** ใน Settings เมื่อมีคนเข้าร่วมมากขึ้น
 - หากเปิดใช้ **API** ให้ลบ user key ที่ไม่ใช้แล้ว: system log ระบุชื่อ key ในทุกการเรียกที่ key นั้นทำ
 
-### ยังไม่ครอบคลุม
+### ยังไม่ครอบคลุม {#th-not-covered-yet}
 
 Essentials ที่โซลพร้อม replication, persistence, backup และ RBAC รวมถึง Pro Active-Active เป็น lab แยกต่างหาก โดยแต่ละอันมี issue ของตัวเองในรีโพซิทอรี
 
@@ -992,7 +992,7 @@ Essentials ที่โซลพร้อม replication, persistence, backup �
 
 **Redis Cloud, dari pendaftaran hingga setiap menu konsol.** Diambil pada 2026-11-07 di paket gratis: satu database gratis (Redis 8.6, AWS ap-northeast-2 Seoul), konsol dalam mode gelap, tanpa biaya. Formulir Essentials dan Pro dibuka dan diambil tangkapan layarnya, tetapi tidak dikirim. Disamarkan di setiap tangkapan layar: nama, e-mail, nomor akun, ID subscription dan database, endpoint, port, alamat IP, API key. Harga di halaman ini dibaca dari konsol pada 2026-11-07.
 
-### Sekilas
+### Sekilas {#id-at-a-glance}
 
 Sidebar kiri, dari atas ke bawah: **Databases**, **Subscriptions**, **Redis Search**, **Data Integration**; di bawah *AI services* terdapat **Iris** dengan Agent Playbooks, Agent Memory, Context Gateway, Intent Router, Lens (beta), Agent Mesh (beta), dan Access & Identity; di bawah *Reports* terdapat **Logs** dan **Usage**; di bawah *Account* terdapat **API Keys & Team**, **Data Access**, **Billing**, **Integrations**, **Settings**. Bilah atas berisi pengalih aplikasi, ikon tips, pengalih tema (terang, gelap, sistem), dan menu akun.
 
@@ -1000,7 +1000,7 @@ Sidebar kiri, dari atas ke bawah: **Databases**, **Subscriptions**, **Redis Sear
 
 Akun baru terbuka di Databases tanpa isi apa pun. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
 
-### Membuat database
+### Membuat database {#id-create-a-database}
 
 **New database** membuka satu halaman dengan dua kartu paket. **Essentials** adalah infrastruktur bersama, mulai dari $0.007/jam ($5/bulan). **Pro** adalah infrastruktur khusus, mulai dari $0.014/jam dengan minimum $200/bulan dan lencana "First $200 free". Di bawah kartu ada baris *Not ready? Try 30 MB for free*; tautan itu satu-satunya jalan menuju paket gratis.
 
@@ -1016,7 +1016,7 @@ Pro dimulai dengan metode penyiapan, Easy create atau Custom settings. Default E
 
 Formulir gratis mencantumkan apa yang disertakan: 1 database, RAM 30 MB, 30 koneksi, 100 ops/sec, $0/bulan. Pilihan region bebas (AWS, Google Cloud, atau Azure; Seoul yang dipilih). Hanya tangkapan ini yang berada dalam mode terang; formulir tidak dapat dibuka kembali setelah akun memiliki database gratisnya. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
 
-### Layar database
+### Layar database {#id-the-database-screen}
 
 Create database membawa Anda ke halaman database setelah beberapa detik. Halaman ini memiliki empat tab: Configuration, Metrics, Alerts, Slowlog. Dialog kunjungan pertama menawarkan penyiapan terpandu; menutupnya tidak menerapkan apa pun.
 
@@ -1048,7 +1048,7 @@ Alert paket gratis: ukuran dataset dan jumlah koneksi, masing-masing sebagai per
 
 Slowlog tetap kosong: pengujian hanya menggunakan INCR dan SET. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
 
-### Database dan subscription
+### Database dan subscription {#id-databases-and-subscriptions}
 
 Setiap database termasuk dalam sebuah subscription. Paket gratis membuat satu subscription yang berisi satu database.
 
@@ -1060,7 +1060,7 @@ Kolom: status, nama database, subscription, endpoint (tombol Connect), penggunaa
 
 Subscription gratis di ap-northeast-2, dengan tombol Plan upgrade serta tab Databases dan Overview. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
 
-### Menu produk
+### Menu produk {#id-product-menus}
 
 Tiga entri sidebar merupakan titik masuk ke produk, bukan pengaturan.
 
@@ -1076,7 +1076,7 @@ Data Integration adalah RDI terkelola: $1.37/jam, perkiraan sekitar $1,000/bulan
 
 Halaman landing Iris. Layanan yang tercantum: Agent Memory, Agent Playbooks, Intent Router, Context Gateway, Agent Mesh; Lens muncul di sidebar. Halaman Iris di situs ini menguraikan semuanya. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
 
-### Laporan
+### Laporan {#id-reports}
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/17-logs-system.webp' | relative_url }}" width="1440" height="765" alt="System log: subscription dibuat, database diaktifkan, persistence dinonaktifkan, source IP ditambahkan, RESP3 diaktifkan, API diaktifkan, API key ditetapkan" loading="lazy" decoding="async"></p>
 
@@ -1090,7 +1090,7 @@ Sessions: setiap login konsol beserta user agent, IP, peran, dan jenis login. <s
 
 Usage memiliki tab Memory Usage dan RBU Usage serta unduhan Cost report. Tepat setelah database dibuat, tertulis bahwa laporan akan muncul satu jam kemudian; pada tangkapan terakhir sudah menampilkan data. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
 
-### Akun
+### Akun {#id-account}
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/20-api-keys.webp' | relative_url }}" width="1440" height="765" alt="Tab API Keys dengan account key tersembunyi dan satu user key" loading="lazy" decoding="async"></p>
 
@@ -1140,7 +1140,7 @@ Settings: info akun, kontak bisnis, MFA enforcement (nonaktif secara default), b
 
 Menu akun beralih antar akun dan membuka profil pengguna. <small>Diambil pada 2026-11-07, paket gratis Redis Cloud.</small>
 
-### Lab: database gratis dan batasnya
+### Lab: database gratis dan batasnya {#id-lab-the-free-database-and-its-limits}
 
 **Diverifikasi pada Redis 8.6.2 (paket gratis Redis Cloud, AWS ap-northeast-2), 2026-11-07.** Klien: redis-py 6.1.1 dari host di Korea, round trip sekitar 2.6 ms, TCP biasa (paket gratis tidak memiliki TLS). Sumber dan keluaran lengkap: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database).
 
@@ -1154,7 +1154,7 @@ Satu koneksi tanpa pipeline mencapai 249 ops/s, yang ditentukan oleh round trip,
 
 **Sepuluh menit** (`long_window.py`). Satu koneksi dengan pipeline 100 mempertahankan 9,563–22,250 INCR/dtk selama 600 dtk tanpa error: batas 100 ops/s di halaman harga juga tidak diberlakukan pada jendela waktu yang lebih panjang.
 
-### Lab: REST API pada paket gratis
+### Lab: REST API pada paket gratis {#id-lab-the-rest-api-on-the-free-plan}
 
 **Diverifikasi pada Redis Cloud REST API v1, paket gratis, 2026-11-07.** Aktifkan **Enable API**, buat user key, lalu kirim account key (`x-api-key`) dan user key (`x-api-secret-key`) pada setiap panggilan. Dari dokumentasi: "All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously".
 
@@ -1167,7 +1167,7 @@ Satu koneksi tanpa pipeline mencapai 249 ops/s, yang ditentukan oleh round trip,
 
 Dua hal yang perlu diketahui sebelum menulis klien. Periksa task, bukan status HTTP: permintaan yang ditolak tetap mengembalikan 202. Dan `alerts` mengganti seluruh daftar. Mengirim hanya alert koneksi mematikan alert ukuran dataset, seperti yang ditunjukkan log sistem; alert itu segera dipulihkan. Dokumentasi: [REST API](https://redis.io/docs/latest/operate/rc/api/), [API lifecycle](https://redis.io/docs/latest/operate/rc/api/get-started/process-lifecycle/). Lab: [`cloud/04-rest-api`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/04-rest-api).
 
-### Daftar periksa minggu pertama
+### Daftar periksa minggu pertama {#id-first-week-checklist}
 
 - Atur **CIDR allow list**: database gratis dimulai dengan 0.0.0.0/0. **TLS** tidak dapat diaktifkan pada paket gratis (API menolaknya dengan `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`), jadi simpan hanya data uji, atau pindah ke paket berbayar dan aktifkan TLS di sana.
 - Ganti default user dengan pengguna dan peran **Data Access**, atau setidaknya ganti kata sandinya.
@@ -1176,7 +1176,7 @@ Dua hal yang perlu diketahui sebelum menulis klien. Periksa task, bukan status H
 - Aktifkan **MFA enforcement** di Settings setelah lebih banyak orang bergabung.
 - Jika Anda mengaktifkan **API**, hapus user key yang tidak lagi digunakan; system log mencantumkan nama key pada setiap panggilan yang dibuatnya.
 
-### Belum dibahas
+### Belum dibahas {#id-not-covered-yet}
 
 Essentials di Seoul dengan replikasi, persistensi, backup, dan RBAC, serta Pro Active-Active adalah lab terpisah dengan issue masing-masing di repositori.
 
@@ -1188,7 +1188,7 @@ Essentials di Seoul dengan replikasi, persistensi, backup, dan RBAC, serta Pro A
 
 **Redis Cloud, dari pendaftaran hingga setiap menu konsol.** Ditangkap pada 2026-11-07 di pelan percuma: satu pangkalan data percuma (Redis 8.6, AWS ap-northeast-2 Seoul), konsol dalam mod gelap, tiada bayaran. Borang Essentials dan Pro dibuka dan ditangkap tetapi tidak dihantar. Disamarkan dalam setiap tangkapan skrin: nama, e-mel, nombor akaun, ID subscription dan pangkalan data, endpoint, port, alamat IP, API key. Harga pada halaman ini dibaca dalam konsol pada 2026-11-07.
 
-### Sekilas pandang
+### Sekilas pandang {#ms-at-a-glance}
 
 Bar sisi kiri, dari atas ke bawah: **Databases**, **Subscriptions**, **Redis Search**, **Data Integration**; di bawah *AI services* terdapat **Iris** dengan Agent Playbooks, Agent Memory, Context Gateway, Intent Router, Lens (beta), Agent Mesh (beta) dan Access & Identity; di bawah *Reports* terdapat **Logs** dan **Usage**; di bawah *Account* terdapat **API Keys & Team**, **Data Access**, **Billing**, **Integrations**, **Settings**. Bar atas mengandungi penukar aplikasi, ikon petua, penukar tema (cerah, gelap, sistem) dan menu akaun.
 
@@ -1196,7 +1196,7 @@ Bar sisi kiri, dari atas ke bawah: **Databases**, **Subscriptions**, **Redis Sea
 
 Akaun baharu dibuka pada Databases tanpa sebarang kandungan. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
 
-### Cipta pangkalan data
+### Cipta pangkalan data {#ms-create-a-database}
 
 **New database** membuka satu halaman dengan dua kad pelan. **Essentials** ialah infrastruktur kongsi, bermula dari $0.007/jam ($5/bulan). **Pro** ialah infrastruktur khusus, bermula dari $0.014/jam dengan minimum $200/bulan dan lencana "First $200 free". Di bawah kad terdapat baris *Not ready? Try 30 MB for free*; pautan itu satu-satunya jalan ke pelan percuma.
 
@@ -1212,7 +1212,7 @@ Pro bermula dengan kaedah persediaan, Easy create atau Custom settings. Lalai Ea
 
 Borang percuma menyenaraikan apa yang disertakan: 1 pangkalan data, RAM 30 MB, 30 sambungan, 100 ops/sec, $0/bulan. Pilihan region adalah bebas (AWS, Google Cloud atau Azure; Seoul dipilih). Hanya tangkapan ini dalam mod cerah; borang tidak boleh dibuka semula sebaik sahaja akaun mempunyai pangkalan data percuma. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
 
-### Skrin pangkalan data
+### Skrin pangkalan data {#ms-the-database-screen}
 
 Create database membawa anda ke halaman pangkalan data selepas beberapa saat. Halaman ini mempunyai empat tab: Configuration, Metrics, Alerts, Slowlog. Dialog lawatan pertama menawarkan persediaan berpandu; menutupnya tidak menggunakan sebarang perubahan.
 
@@ -1244,7 +1244,7 @@ Alert pelan percuma: saiz dataset dan bilangan sambungan, masing-masing sebagai 
 
 Slowlog kekal kosong: ujian hanya menggunakan INCR dan SET. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
 
-### Pangkalan data dan subscription
+### Pangkalan data dan subscription {#ms-databases-and-subscriptions}
 
 Setiap pangkalan data tergolong dalam sebuah subscription. Pelan percuma mencipta satu subscription yang mengandungi satu pangkalan data.
 
@@ -1256,7 +1256,7 @@ Lajur: status, nama pangkalan data, subscription, endpoint (butang Connect), pen
 
 Subscription percuma di ap-northeast-2, dengan butang Plan upgrade serta tab Databases dan Overview. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
 
-### Menu produk
+### Menu produk {#ms-product-menus}
 
 Tiga entri bar sisi ialah pintu masuk ke produk, bukan tetapan.
 
@@ -1272,7 +1272,7 @@ Data Integration ialah RDI terurus: $1.37/jam, anggaran kira-kira $1,000/bulan, 
 
 Halaman landing Iris. Perkhidmatan yang disenaraikan: Agent Memory, Agent Playbooks, Intent Router, Context Gateway, Agent Mesh; Lens muncul dalam bar sisi. Halaman Iris di tapak ini menerangkan kesemuanya. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
 
-### Laporan
+### Laporan {#ms-reports}
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/17-logs-system.webp' | relative_url }}" width="1440" height="765" alt="System log: subscription dicipta, pangkalan data diaktifkan, persistence dimatikan, source IP ditambah, RESP3 didayakan, API didayakan, API key ditetapkan" loading="lazy" decoding="async"></p>
 
@@ -1286,7 +1286,7 @@ Sessions: setiap log masuk konsol dengan user agent, IP, peranan dan jenis log m
 
 Usage mempunyai tab Memory Usage dan RBU Usage serta muat turun Cost report. Sejurus selepas pangkalan data dicipta, ia menyatakan laporan akan muncul sejam kemudian; pada tangkapan akhir ia telah menunjukkan data. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
 
-### Akaun
+### Akaun {#ms-account}
 
 <p class="shot"><img src="{{ '/assets/img/cloud-console/20-api-keys.webp' | relative_url }}" width="1440" height="765" alt="Tab API Keys dengan account key tersembunyi dan satu user key" loading="lazy" decoding="async"></p>
 
@@ -1336,7 +1336,7 @@ Settings: maklumat akaun, kenalan perniagaan, MFA enforcement (dimatikan secara 
 
 Menu akaun bertukar antara akaun dan membuka profil pengguna. <small>Ditangkap pada 2026-11-07, pelan percuma Redis Cloud.</small>
 
-### Makmal: pangkalan data percuma dan hadnya
+### Makmal: pangkalan data percuma dan hadnya {#ms-lab-the-free-database-and-its-limits}
 
 **Disahkan pada Redis 8.6.2 (pelan percuma Redis Cloud, AWS ap-northeast-2), 2026-11-07.** Klien: redis-py 6.1.1 dari hos di Korea, round trip kira-kira 2.6 ms, TCP biasa (pelan percuma tidak mempunyai TLS). Sumber dan output penuh: [`cloud/01-free-database`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/01-free-database).
 
@@ -1350,7 +1350,7 @@ Satu sambungan tanpa pipeline mencapai 249 ops/s, iaitu round trip, bukan pelan.
 
 **Sepuluh minit** (`long_window.py`). Satu sambungan dengan pipeline 100 mengekalkan 9,563–22,250 INCR/s selama 600 s tanpa ralat: had 100 ops/s pada halaman harga juga tidak dikuatkuasakan pada tempoh yang lebih panjang.
 
-### Makmal: REST API pada pelan percuma
+### Makmal: REST API pada pelan percuma {#ms-lab-the-rest-api-on-the-free-plan}
 
 **Disahkan pada Redis Cloud REST API v1, pelan percuma, 2026-11-07.** Hidupkan **Enable API**, cipta user key, dan hantar account key (`x-api-key`) serta user key (`x-api-secret-key`) pada setiap panggilan. Daripada dokumentasi: "All create, update, and delete API operations (`POST`, `PUT`, and `DELETE`) and some query operations (`GET`) run asynchronously".
 
@@ -1363,7 +1363,7 @@ Satu sambungan tanpa pipeline mencapai 249 ops/s, iaitu round trip, bukan pelan.
 
 Dua perkara yang perlu diketahui sebelum menulis klien. Semak tugasan, bukan status HTTP: permintaan yang ditolak masih mengembalikan 202. Dan `alerts` menggantikan keseluruhan senarai. Menghantar hanya amaran sambungan telah mematikan amaran saiz set data, seperti yang ditunjukkan oleh log sistem; ia dipulihkan serta-merta. Dokumentasi: [REST API](https://redis.io/docs/latest/operate/rc/api/), [API lifecycle](https://redis.io/docs/latest/operate/rc/api/get-started/process-lifecycle/). Makmal: [`cloud/04-rest-api`](https://github.com/litkhai/notes-on-redis/tree/main/cloud/04-rest-api).
 
-### Senarai semak minggu pertama
+### Senarai semak minggu pertama {#ms-first-week-checklist}
 
 - Tetapkan **CIDR allow list**: pangkalan data percuma bermula dengan 0.0.0.0/0. **TLS** tidak boleh dihidupkan pada pelan percuma (API menolaknya dengan `FIXED_DATABASE_ENABLE_TLS_NOT_SUPPORTED_IN_REQUESTED_PLAN`), jadi simpan data ujian sahaja, atau beralih ke pelan berbayar dan hidupkan TLS di sana.
 - Gantikan default user dengan pengguna dan peranan **Data Access**, atau sekurang-kurangnya tukar kata laluannya.
@@ -1372,7 +1372,7 @@ Dua perkara yang perlu diketahui sebelum menulis klien. Semak tugasan, bukan sta
 - Hidupkan **MFA enforcement** dalam Settings apabila lebih ramai orang menyertai.
 - Jika anda mendayakan **API**, padam user key yang tidak lagi digunakan; system log menamakan key pada setiap panggilan yang dibuatnya.
 
-### Belum diliputi
+### Belum diliputi {#ms-not-covered-yet}
 
 Essentials di Seoul dengan replikasi, kegigihan, sandaran dan RBAC, serta Pro Active-Active ialah makmal berasingan dengan isu masing-masing dalam repositori.
 

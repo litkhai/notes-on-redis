@@ -119,7 +119,7 @@ Active-Active needs Redis Cloud Pro or several Redis Software clusters, and Redi
 
 Redis Software와 Redis Cloud Pro가 Redis Open Source에 더해 주는 것 — Active-Active(CRDT), Redis Flex(RAM + SSD), DMC 프록시와 샤딩 정책, 99.999 % SLA, RBAC/LDAP/TLS, RDI, Kubernetes 오퍼레이터, Redis Insight, 멀티테넌시. 표를 먼저: 기능, 어디에 있나, 랩으로 보이는지 문서만인지. 벤더 주장과 측정 결과는 구분한다.
 
-### Redis Software와 Cloud Pro가 더하는 것, 그리고 실행한 것
+### Redis Software와 Cloud Pro가 더하는 것, 그리고 실행한 것 {#ko-what-redis-software-and-cloud-pro-add-and-what-was-run}
 
 | 기능 | 어디에 | 이 사이트에서 |
 |---|---|---|
@@ -133,7 +133,7 @@ Redis Software와 Redis Cloud Pro가 Redis Open Source에 더해 주는 것 — 
 | Kubernetes operator | Software | 실행: 아래, kind에서 |
 | Redis Insight | 전부 | [Setup 페이지]({{ '/setup/' | relative_url }})에서 실행 |
 
-### 실습: 컨테이너 하나의 Redis Software
+### 실습: 컨테이너 하나의 Redis Software {#ko-lab-redis-software-in-one-container}
 
 **확인: Redis Software 8.2.6-25, Redis 8.8 DB, 2026-11-07.** `redislabs/redis:8.2.6-25.21`의 단일 노드 클러스터를 REST API로 다뤘다. 소스와 출력: [`enterprise/01-redis-software-docker`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/01-redis-software-docker). 문서: [Redis Software](https://redis.io/docs/latest/operate/rs/), [Proxy policies](https://redis.io/docs/latest/operate/rs/databases/configure/proxy-policy/), [Database clustering](https://redis.io/docs/latest/operate/rs/databases/durability-ha/clustering/).
 
@@ -170,7 +170,7 @@ Cluster Manager UI: 재샤딩 뒤의 DB 목록. <small>2026-11-07 캡처, Redis 
 
 DB 설정: 샤딩, OSS Cluster API 꺼짐, 프록시 정책, 기능, 내구성이 한곳에 있다. <small>2026-11-07 캡처, Redis Software 8.2.6-25.</small>
 
-### 실습: kind 위의 Kubernetes operator
+### 실습: kind 위의 Kubernetes operator {#ko-lab-the-kubernetes-operator-on-kind}
 
 **확인: Redis Enterprise operator 8.2.6-21(클러스터 8.2.6-25), kind v0.33.0, Kubernetes v1.34.11, 2026-11-07.** 문서의 표현: "You can deploy, scale, and manage Redis Enterprise clusters and databases by using native Kubernetes resources and workflows." `helm install` 한 번이 operator와 노드 셋짜리 클러스터(REC)를 만들었다. DB는 `RedisEnterpriseDatabase`(REDB) 리소스다.
 
@@ -185,7 +185,7 @@ DB 설정: 샤딩, OSS Cluster API 꺼짐, 프록시 정책, 기능, 내구성�
 
 **REDB의 TLS**(`tls.sh`). `tlsMode: enabled`이면 DB가 평문 TCP를 거절했고, 클라이언트는 REC API에서 받은 클러스터 프록시 인증서를 CA로 줘서 연결했다.
 
-### 실습: Postgres에서 RDI
+### 실습: Postgres에서 RDI {#ko-lab-rdi-from-postgres}
 
 **확인: RDI 2.2.1(Debezium 3.5.0, Flink 프로세서), Postgres 17.11, kind 위 Redis Enterprise 8.2.6-25, 2026-11-07.** 문서의 표현: "Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time." 원천은 Postgres의 가상 고객 1,000명이다. 작업 하나가 `credit_limit`에서 `tier` 필드를 만들고 `email`을 빼고 `customer:<id>`에 JSON으로 쓴다. RDI는 operator 실습의 클러스터가 아닌(non-clustered) `rdi-state` DB에 상태를 둔다.
 
@@ -206,7 +206,7 @@ DB 설정: 샤딩, OSS Cluster API 꺼짐, 프록시 정책, 기능, 내구성�
 
 kind 위 RDI 2.2.1에 연결한 Redis Insight 3.8.0. headless Chromium으로 캡처. <small>2026-11-07 캡처, Redis Software 8.2.6-25.</small>
 
-### 아직 실행하지 않은 것
+### 아직 실행하지 않은 것 {#ko-not-run-yet}
 
 Active-Active는 Redis Cloud Pro나 Redis Software 클러스터 여러 개가, Redis Flex는 로컬 NVMe가 필요하다. 둘 다 여기서는 문서만으로 다룬다. Redis Cloud의 관리형 RDI는 Pro 전용이다.
 
@@ -222,7 +222,7 @@ Active-Active는 Redis Cloud Pro나 Redis Software 클러스터 여러 개가, R
 
 Redis Software 和 Redis Cloud Pro 在 Redis Open Source 之上增加了什么——Active-Active（CRDT）、Redis Flex（RAM + SSD）、DMC 代理与分片策略、99.999 % SLA、RBAC/LDAP/TLS、RDI、Kubernetes operator、Redis Insight、多租户。先给出一张表：功能、存在于何处，以及是有实验演示，还是仅有文档。厂商的说法与实测结果分开列出。
 
-### Redis Software 与 Cloud Pro 增加了什么，以及运行了什么
+### Redis Software 与 Cloud Pro 增加了什么，以及运行了什么 {#zh-what-redis-software-and-cloud-pro-add-and-what-was-run}
 
 | 功能 | 位置 | 本站情况 |
 |---|---|---|
@@ -236,7 +236,7 @@ Redis Software 和 Redis Cloud Pro 在 Redis Open Source 之上增加了什么�
 | Kubernetes operator | Software | 已运行：见下，在 kind 上 |
 | Redis Insight | 全部 | 已在 [安装页面]({{ '/setup/' | relative_url }}) 运行 |
 
-### 实验：一个容器中的 Redis Software
+### 实验：一个容器中的 Redis Software {#zh-lab-redis-software-in-one-container}
 
 **在 Redis Software 8.2.6-25、Redis 8.8 数据库上验证，2026-11-07。** 单节点集群，来自 `redislabs/redis:8.2.6-25.21`，通过其 REST API 驱动。源码与输出：[`enterprise/01-redis-software-docker`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/01-redis-software-docker). 文档：[Redis Software](https://redis.io/docs/latest/operate/rs/), [Proxy policies](https://redis.io/docs/latest/operate/rs/databases/configure/proxy-policy/), [Database clustering](https://redis.io/docs/latest/operate/rs/databases/durability-ha/clustering/).
 
@@ -273,7 +273,7 @@ Cluster Manager UI：重新分片之后的数据库列表。 <small>2026-11-07 �
 
 数据库设置：分片、OSS Cluster API 关闭、代理策略、功能与持久性集中在一处。 <small>2026-11-07 截取，Redis Software 8.2.6-25。</small>
 
-### 实验：kind 上的 Kubernetes operator
+### 实验：kind 上的 Kubernetes operator {#zh-lab-the-kubernetes-operator-on-kind}
 
 **在 Redis Enterprise operator 8.2.6-21（集群 8.2.6-25）、kind v0.33.0、Kubernetes v1.34.11 上验证，2026-11-07。** 文档中写道："You can deploy, scale, and manage Redis Enterprise clusters and databases by using native Kubernetes resources and workflows." 一次 `helm install` 创建了 operator 和一个三节点集群（REC）；数据库是 `RedisEnterpriseDatabase`（REDB）资源。
 
@@ -288,7 +288,7 @@ Cluster Manager UI：重新分片之后的数据库列表。 <small>2026-11-07 �
 
 **REDB 上的 TLS**（`tls.sh`）。设置 `tlsMode: enabled` 后，数据库拒绝明文 TCP；客户端把从 REC API 获取的集群代理证书作为 CA 来连接。
 
-### 实验：从 Postgres 到 RDI
+### 实验：从 Postgres 到 RDI {#zh-lab-rdi-from-postgres}
 
 **在 RDI 2.2.1（Debezium 3.5.0、Flink processor）、Postgres 17.11、kind 上的 Redis Enterprise 8.2.6-25 上验证，2026-11-07。** 文档中写道："Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time." 数据源是 Postgres 中 1,000 条虚构的客户记录。一个 job 根据 `credit_limit` 添加 `tier` 字段，丢弃 `email`，并把 JSON 写到 `customer:<id>` 之下。RDI 将其状态保存在 operator 实验中的非集群数据库 `rdi-state` 里。
 
@@ -309,7 +309,7 @@ Cluster Manager UI：重新分片之后的数据库列表。 <small>2026-11-07 �
 
 Redis Insight 3.8.0 连接到 kind 上的 RDI 2.2.1；用 headless Chromium 截图。 <small>2026-11-07 截取，Redis Software 8.2.6-25。</small>
 
-### 尚未运行
+### 尚未运行 {#zh-not-run-yet}
 
 Active-Active 需要 Redis Cloud Pro 或多个 Redis Software 集群，Redis Flex 需要本地 NVMe；两者在这里都只有文档。Redis Cloud 上的托管 RDI 仅限 Pro。
 
@@ -325,7 +325,7 @@ Active-Active 需要 Redis Cloud Pro 或多个 Redis Software 集群，Redis Fle
 
 Redis Software と Redis Cloud Pro が Redis Open Source に加えるもの — Active-Active（CRDT）、Redis Flex（RAM + SSD）、DMC プロキシとシャーディングポリシー、99.999 % の SLA、RBAC/LDAP/TLS、RDI、Kubernetes operator、Redis Insight、マルチテナンシー。最初に表を示す。機能、それがどこにあるか、ラボで確認したのかドキュメントのみなのか。ベンダーの主張と実測結果は分けて記す。
 
-### Redis Software と Cloud Pro が加えるものと、実行したもの
+### Redis Software と Cloud Pro が加えるものと、実行したもの {#ja-what-redis-software-and-cloud-pro-add-and-what-was-run}
 
 | 機能 | 提供先 | このサイトでは |
 |---|---|---|
@@ -339,7 +339,7 @@ Redis Software と Redis Cloud Pro が Redis Open Source に加えるもの — 
 | Kubernetes operator | Software | 実行済み: 下記、kind 上 |
 | Redis Insight | すべて | [セットアップのページ]({{ '/setup/' | relative_url }}) で実行済み |
 
-### ラボ: 1 つのコンテナで動く Redis Software
+### ラボ: 1 つのコンテナで動く Redis Software {#ja-lab-redis-software-in-one-container}
 
 **Redis Software 8.2.6-25、Redis 8.8 データベースで確認、2026-11-07。** `redislabs/redis:8.2.6-25.21` による単一ノードのクラスター。REST API で操作した。ソースと出力: [`enterprise/01-redis-software-docker`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/01-redis-software-docker). ドキュメント: [Redis Software](https://redis.io/docs/latest/operate/rs/), [Proxy policies](https://redis.io/docs/latest/operate/rs/databases/configure/proxy-policy/), [Database clustering](https://redis.io/docs/latest/operate/rs/databases/durability-ha/clustering/).
 
@@ -376,7 +376,7 @@ Cluster Manager UI: リシャーディング後のデータベース一覧。 <s
 
 データベース設定: シャーディング、OSS Cluster API オフ、プロキシポリシー、機能、永続性が 1 か所にある。 <small>2026-11-07 取得、Redis Software 8.2.6-25。</small>
 
-### ラボ: kind 上の Kubernetes operator
+### ラボ: kind 上の Kubernetes operator {#ja-lab-the-kubernetes-operator-on-kind}
 
 **Redis Enterprise operator 8.2.6-21（クラスター 8.2.6-25）、kind v0.33.0、Kubernetes v1.34.11 で確認、2026-11-07。** ドキュメントより: "You can deploy, scale, and manage Redis Enterprise clusters and databases by using native Kubernetes resources and workflows." 1 回の `helm install` で operator と 3 ノードのクラスター（REC）が作られた。データベースは `RedisEnterpriseDatabase`（REDB）リソースである。
 
@@ -391,7 +391,7 @@ Cluster Manager UI: リシャーディング後のデータベース一覧。 <s
 
 **REDB の TLS**（`tls.sh`）。`tlsMode: enabled` にするとデータベースは平文の TCP を拒否し、クライアントは REC API から取得したクラスターのプロキシ証明書を CA として渡して接続した。
 
-### ラボ: Postgres からの RDI
+### ラボ: Postgres からの RDI {#ja-lab-rdi-from-postgres}
 
 **RDI 2.2.1（Debezium 3.5.0、Flink processor）、Postgres 17.11、kind 上の Redis Enterprise 8.2.6-25 で確認、2026-11-07。** ドキュメントより: "Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time." ソースは Postgres 上の 1,000 件の架空の顧客。1 つのジョブが `credit_limit` から `tier` フィールドを追加し、`email` を削除して、`customer:<id>` の下に JSON を書き込む。RDI は自身の状態を、operator ラボの非クラスターデータベース `rdi-state` に保持する。
 
@@ -412,7 +412,7 @@ Cluster Manager UI: リシャーディング後のデータベース一覧。 <s
 
 kind 上の RDI 2.2.1 に接続した Redis Insight 3.8.0。headless Chromium でキャプチャ。 <small>2026-11-07 取得、Redis Software 8.2.6-25。</small>
 
-### 未実行
+### 未実行 {#ja-not-run-yet}
 
 Active-Active には Redis Cloud Pro か複数の Redis Software クラスターが必要で、Redis Flex にはローカル NVMe が必要。どちらもここではドキュメントのみとする。Redis Cloud でのマネージド RDI は Pro 限定。
 
@@ -428,7 +428,7 @@ Active-Active には Redis Cloud Pro か複数の Redis Software クラスター
 
 สิ่งที่ Redis Software และ Redis Cloud Pro เพิ่มให้เหนือ Redis Open Source — Active-Active (CRDT), Redis Flex (RAM + SSD), DMC proxy และ sharding policy, SLA 99.999 %, RBAC/LDAP/TLS, RDI, Kubernetes operator, Redis Insight, multi-tenancy เริ่มด้วยตาราง: ฟีเจอร์ มีอยู่ที่ไหน และมีแล็บแสดงหรือมีเพียงเอกสาร คำกล่าวอ้างของผู้จำหน่ายกับผลที่วัดได้จริงถูกแยกจากกัน
 
-### สิ่งที่ Redis Software และ Cloud Pro เพิ่มให้ และสิ่งที่รันแล้ว
+### สิ่งที่ Redis Software และ Cloud Pro เพิ่มให้ และสิ่งที่รันแล้ว {#th-what-redis-software-and-cloud-pro-add-and-what-was-run}
 
 | ฟีเจอร์ | มีที่ไหน | บนเว็บไซต์นี้ |
 |---|---|---|
@@ -442,7 +442,7 @@ Active-Active には Redis Cloud Pro か複数の Redis Software クラスター
 | Kubernetes operator | Software | รันแล้ว: ดูด้านล่าง บน kind |
 | Redis Insight | ทั้งหมด | รันแล้วใน[หน้า Setup]({{ '/setup/' | relative_url }}) |
 
-### แล็บ: Redis Software ในคอนเทนเนอร์เดียว
+### แล็บ: Redis Software ในคอนเทนเนอร์เดียว {#th-lab-redis-software-in-one-container}
 
 **ตรวจสอบบน Redis Software 8.2.6-25, ฐานข้อมูล Redis 8.8, 2026-11-07** คลัสเตอร์โหนดเดียวจาก `redislabs/redis:8.2.6-25.21` ควบคุมผ่าน REST API ซอร์สและผลลัพธ์: [`enterprise/01-redis-software-docker`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/01-redis-software-docker). เอกสาร: [Redis Software](https://redis.io/docs/latest/operate/rs/), [Proxy policies](https://redis.io/docs/latest/operate/rs/databases/configure/proxy-policy/), [Database clustering](https://redis.io/docs/latest/operate/rs/databases/durability-ha/clustering/).
 
@@ -479,7 +479,7 @@ Cluster Manager UI: รายการฐานข้อมูลหลัง re
 
 การตั้งค่าฐานข้อมูล: sharding, OSS Cluster API ปิด, proxy policy, ความสามารถ และ durability อยู่ในที่เดียว <small>จับภาพเมื่อ 2026-11-07, Redis Software 8.2.6-25</small>
 
-### แล็บ: Kubernetes operator บน kind
+### แล็บ: Kubernetes operator บน kind {#th-lab-the-kubernetes-operator-on-kind}
 
 **ตรวจสอบบน Redis Enterprise operator 8.2.6-21 (คลัสเตอร์ 8.2.6-25) บน kind v0.33.0, Kubernetes v1.34.11, 2026-11-07** จากเอกสาร: "You can deploy, scale, and manage Redis Enterprise clusters and databases by using native Kubernetes resources and workflows." `helm install` ครั้งเดียวสร้าง operator และคลัสเตอร์สามโหนด (REC); ฐานข้อมูลคือทรัพยากร `RedisEnterpriseDatabase` (REDB)
 
@@ -494,7 +494,7 @@ Cluster Manager UI: รายการฐานข้อมูลหลัง re
 
 **TLS บน REDB** (`tls.sh`) เมื่อตั้ง `tlsMode: enabled` ฐานข้อมูลปฏิเสธ TCP แบบข้อความล้วน ไคลเอนต์เชื่อมต่อโดยใช้ใบรับรองพร็อกซีของคลัสเตอร์จาก REC API เป็น CA
 
-### แล็บ: RDI จาก Postgres
+### แล็บ: RDI จาก Postgres {#th-lab-rdi-from-postgres}
 
 **ตรวจสอบบน RDI 2.2.1 (Debezium 3.5.0, Flink processor), Postgres 17.11, Redis Enterprise 8.2.6-25 บน kind, 2026-11-07** จากเอกสาร: "Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time." แหล่งข้อมูลคือลูกค้าสมมติ 1,000 รายใน Postgres งาน (job) หนึ่งเพิ่มฟิลด์ `tier` จาก `credit_limit` ตัด `email` ออก และเขียน JSON ไว้ใต้ `customer:<id>` RDI เก็บสถานะของตัวเองไว้ในฐานข้อมูลที่ไม่ใช่คลัสเตอร์ชื่อ `rdi-state` จากแล็บ operator
 
@@ -515,7 +515,7 @@ Cluster Manager UI: รายการฐานข้อมูลหลัง re
 
 Redis Insight 3.8.0 เชื่อมต่อกับ RDI 2.2.1 บน kind จับภาพด้วย headless Chromium <small>จับภาพเมื่อ 2026-11-07, Redis Software 8.2.6-25</small>
 
-### ยังไม่ได้รัน
+### ยังไม่ได้รัน {#th-not-run-yet}
 
 Active-Active ต้องใช้ Redis Cloud Pro หรือ Redis Software หลายคลัสเตอร์ และ Redis Flex ต้องใช้ NVMe ในเครื่อง ทั้งสองอย่างจึงมีเพียงเอกสารที่นี่ RDI แบบ managed บน Redis Cloud มีเฉพาะ Pro
 
@@ -531,7 +531,7 @@ Active-Active ต้องใช้ Redis Cloud Pro หรือ Redis Software 
 
 Apa yang ditambahkan Redis Software dan Redis Cloud Pro di atas Redis Open Source — Active-Active (CRDT), Redis Flex (RAM + SSD), proxy DMC dan kebijakan sharding, SLA 99,999 %, RBAC/LDAP/TLS, RDI, Kubernetes operator, Redis Insight, multi-tenancy. Tabel dulu: fitur, di mana fitur itu ada, dan apakah ada lab yang menunjukkannya atau hanya dokumentasi. Klaim vendor dan hasil terukur dipisahkan.
 
-### Apa yang ditambahkan Redis Software dan Cloud Pro, dan apa yang dijalankan
+### Apa yang ditambahkan Redis Software dan Cloud Pro, dan apa yang dijalankan {#id-what-redis-software-and-cloud-pro-add-and-what-was-run}
 
 | Fitur | Di mana | Di situs ini |
 |---|---|---|
@@ -545,7 +545,7 @@ Apa yang ditambahkan Redis Software dan Redis Cloud Pro di atas Redis Open Sourc
 | Kubernetes operator | Software | dijalankan: di bawah, di kind |
 | Redis Insight | semua | dijalankan di [halaman Setup]({{ '/setup/' | relative_url }}) |
 
-### Lab: Redis Software dalam satu kontainer
+### Lab: Redis Software dalam satu kontainer {#id-lab-redis-software-in-one-container}
 
 **Diverifikasi pada Redis Software 8.2.6-25, database Redis 8.8, 2026-11-07.** Klaster satu node dari `redislabs/redis:8.2.6-25.21`, dijalankan melalui REST API-nya. Sumber dan keluaran: [`enterprise/01-redis-software-docker`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/01-redis-software-docker). Dokumentasi: [Redis Software](https://redis.io/docs/latest/operate/rs/), [Proxy policies](https://redis.io/docs/latest/operate/rs/databases/configure/proxy-policy/), [Database clustering](https://redis.io/docs/latest/operate/rs/databases/durability-ha/clustering/).
 
@@ -582,7 +582,7 @@ Halaman klaster mencantumkan versi database yang tersedia dan penggunaan shard t
 
 Pengaturan database: sharding, OSS Cluster API nonaktif, kebijakan proxy, kapabilitas dan durabilitas di satu tempat. <small>Ditangkap 2026-11-07, Redis Software 8.2.6-25.</small>
 
-### Lab: Kubernetes operator di kind
+### Lab: Kubernetes operator di kind {#id-lab-the-kubernetes-operator-on-kind}
 
 **Diverifikasi pada Redis Enterprise operator 8.2.6-21 (klaster 8.2.6-25) di kind v0.33.0, Kubernetes v1.34.11, 2026-11-07.** Dari dokumentasi: "You can deploy, scale, and manage Redis Enterprise clusters and databases by using native Kubernetes resources and workflows." Satu `helm install` membuat operator dan klaster tiga node (REC); database berupa resource `RedisEnterpriseDatabase` (REDB).
 
@@ -597,7 +597,7 @@ Pengaturan database: sharding, OSS Cluster API nonaktif, kebijakan proxy, kapabi
 
 **TLS pada REDB** (`tls.sh`). Dengan `tlsMode: enabled`, database menolak TCP polos; klien terhubung dengan sertifikat proxy klaster dari REC API sebagai CA-nya.
 
-### Lab: RDI dari Postgres
+### Lab: RDI dari Postgres {#id-lab-rdi-from-postgres}
 
 **Diverifikasi pada RDI 2.2.1 (Debezium 3.5.0, Flink processor), Postgres 17.11, Redis Enterprise 8.2.6-25 di kind, 2026-11-07.** Dari dokumentasi: "Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time." Sumbernya adalah 1.000 pelanggan fiktif di Postgres. Satu job menambahkan field `tier` dari `credit_limit`, membuang `email`, dan menulis JSON di bawah `customer:<id>`. RDI menyimpan state-nya di database non-klaster `rdi-state` dari lab operator.
 
@@ -618,7 +618,7 @@ Latensi itu sudah termasuk sekitar 0,11 dtk untuk `kubectl exec` dan berasal dar
 
 Redis Insight 3.8.0 terhubung ke RDI 2.2.1 di kind; ditangkap dengan headless Chromium. <small>Ditangkap 2026-11-07, Redis Software 8.2.6-25.</small>
 
-### Belum dijalankan
+### Belum dijalankan {#id-not-run-yet}
 
 Active-Active membutuhkan Redis Cloud Pro atau beberapa klaster Redis Software, dan Redis Flex membutuhkan NVMe lokal; keduanya tetap hanya dokumentasi di sini. RDI terkelola di Redis Cloud hanya tersedia di Pro.
 
@@ -634,7 +634,7 @@ Active-Active membutuhkan Redis Cloud Pro atau beberapa klaster Redis Software, 
 
 Apa yang ditambah oleh Redis Software dan Redis Cloud Pro berbanding Redis Open Source — Active-Active (CRDT), Redis Flex (RAM + SSD), proksi DMC dan dasar sharding, SLA 99.999 %, RBAC/LDAP/TLS, RDI, Kubernetes operator, Redis Insight, berbilang penyewa. Jadual dahulu: ciri, di mana ia wujud, dan sama ada makmal menunjukkannya atau hanya dokumentasi. Dakwaan vendor dan hasil yang diukur diasingkan.
 
-### Apa yang ditambah oleh Redis Software dan Cloud Pro, dan apa yang dijalankan
+### Apa yang ditambah oleh Redis Software dan Cloud Pro, dan apa yang dijalankan {#ms-what-redis-software-and-cloud-pro-add-and-what-was-run}
 
 | Ciri | Di mana | Di tapak ini |
 |---|---|---|
@@ -648,7 +648,7 @@ Apa yang ditambah oleh Redis Software dan Redis Cloud Pro berbanding Redis Open 
 | Kubernetes operator | Software | dijalankan: di bawah, pada kind |
 | Redis Insight | semua | dijalankan pada [halaman Setup]({{ '/setup/' | relative_url }}) |
 
-### Makmal: Redis Software dalam satu kontena
+### Makmal: Redis Software dalam satu kontena {#ms-lab-redis-software-in-one-container}
 
 **Disahkan pada Redis Software 8.2.6-25, pangkalan data Redis 8.8, 2026-11-07.** Satu kluster satu nod daripada `redislabs/redis:8.2.6-25.21`, dikendalikan melalui REST API-nya. Sumber dan output: [`enterprise/01-redis-software-docker`](https://github.com/litkhai/notes-on-redis/tree/main/enterprise/01-redis-software-docker). Dokumen: [Redis Software](https://redis.io/docs/latest/operate/rs/), [Proxy policies](https://redis.io/docs/latest/operate/rs/databases/configure/proxy-policy/), [Database clustering](https://redis.io/docs/latest/operate/rs/databases/durability-ha/clustering/).
 
@@ -685,7 +685,7 @@ Halaman kluster menyenaraikan versi pangkalan data yang ditawarkan dan penggunaa
 
 Tetapan pangkalan data: sharding, OSS Cluster API dimatikan, dasar proxy, keupayaan dan ketahanan di satu tempat. <small>Ditangkap 2026-11-07, Redis Software 8.2.6-25.</small>
 
-### Makmal: Kubernetes operator pada kind
+### Makmal: Kubernetes operator pada kind {#ms-lab-the-kubernetes-operator-on-kind}
 
 **Disahkan pada Redis Enterprise operator 8.2.6-21 (kluster 8.2.6-25) pada kind v0.33.0, Kubernetes v1.34.11, 2026-11-07.** Daripada dokumen: "You can deploy, scale, and manage Redis Enterprise clusters and databases by using native Kubernetes resources and workflows." Satu `helm install` mencipta operator dan kluster tiga nod (REC); pangkalan data ialah sumber `RedisEnterpriseDatabase` (REDB).
 
@@ -700,7 +700,7 @@ Tetapan pangkalan data: sharding, OSS Cluster API dimatikan, dasar proxy, keupay
 
 **TLS pada REDB** (`tls.sh`). Dengan `tlsMode: enabled`, pangkalan data menolak TCP biasa; klien bersambung dengan sijil proksi kluster daripada REC API sebagai CA-nya.
 
-### Makmal: RDI daripada Postgres
+### Makmal: RDI daripada Postgres {#ms-lab-rdi-from-postgres}
 
 **Disahkan pada RDI 2.2.1 (Debezium 3.5.0, Flink processor), Postgres 17.11, Redis Enterprise 8.2.6-25 pada kind, 2026-11-07.** Daripada dokumen: "Redis Data Integration (RDI) keeps your Redis cache in sync with a primary system-of-record database in near real time." Sumbernya ialah 1,000 pelanggan rekaan dalam Postgres. Satu job menambah medan `tier` daripada `credit_limit`, menggugurkan `email`, dan menulis JSON di bawah `customer:<id>`. RDI menyimpan keadaannya dalam pangkalan data bukan kluster `rdi-state` daripada makmal operator.
 
@@ -721,7 +721,7 @@ Kependaman itu termasuk kira-kira 0.11 s untuk `kubectl exec` dan datang daripad
 
 Redis Insight 3.8.0 bersambung ke RDI 2.2.1 pada kind; ditangkap dengan headless Chromium. <small>Ditangkap 2026-11-07, Redis Software 8.2.6-25.</small>
 
-### Belum dijalankan
+### Belum dijalankan {#ms-not-run-yet}
 
 Active-Active memerlukan Redis Cloud Pro atau beberapa kluster Redis Software, dan Redis Flex memerlukan NVMe tempatan; kedua-duanya kekal sebagai dokumen sahaja di sini. RDI terurus pada Redis Cloud hanya untuk Pro.
 
