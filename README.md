@@ -58,8 +58,8 @@ something has *not* been run, the page says so. `STATUS.md` is the ledger.
 scripts, its own `.venv` — so the folder can be lifted out unchanged.
 
 **Docs are bilingual, English first.** Every README carries a full English section and a full
-Korean one. Site pages add Chinese and Japanese blocks. Interface text stays English; the
-language toggle governs content, not chrome.
+Korean one. Site pages come in seven languages, one URL each (`/iris/`, `/ko/iris/`, …), all
+generated from one `page.json` per page by `scripts/build-lang-page.py` (#68). Interface text stays English.
 
 **The top level is flat.** `setup / local / cloud / enterprise / iris / compare / deep-dive`
 sit side by side, because the repository name already says these are labs.
@@ -77,10 +77,10 @@ redirect stub per page once the host is live.
 
 | Choice | Why |
 |---|---|
-| Jekyll with a hand-written layout, no remote theme | No upstream gem to break, full control over the language toggle |
+| Jekyll with a hand-written layout, no remote theme | No upstream gem to break, full control over the language menu and `hreflang` |
 | Palette from redis.io's own page styles | `#FF4438` / `#091A23` / `#F3F3F3`, read 2026-11-07, not invented |
 | Dark by default, light opt-in | A `<head>` guard applies the saved theme before first paint |
-| Sidebar contents built in the browser | Each page holds seven languages; a server-rendered list would duplicate every heading |
+| One URL per language, English at the root | Google reads language from visible content and wants a URL per language with `hreflang` ([design](./design/lang-urls.md)) |
 
 To preview locally without installing Ruby:
 
@@ -151,7 +151,8 @@ Software, 그리고 AI 에이전트용 컨텍스트 엔진 **Redis Iris**.
 **랩은 자족적이다.** 랩 디렉터리 하나에 Compose 파일, 스크립트, 자체 `.venv`가 다 있어 그대로 들어내 쓸 수 있다.
 
 **문서는 이중 언어, 영어가 먼저.** README마다 영어 절과 한국어 절이 모두 있다. 사이트 페이지는
-중국어·일본어 블록을 더한다. UI 문구는 영어만, 언어 토글은 본문만 바꾼다.
+일곱 언어로, 언어마다 URL 하나다(`/iris/`, `/ko/iris/`, …). 모두 페이지마다 `page.json` 하나에서
+`scripts/build-lang-page.py`로 만든다(#68). UI 문구는 영어만.
 
 **최상위는 평평하다.** 저장소 이름이 이미 랩이라고 말하므로 `labs/` 포장이 없다.
 

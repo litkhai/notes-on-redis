@@ -28,6 +28,20 @@ exclude:
   - vendor
   - vercel.json
 
+# Site languages (#68, design/lang-urls.md). English at the root, the others under
+# /<code>/. `tag` is the BCP 47 tag for <html lang> and hreflang, `og` the og:locale,
+# `banner` the line offering this language on a page in another one.
+# 사이트 언어. 영어는 루트, 나머지는 /<code>/ 아래. `banner` 는 다른 언어 페이지에서
+# 이 언어를 제안하는 한 줄.
+languages:
+  - { code: en, tag: en,      og: en_US, short: EN, label: English,          prefix: "",  banner: "This page is also in English" }
+  - { code: ko, tag: ko,      og: ko_KR, short: KO, label: 한국어,           prefix: /ko, banner: "이 페이지는 한국어로도 있습니다" }
+  - { code: zh, tag: zh-Hans, og: zh_CN, short: 中, label: 简体中文,         prefix: /zh, banner: "本页也有简体中文版" }
+  - { code: ja, tag: ja,      og: ja_JP, short: 日, label: 日本語,           prefix: /ja, banner: "このページは日本語でも読めます" }
+  - { code: th, tag: th,      og: th_TH, short: TH, label: ภาษาไทย,          prefix: /th, banner: "หน้านี้มีภาษาไทยด้วย" }
+  - { code: id, tag: id,      og: id_ID, short: ID, label: Bahasa Indonesia, prefix: /id, banner: "Halaman ini juga tersedia dalam Bahasa Indonesia" }
+  - { code: ms, tag: ms,      og: ms_MY, short: MS, label: Bahasa Melayu,    prefix: /ms, banner: "Halaman ini juga tersedia dalam Bahasa Melayu" }
+
 # Nav, grouped. A divider is drawn wherever `group` changes. Labels are
 # English only — the language toggle switches page content, not the chrome.
 # `group` is not displayed; the layout reads it only to place dividers.

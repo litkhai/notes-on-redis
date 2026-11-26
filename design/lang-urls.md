@@ -2,7 +2,7 @@
 
 [English](#english) | [한국어](#한국어)
 
-Status: **decided 2026-11-26 (D1–D3 below), nothing built.** Sizes measured on https://redis.litkhai.dev on 2026-11-26;
+Status: **decided 2026-11-26 (D1–D3 below); built in #68's pull request, 2026-11-27.** Sizes measured on https://redis.litkhai.dev on 2026-11-26;
 search-engine guidance read the same day from Google Search Central
 ([multi-regional sites](https://developers.google.com/search/docs/specialty/international/managing-multi-regional-sites),
 [localized versions](https://developers.google.com/search/docs/specialty/international/localized-versions); neither page shows an update date).

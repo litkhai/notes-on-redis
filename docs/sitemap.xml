@@ -3,11 +3,27 @@ layout: null
 permalink: /sitemap.xml
 ---
 <?xml version="1.0" encoding="UTF-8"?>
-{%- comment -%} Every content page; redirect stubs (layout: null) and 404 are left out (#64). {%- endcomment %}
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{%- comment -%}
+  Every content page in every language, each with the full set of alternates and
+  x-default → English, the same set as the HTML head (#64, #68).
+{%- endcomment %}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 {%- for p in site.pages %}
-{%- if p.layout == "default" and p.url != "/404.html" %}
-  <url><loc>{{ p.url | absolute_url }}</loc><lastmod>{{ site.time | date_to_xmlschema }}</lastmod></url>
+{%- if p.layout == "default" and p.ref %}
+{%- assign versions = site.pages | where: 'ref', p.ref %}
+  <url>
+    <loc>{{ p.url | absolute_url }}</loc>
+    <lastmod>{{ site.time | date_to_xmlschema }}</lastmod>
+{%- for l in site.languages %}
+{%- assign v = versions | where: 'lang', l.code | first %}
+{%- if v %}
+    <xhtml:link rel="alternate" hreflang="{{ l.tag }}" href="{{ v.url | absolute_url }}"/>
+{%- if l.code == 'en' %}
+    <xhtml:link rel="alternate" hreflang="x-default" href="{{ v.url | absolute_url }}"/>
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+  </url>
 {%- endif %}
 {%- endfor %}
 </urlset>
