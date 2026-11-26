@@ -38,3 +38,6 @@ for lang, label in LANGS:
     out += ["</div>", ""]
 (ROOT / page["out"]).write_text("\n".join(out))
 print("wrote", page["out"])
+# Stable ids for the non-English headings (#64).
+import subprocess  # noqa: E402
+subprocess.run([sys.executable, str(ROOT / "scripts" / "lang-heading-ids.py"), str(ROOT / page["out"])], check=True)
