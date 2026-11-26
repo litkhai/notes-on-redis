@@ -52,8 +52,8 @@ def rel(p):
 # --------------------------------------------------------------------------
 # 1. Bilingual structure
 #
-# Every README and site page carries a full English section and a full Korean
-# one. Sections are meant to mirror each other, so an unequal heading count
+# Every README carries a full English section and a full Korean one (site
+# pages are checked through their page.json sources, section 2). Sections are meant to mirror each other, so an unequal heading count
 # means one language is missing something the other has.
 # --------------------------------------------------------------------------
 def check_bilingual():
@@ -107,49 +107,106 @@ def check_bilingual():
 # --------------------------------------------------------------------------
 # 2. Site pages
 #
-# Each page in docs/ wraps its languages (en, ko, zh, ja, th, id, ms) in `.lang` blocks that the toggle
-# shows and hides. A missing or unbalanced block leaves content stranded in a
-# hidden div.
+# One language per page (#68, design/lang-urls.md): English in docs/, the others
+# in docs/<lang>/, all generated from a page.json by scripts/build-lang-page.py.
+# Each source must carry every language with the same headings, and each
+# committed page must be exactly what its source produces — a hand edit, or a
+# source changed without rebuilding, would make the languages drift apart.
 # --------------------------------------------------------------------------
 SITE_LANGS = ["en", "ko", "zh", "ja", "th", "id", "ms"]
 
 
-def check_site_pages():
-    checked = 0
-    for p in sorted((ROOT / "docs").glob("*.md")):
+def builder():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("build_lang_page", ROOT / "scripts" / "build-lang-page.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def site_pages():
+    """Content pages (redirect stubs and non-page files left out)."""
+    for p in sorted((ROOT / "docs").rglob("*.md")):
+        if any(part in SKIP_DIRS for part in p.parts):
+            continue
         text = p.read_text()
-        if not text.startswith("---"):
-            fail(rel(p), "missing YAML front matter")
+        front = text.split("---", 2)[1] if text.startswith("---") else ""
+        if "layout: null" in front:
             continue
-        front = text.split("---", 2)[1]
-        if "layout: null" in front:          # redirect stub, no content of its own
-            continue
+        yield p, text, front
+
+
+def check_page_sources():
+    import json
+    b = builder()
+    heading = re.compile(r"^#{2,4} ", re.M)
+    n = 0
+    for src in b.sources():
+        n += 1
+        page = json.loads(src.read_text())
+        for i, blk in enumerate(page["blocks"]):
+            fields = ["alt", "cap"] if blk["type"] == "img" else [None]
+            for f in fields:
+                d = blk[f] if f else blk
+                missing = [l for l in SITE_LANGS if not d.get(l)]
+                if missing:
+                    fail(rel(src), f"block {i}{'.' + f if f else ''} lacks {', '.join(missing)}")
+            if blk["type"] != "md":
+                continue
+            counts = {l: len(heading.findall(LIQUID.sub("X", blk.get(l, "")))) for l in SITE_LANGS}
+            if len(set(counts.values())) > 1:
+                fail(rel(src), f"block {i} heading counts differ: {counts}")
+            for l in SITE_LANGS:
+                txt = LIQUID.sub("X", blk.get(l, ""))
+                if txt.count("```") % 2:
+                    fail(rel(src), f"block {i} [{l}] unbalanced code fence")
+                run = []
+                for line in txt.split("\n") + [""]:
+                    if line.strip().startswith("|"):
+                        run.append(line.count("|"))
+                    else:
+                        if len(set(run)) > 1:
+                            fail(rel(src), f"block {i} [{l}] table with inconsistent columns {sorted(set(run))}")
+                        run = []
+    ok(f"page sources: {n} page.json files")
+
+
+def check_site_pages():
+    b = builder()
+    expected = {}
+    for src in b.sources():
+        try:
+            expected.update(b.render(src))
+        except (SystemExit, KeyError) as e:
+            fail(rel(src), f"cannot build: {e}")
+    checked = 0
+    for p, text, front in site_pages():
         checked += 1
-        for key in ("layout:", "title:", "permalink:"):
-            if key not in front:
+        for key in ("layout:", "title:", "permalink:", "lang:", "ref:"):
+            if not re.search(r"^" + key, front, re.M):
                 fail(rel(p), f"front matter missing `{key}`")
-
-        langs = re.findall(r'<div class="lang" data-lang="(\w+)"', text)
-        # All of them (#48, #22). A missing block would leave its readers on English.
-        if langs != SITE_LANGS:
-            fail(rel(p), f"expected .lang blocks {', '.join(SITE_LANGS)}, found {langs}")
-
-        depth = 0
-        for m in re.finditer(r"<div\b[^>]*>|</div>", text):
-            depth += 1 if m.group().startswith("<div") else -1
-            if depth < 0:
-                fail(rel(p), "a </div> closes more than was opened")
-                break
-        if depth > 0:
-            fail(rel(p), f"{depth} unclosed <div>")
-    ok(f"site pages: {checked} files")
+        lang = re.search(r"^lang:\s*(\S+)", front, re.M)
+        where = p.parent.name if p.parent != ROOT / "docs" else "en"
+        if lang and lang.group(1) != where:
+            fail(rel(p), f"`lang: {lang.group(1)}` but the file is under {where}")
+        if '<div class="lang"' in text:
+            fail(rel(p), "carries a .lang block; pages hold one language now (#68)")
+        if p not in expected:
+            fail(rel(p), "no page.json produces this file")
+        elif expected[p] != text:
+            fail(rel(p), "differs from its page.json: run scripts/build-lang-page.py on the source")
+    for p in expected:
+        if not p.exists():
+            fail(rel(p), "missing: run scripts/build-lang-page.py on its source")
+    ok(f"site pages: {checked} files, all in sync with their sources")
 
 
 # --------------------------------------------------------------------------
 # 3. Navigation
 #
-# Every nav entry must resolve to a real page, and every content page must be
-# reachable. A page moved without updating _config.yml 404s silently.
+# Every nav entry must resolve to a real page in every language, and every
+# content page must be reachable. A page moved without updating _config.yml
+# 404s silently.
 # --------------------------------------------------------------------------
 def check_nav():
     config = (ROOT / "docs" / "_config.yml").read_text()
@@ -159,21 +216,22 @@ def check_nav():
     nav_titles = set(t.strip() for t in re.findall(r"title:\s*([^,}]+?)\s*[,}]", nav_block))
 
     permalinks = {}
-    for p in sorted((ROOT / "docs").glob("*.md")):
-        m = re.search(r"^permalink:\s*(\S+)", p.read_text(), re.M)
+    for p, text, front in site_pages():
+        m = re.search(r"^permalink:\s*(\S+)", front, re.M)
         if m:
             permalinks[m.group(1)] = p
 
     for url in nav_urls:
-        if url not in permalinks:
-            fail("docs/_config.yml", f"nav points at `{url}` but no page has that permalink")
+        for lang in SITE_LANGS:
+            want = url if lang == "en" else f"/{lang}{url}"
+            if want not in permalinks:
+                fail("docs/_config.yml", f"nav points at `{url}` but no page has `{want}`")
 
     for url, p in permalinks.items():
-        if url in nav_urls:
-            continue
-        if "layout: null" in p.read_text():   # redirect stubs are deliberately unlisted
-            continue
-        fail(rel(p), f"permalink `{url}` is not in the nav and is not a redirect stub")
+        m = re.match(r"^/(%s)(/.*)$" % "|".join(SITE_LANGS[1:]), url)
+        base = m.group(2) if m else url
+        if base not in nav_urls:
+            fail(rel(p), f"permalink `{url}` is not in the nav and is not a redirect stub")
 
     for parent in nav_parents:
         if parent not in nav_titles:
@@ -224,37 +282,14 @@ def check_secrets():
     ok(f"secrets: {len(tracked)} tracked files scanned")
 
 
-# --------------------------------------------------------------------------
-# 6. Heading ids
-#
-# Non-English headings carry `{#<lang>-<english id>}` (#64); kramdown alone
-# would give them `section-3`. A heading added or reordered without rerunning
-# scripts/lang-heading-ids.py leaves an id pointing at the wrong section.
-# --------------------------------------------------------------------------
-def check_heading_ids():
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("lhi", ROOT / "scripts" / "lang-heading-ids.py")
-    lhi = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(lhi)
-    n = 0
-    for p, text in lhi.pages():
-        n += 1
-        try:
-            if lhi.rewrite(text) != text:
-                fail(rel(p), "non-English heading ids out of date: run scripts/lang-heading-ids.py")
-        except SystemExit as e:
-            fail(rel(p), f"heading ids: {e}")
-    ok(f"heading ids: {n} pages")
-
-
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("-v", "--verbose", action="store_true", help="list checks that passed")
     args = ap.parse_args()
 
-    for check in (check_bilingual, check_site_pages, check_nav,
-                  check_internal_links, check_secrets, check_heading_ids):
+    for check in (check_bilingual, check_page_sources, check_site_pages, check_nav,
+                  check_internal_links, check_secrets):
         check()
 
     if args.verbose:

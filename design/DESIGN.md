@@ -52,7 +52,7 @@ Deep Dive       /deep-dive/       one page per mechanism, each with a reproducib
   └ Functions & ACL
 ```
 
-Nav labels are English only; the language toggle switches page content (runpod-hols rule).
+Nav labels are English only; each language has its own URL since #68 ([`lang-urls.md`](./lang-urls.md)).
 Every `docs/*.md` page carries `en / ko / zh / ja` blocks and `scripts/check-docs.py` enforces it.
 
 ### 3. Repository layout
@@ -282,7 +282,7 @@ read at run time, not assumed.
 
 ### 2. 사이트 맵
 
-영문 §2와 같다. 네비게이션 라벨은 영문만, 언어 토글은 본문만 바꾼다(runpod-hols 규칙).
+영문 §2와 같다. 네비게이션 라벨은 영문만, #68부터 언어마다 URL이 따로 있다([`lang-urls.md`](./lang-urls.md)).
 모든 `docs/*.md`는 `en / ko / zh / ja` 블록을 갖고 `scripts/check-docs.py`가 검사한다.
 
 ### 3. 저장소 구조

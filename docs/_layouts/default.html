@@ -1,5 +1,13 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+{%- comment -%}
+  One language per page (#68, design/lang-urls.md). `page.lang` and `page.ref` come from
+  scripts/build-lang-page.py; `versions` are this page in every language.
+  페이지마다 언어 하나 (#68). `versions` 는 이 페이지의 언어별 버전이다.
+{%- endcomment -%}
+{%- assign plang = page.lang | default: 'en' -%}
+{%- assign L = site.languages | where: 'code', plang | first -%}
+{%- if page.ref -%}{%- assign versions = site.pages | where: 'ref', page.ref -%}{%- else -%}{%- assign versions = '' | split: '' -%}{%- endif %}
+<html lang="{{ L.tag }}" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,6 +28,18 @@
 <meta property="og:image:alt" content="Notes on Redis: hands-on Redis labs, measured, in seven languages">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="{{ '/assets/og/og.png' | absolute_url }}">
+<meta property="og:locale" content="{{ L.og }}">
+<link rel="canonical" href="{{ page.url | absolute_url }}">
+{%- comment -%} Every version lists itself and the others, plus x-default → English (Google's rule). {%- endcomment -%}
+{%- for l in site.languages -%}
+{%- assign v = versions | where: 'lang', l.code | first -%}
+{%- if v %}
+<link rel="alternate" hreflang="{{ l.tag }}" href="{{ v.url | absolute_url }}">
+{%- if l.code == 'en' %}
+<link rel="alternate" hreflang="x-default" href="{{ v.url | absolute_url }}">
+{%- endif -%}
+{%- endif -%}
+{%- endfor %}
 <!-- Applied before first paint so a saved light theme does not flash dark.
      첫 페인트 전에 적용해 라이트 테마 저장 시 다크가 번쩍이지 않게 한다. -->
 <script>
@@ -44,16 +64,14 @@
 
 <header class="site-header">
   <div class="wrap header-inner">
-    <a class="brand" href="{{ '/' | relative_url }}">
+    <a class="brand" href="{{ L.prefix | append: '/' | relative_url }}">
       <span class="brand-mark">▮</span> {{ site.title }}
     </a>
     <div class="header-right">
-      <!-- One icon instead of a button per language: four labels would crowd
-           the bar on a phone. The menu items keep `data-set-lang`, so the same
-           bind() drives them.
-           언어마다 버튼을 두지 않고 아이콘 하나로 묶는다. 라벨 네 개는 휴대폰에서
-           상단 바를 비좁게 만든다. 메뉴 항목은 `data-set-lang` 을 그대로 쓰므로
-           같은 bind() 가 처리한다. -->
+      <!-- One icon instead of a link per language: seven labels would crowd the
+           bar on a phone. Each item is a link to this page in that language (#68).
+           언어마다 링크를 두지 않고 아이콘 하나로 묶는다. 항목은 이 페이지의 해당
+           언어 버전으로 가는 링크다 (#68). -->
       <div class="lang-menu" id="lang-menu">
         <button type="button" class="lang-trigger" id="lang-trigger"
                 aria-haspopup="true" aria-expanded="false" aria-controls="lang-list"
@@ -63,17 +81,16 @@
             <circle cx="12" cy="12" r="9"/><path d="M3 12h18"/>
             <path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/>
           </svg>
-          <span class="lang-code" id="lang-code">EN</span>
+          <span class="lang-code" id="lang-code">{{ L.short }}</span>
           <span class="visually-hidden">Language</span>
         </button>
         <div class="lang-list" id="lang-list" role="menu" hidden>
-          <button type="button" role="menuitemradio" data-set-lang="en" lang="en" class="active">English</button>
-          <button type="button" role="menuitemradio" data-set-lang="ko" lang="ko">한국어</button>
-          <button type="button" role="menuitemradio" data-set-lang="zh" lang="zh-Hans">简体中文</button>
-          <button type="button" role="menuitemradio" data-set-lang="ja" lang="ja">日本語</button>
-          <button type="button" role="menuitemradio" data-set-lang="th" lang="th">ภาษาไทย</button>
-          <button type="button" role="menuitemradio" data-set-lang="id" lang="id">Bahasa Indonesia</button>
-          <button type="button" role="menuitemradio" data-set-lang="ms" lang="ms">Bahasa Melayu</button>
+          {%- for l in site.languages -%}
+          {%- assign v = versions | where: 'lang', l.code | first -%}
+          {%- if v -%}{%- assign href = v.url -%}{%- else -%}{%- assign href = l.prefix | append: '/' -%}{%- endif %}
+          <a role="menuitemradio" data-lang="{{ l.code }}" lang="{{ l.tag }}" hreflang="{{ l.tag }}" href="{{ href | relative_url }}"
+             aria-checked="{% if l.code == plang %}true{% else %}false{% endif %}"{% if l.code == plang %} class="active"{% endif %}>{{ l.label }}</a>
+          {%- endfor %}
         </div>
       </div>
       <div class="switch" role="group" aria-label="Theme">
@@ -88,6 +105,9 @@
 <nav class="site-nav">
   <div class="wrap nav-inner">
     {% assign cur = page.url | remove: site.baseurl %}
+    {%- comment -%} Nav urls are the English permalinks; compare and link with the language prefix stripped/added. {%- endcomment -%}
+    {% assign pfx = L.prefix %}
+    {% if pfx != '' %}{% assign cur = cur | remove_first: pfx %}{% endif %}
     {% assign here = '' %}
     {% for item in site.nav %}
       {% if cur == item.url %}{% assign here = item %}{% endif %}
@@ -98,7 +118,7 @@
         {% if prev_group != '' and item.group != prev_group %}
           <span class="nav-divider" aria-hidden="true"></span>
         {% endif %}
-        <a href="{{ item.url | relative_url }}"
+        <a href="{{ pfx | append: item.url | relative_url }}"
            class="{% if cur == item.url or here.parent == item.title %}current{% endif %}">{{ item.title }}</a>
         {% assign prev_group = item.group %}
       {% endunless %}
@@ -115,16 +135,13 @@
        페이지 단위 이동은 상단 바가 담당한다. 이 사이드바는 현재 페이지의
        섹션만 담으며 넓은 화면에서만 나타난다.
 
-       Filled in by script: the headings of whichever language block is
-       visible. Building it server-side would list every heading twice, once
-       per language, and half the anchors would point into a hidden block.
-       스크립트가 채운다. 현재 보이는 언어 블록의 제목만 넣는다. 서버 사이드로
-       만들면 제목이 두 배로 나열되고, 앵커 절반이 숨겨진 블록을 가리킨다. -->
+       Filled in by script from the page's h2/h3, which also drives the
+       highlight of the section in view.
+       스크립트가 페이지의 h2/h3 로 채우고, 보이는 절의 강조도 처리한다. -->
   {%- comment -%}
-    Child pages of the current section. Server-side, because the tree is the
-    same in both languages — only the heading list below it is per-language.
-    현재 섹션의 자식 페이지. 트리는 두 언어가 같으므로 서버 사이드로 만든다.
-    언어마다 달라지는 것은 그 아래 제목 목록뿐이다.
+    Child pages of the current section, server-side; the heading list below
+    it is filled in by script.
+    현재 섹션의 자식 페이지는 서버 사이드로, 그 아래 제목 목록은 스크립트로 만든다.
   {%- endcomment -%}
   {% if here.parent %}{% assign section = here.parent %}{% else %}{% assign section = here.title %}{% endif %}
   {% assign kids = site.nav | where: 'parent', section %}
@@ -142,13 +159,13 @@
       <p class="side-group">In this section</p>
       <ul class="side-tree">
         <li>
-          <a href="{{ parent_item.url | relative_url }}"
+          <a href="{{ pfx | append: parent_item.url | relative_url }}"
              class="{% if cur == parent_item.url %}here{% endif %}">{{ parent_item.title }}</a>
           {% if cur == parent_item.url %}<ul class="side-toc" id="page-toc"></ul>{% endif %}
         </li>
         {% for kid in kids %}
         <li class="side-child">
-          <a href="{{ kid.url | relative_url }}"
+          <a href="{{ pfx | append: kid.url | relative_url }}"
              class="{% if cur == kid.url %}here{% endif %}">{{ kid.title }}</a>
           {% if cur == kid.url %}<ul class="side-toc" id="page-toc"></ul>{% endif %}
         </li>
@@ -164,6 +181,13 @@
   </aside>
 
   <main class="content">
+    <!-- Offers the reader's language when this page is in another one. Never redirects:
+         Google advises against redirecting by a guessed language (design/lang-urls.md §6).
+         독자의 언어가 이 페이지와 다르면 그 언어 버전을 제안한다. 리다이렉트는 하지 않는다. -->
+    <p class="lang-banner" id="lang-banner" hidden>
+      <a id="lang-banner-link" href="#"></a>
+      <button type="button" id="lang-banner-close" aria-label="Close">&times;</button>
+    </p>
     {{ content }}
   </main>
 
@@ -185,70 +209,58 @@
 </footer>
 
 <script>
-// Two independent preferences, same segmented-switch pattern.
-// 서로 독립적인 두 설정이 같은 세그먼트 스위치 패턴을 공유한다.
+// Language menu and banner, table of contents, theme switch.
+// 언어 메뉴와 배너, 목차, 테마 스위치.
 (function () {
-  // Language: the saved choice, else the browser's language, else EN. Without
-  // JS every language block stays visible, so the page degrades to showing
-  // all of them — never to nothing. A page that lacks the chosen language
-  // shows English rather than an empty main.
-  // 언어: 저장된 선택, 없으면 브라우저 언어, 그것도 아니면 EN. JS 가 없으면
-  // 모든 블록이 보이므로 최악의 경우에도 전부 표시될 뿐 빈 페이지가 되지 않는다.
-  // 선택한 언어가 없는 페이지는 빈 본문 대신 영어를 보여준다.
-  var LANG_TAG = { en: 'en', ko: 'ko', zh: 'zh-Hans', ja: 'ja', th: 'th', id: 'id', ms: 'ms' };
-  var LANG_CODE = { en: 'EN', ko: 'KO', zh: '中', ja: '日', th: 'TH', id: 'ID', ms: 'MS' };
-  var browserLang = (navigator.language || 'en').slice(0, 2).toLowerCase();
-  bind({
-    key: 'notes-on-redis-lang',
-    attr: 'data-set-lang',
-    fallback: LANG_TAG[browserLang] ? browserLang : 'en',
-    valid: ['en', 'ko', 'zh', 'ja', 'th', 'id', 'ms'],
-    onApply: function (mode) {
-      var shown = document.querySelector('.lang[data-lang="' + mode + '"]') ? mode : 'en';
-      document.documentElement.lang = LANG_TAG[shown];
-      document.querySelectorAll('.lang').forEach(function (el) {
-        el.hidden = el.getAttribute('data-lang') !== shown;
-      });
-      var code = document.getElementById('lang-code');
-      if (code) code.textContent = LANG_CODE[mode];
-      document.querySelectorAll('[data-set-lang]').forEach(function (b) {
-        b.setAttribute('aria-checked', b.getAttribute('data-set-lang') === mode ? 'true' : 'false');
-      });
-      setLangMenu(false);
-      buildToc();
-      document.documentElement.setAttribute('data-lang-ready', shown);
-      followHash();
-    }
+  // Languages (#68). The page is in one language; the menu links to the others.
+  // 언어 (#68). 페이지는 언어 하나로 되어 있고, 메뉴는 다른 언어 버전으로 가는 링크다.
+  var PAGE_LANG = {{ plang | jsonify }};
+  var VERSIONS = { {% for v in versions %}{{ v.lang | jsonify }}: {{ v.url | relative_url | jsonify }}{% unless forloop.last %}, {% endunless %}{% endfor %} };
+  var BANNER = { {% for l in site.languages %}{{ l.code | jsonify }}: {{ l.banner | jsonify }}{% unless forloop.last %}, {% endunless %}{% endfor %} };
+  var KEY = 'notes-on-redis-lang';
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } }
+  };
+
+  // Links into a hidden language block from #64 (`#ko-intent-router`) now name the same
+  // section on the Korean page: every language uses the English heading ids.
+  // #64 의 `#ko-…` 링크는 한국어 페이지의 같은 절로 보낸다. 이제 모든 언어가 영어 id 를 쓴다.
+  var legacy = location.hash.match(/^#(ko|zh|ja|th|id|ms)-(.+)$/);
+  if (legacy && !document.getElementById(location.hash.slice(1)) && VERSIONS[legacy[1]]) {
+    location.replace(VERSIONS[legacy[1]] + '#' + legacy[2]);
+  }
+
+  // A choice in the menu is remembered, and the fragment comes along: the heading ids
+  // are the same in every language, so the reader stays at the same section.
+  // 메뉴에서 고른 언어는 기억하고, fragment 를 함께 넘긴다. 제목 id 가 모든 언어에서 같다.
+  document.querySelectorAll('#lang-list a[data-lang]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      store.set(KEY, a.getAttribute('data-lang'));
+      if (location.hash) { e.preventDefault(); location.href = a.href + location.hash; }
+    });
   });
 
-  // A link to a heading in a hidden language block would jump nowhere. Non-English
-  // headings carry `<lang>-<english id>` (scripts/lang-heading-ids.py, #64), so
-  // `#intent-router` and `#ko-intent-router` name the same section: point the
-  // fragment at the copy in the shown language. Also runs on a language switch,
-  // which keeps the reader at the same section.
-  // 숨겨진 언어 블록의 제목을 가리키는 링크는 아무 데로도 가지 않는다. 영어가 아닌
-  // 제목은 `<언어>-<영어 id>` 를 쓰므로 (#64) `#intent-router` 와
-  // `#ko-intent-router` 는 같은 절이다. 보이는 언어의 제목으로 옮긴다. 언어를
-  // 바꿀 때도 실행되어 읽던 절을 유지한다.
-  function followHash() {
-    var h;
-    try { h = decodeURIComponent(location.hash.slice(1)); } catch (e) { return; }
-    if (!h) return;
-    var visible = function (el) { return el && !el.closest('.lang[hidden]'); };
-    if (visible(document.getElementById(h))) return;
-    var shown = document.documentElement.getAttribute('data-lang-ready') || 'en';
-    var base = h.replace(/^(ko|zh|ja|th|id|ms)-/, '');
-    var tries = shown === 'en' ? [base, h] : [shown + '-' + base, shown + '-' + h];
-    for (var i = 0; i < tries.length; i++) {
-      var el = document.getElementById(tries[i]);
-      if (visible(el)) {
-        history.replaceState(null, '', '#' + tries[i]);
-        el.scrollIntoView();
-        return;
-      }
-    }
+  // Banner: the saved choice, else the browser's language, when it differs from this page's.
+  // 배너: 저장된 선택, 없으면 브라우저 언어가 이 페이지 언어와 다를 때.
+  var want = store.get(KEY) || (navigator.language || 'en').slice(0, 2).toLowerCase();
+  var banner = document.getElementById('lang-banner');
+  if (banner && want !== PAGE_LANG && VERSIONS[want] && BANNER[want]
+      && store.get(KEY + '-banner-closed') !== want + '@' + PAGE_LANG) {
+    var link = document.getElementById('lang-banner-link');
+    link.textContent = BANNER[want] + ' \u2192';
+    link.setAttribute('lang', want === 'zh' ? 'zh-Hans' : want);
+    link.href = VERSIONS[want];
+    link.addEventListener('click', function (e) {
+      store.set(KEY, want);
+      if (location.hash) { e.preventDefault(); location.href = VERSIONS[want] + location.hash; }
+    });
+    document.getElementById('lang-banner-close').addEventListener('click', function () {
+      store.set(KEY + '-banner-closed', want + '@' + PAGE_LANG);
+      banner.hidden = true;
+    });
+    banner.hidden = false;
   }
-  window.addEventListener('hashchange', followHash);
 
   // The language menu: opens on the globe, closes on a choice, Escape or a
   // click elsewhere.
@@ -297,32 +309,15 @@
 
   var spy = null;
 
-  // Sidebar table of contents for the current page.
-  //
-  // Built from the DOM rather than at build time because each page carries
-  // both languages: a server-rendered list would name every heading twice, and
-  // half the anchors would point into a hidden block, where jumps do nothing.
-  //
-  // 현재 페이지의 사이드바 목차.
-  //
-  // 빌드 시점이 아니라 DOM 에서 만든다. 각 페이지가 두 언어를 모두 담고 있어
-  // 서버에서 만들면 제목이 두 번씩 나열되고, 앵커 절반이 숨겨진 블록을 가리켜
-  // 클릭해도 아무 일이 일어나지 않는다.
+  // Sidebar table of contents for the current page, with the section in view highlighted.
+  // 현재 페이지의 사이드바 목차. 보이는 절을 강조한다.
   function buildToc() {
     var list = document.getElementById('page-toc');
     var aside = document.getElementById('page-sidebar');
     if (!list) return;
 
-    var visible = document.querySelector('.lang:not([hidden])') || document;
-
-    // h2 and h3, minus the language header each block opens with — that is
-    // always the first h2 and would read as "English" sitting above the real
-    // contents. Pages that use only h3 are unaffected.
-    //
-    // h2 와 h3 를 담되, 각 블록 첫머리의 언어 제목은 뺀다. 항상 첫 h2 이고,
-    // 목차 맨 위에 "English" 가 얹히는 꼴이 된다. h3 만 쓰는 페이지는 영향 없다.
-    var headings = Array.prototype.slice.call(visible.querySelectorAll('h2[id], h3[id]'));
-    if (headings.length && headings[0].tagName === 'H2') headings.shift();
+    var main = document.querySelector('main.content') || document;
+    var headings = Array.prototype.slice.call(main.querySelectorAll('h2[id], h3[id]'));
 
     list.textContent = '';
     if (spy) { spy.disconnect(); spy = null; }
@@ -374,6 +369,8 @@
   // this only syncs the button state and handles clicks.
   // 테마: 기본 다크. <head> 스크립트가 이미 속성을 설정했으므로
   // 여기서는 버튼 상태 동기화와 클릭 처리만 한다.
+  buildToc();
+
   bind({
     key: 'notes-on-redis-theme',
     attr: 'data-set-theme',
