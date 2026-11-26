@@ -136,7 +136,7 @@ Docs: [Search and query](https://redis.io/docs/latest/develop/ai/search-and-quer
 | AI 에이전트 컨텍스트 계층(Iris) | LLM 주위의 기억, 라우팅, 승인된 답, 도구 | 예: Agent Memory, Intent Router, Context Gateway, Agent Playbooks |
 | 데이터 옆의 검색과 벡터 | 인덱스와 레코드를 한곳에 | 기능 확인만 |
 
-### 1. 데이터베이스 앞의 캐시
+### 1. 데이터베이스 앞의 캐시 {#ko-cache-in-front-of-a-database}
 
 애플리케이션은 먼저 Redis에 묻는다. 없으면 데이터베이스에서 읽어 TTL과 함께 Redis에 쓴다. Redis는 사본을 들고, 원본은 데이터베이스에 있다.
 
@@ -152,7 +152,7 @@ Docs: [Search and query](https://redis.io/docs/latest/develop/ai/search-and-quer
 
 문서: [Client-side caching](https://redis.io/docs/latest/develop/reference/client-side-caching/), [Eviction](https://redis.io/docs/latest/develop/reference/eviction/).
 
-### 2. 고가용성을 갖춘 핫 상태
+### 2. 고가용성을 갖춘 핫 상태 {#ko-hot-state-with-high-availability}
 
 세션, 장바구니, 요청 제한 카운터, 큐를 Redis에 원본으로 둔다. 주 서버가 AOF를 쓰고, 복제본 둘이 따라가며, Sentinel 셋이 주 서버 장애 때 복제본을 승격한다.
 
@@ -168,7 +168,7 @@ Docs: [Search and query](https://redis.io/docs/latest/develop/ai/search-and-quer
 
 문서: [Persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/), [Replication](https://redis.io/docs/latest/operate/oss_and_stack/management/replication/), [Sentinel](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/), [WAIT](https://redis.io/docs/latest/commands/wait/).
 
-### 3. Redis Cluster로 확장
+### 3. Redis Cluster로 확장 {#ko-scale-out-with-redis-cluster}
 
 노드 하나의 메모리나 CPU로 부족하면 Redis Cluster가 키 공간을 16,384개 해시 슬롯으로 나눠 주 서버들에 배분한다. 주 서버마다 복제본이 있다. 클라이언트는 슬롯 지도를 받아 맞는 노드와 직접 통신한다.
 
@@ -183,7 +183,7 @@ Docs: [Search and query](https://redis.io/docs/latest/develop/ai/search-and-quer
 
 문서: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/).
 
-### 4. Redis Cloud 관리형
+### 4. Redis Cloud 관리형 {#ko-managed-on-redis-cloud}
 
 같은 엔진을 서비스로 쓴다. Essentials는 공유 인프라 위의 DB 하나와 선택적 복제, Pro는 전용 인프라에 DB 여러 개, 그리고 여러 리전의 사본이 모두 쓰기를 받는 Active-Active를 더한다.
 
@@ -199,7 +199,7 @@ Docs: [Search and query](https://redis.io/docs/latest/develop/ai/search-and-quer
 
 문서: [Redis Cloud](https://redis.io/docs/latest/operate/rc/), [High availability](https://redis.io/docs/latest/operate/rc/databases/configuration/high-availability/), [Active-Active](https://redis.io/docs/latest/operate/rc/databases/active-active/).
 
-### 5. AI 에이전트의 컨텍스트 계층: Redis Iris
+### 5. AI 에이전트의 컨텍스트 계층: Redis Iris {#ko-context-layer-for-ai-agents-redis-iris}
 
 Iris는 에이전트 주위에 서비스를 두어 매 턴 컨텍스트를 다시 만들지 않게 한다. 문서의 표현: "Redis Iris is a production-ready context engine for AI agents", 그리고 "adds persistent memory", "answers recurring questions without a model call", 에이전트에게 "one MCP endpoint for the tools of any MCP server and your Redis data"를 주고 "routes each message". Agent Memory는 내가 가진 Redis DB에 데이터를 둔다.
 
@@ -218,7 +218,7 @@ Iris는 에이전트 주위에 서비스를 두어 매 턴 컨텍스트를 다�
 
 문서: [Redis Iris](https://redis.io/docs/latest/develop/ai/context-engine/), [Agent Memory](https://redis.io/docs/latest/operate/iris/agent-memory/), [Agent Playbooks](https://redis.io/docs/latest/operate/iris/agent-playbook/), [Context Gateway](https://redis.io/docs/latest/operate/iris/context-gateway/), [Intent Router](https://redis.io/docs/latest/operate/iris/intent-router/), [Lens](https://redis.io/docs/latest/operate/iris/lens/).
 
-### 6. 데이터 옆의 검색과 벡터
+### 6. 데이터 옆의 검색과 벡터 {#ko-search-and-vectors-next-to-the-data}
 
 레코드, 보조 인덱스, 임베딩이 같은 Redis DB에 있어 질의가 다른 시스템으로 건너가지 않는다.
 
@@ -251,7 +251,7 @@ Iris는 에이전트 주위에 서비스를 두어 매 턴 컨텍스트를 다�
 | AI agent 的上下文层 (Iris) | 围绕 LLM 的记忆、路由、已批准的答案和工具 | 是：Agent Memory、Intent Router、Context Gateway、Agent Playbooks |
 | 数据旁边的搜索与向量 | 索引和记录在同一处 | 仅做过探测 |
 
-### 1. 数据库前面的缓存
+### 1. 数据库前面的缓存 {#zh-cache-in-front-of-a-database}
 
 应用先向 Redis 查询；未命中时读取数据库，并把结果连同 TTL 写入 Redis。Redis 保存一份副本，数据库仍是事实来源。
 
@@ -267,7 +267,7 @@ Iris는 에이전트 주위에 서비스를 두어 매 턴 컨텍스트를 다�
 
 文档：[Client-side caching](https://redis.io/docs/latest/develop/reference/client-side-caching/)、[Eviction](https://redis.io/docs/latest/develop/reference/eviction/)。
 
-### 2. 具备高可用的热状态
+### 2. 具备高可用的热状态 {#zh-hot-state-with-high-availability}
 
 会话、购物车、限流计数器和队列以系统记录的身份存放在 Redis 中。一个主节点写入 append-only 文件，两个副本跟随它，主节点故障时由三个 Sentinel 提升一个副本。
 
@@ -283,7 +283,7 @@ Iris는 에이전트 주위에 서비스를 두어 매 턴 컨텍스트를 다�
 
 文档：[Persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/)、[Replication](https://redis.io/docs/latest/operate/oss_and_stack/management/replication/)、[Sentinel](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/)、[WAIT](https://redis.io/docs/latest/commands/wait/)。
 
-### 3. 用 Redis Cluster 横向扩展
+### 3. 用 Redis Cluster 横向扩展 {#zh-scale-out-with-redis-cluster}
 
 当单个节点的内存或 CPU 不够用时，Redis Cluster 把键空间划分为 16,384 个哈希槽，分布在多个主节点上，每个主节点带有副本。客户端获取槽映射后直接与正确的节点通信。
 
@@ -298,7 +298,7 @@ Iris는 에이전트 주위에 서비스를 두어 매 턴 컨텍스트를 다�
 
 文档：[Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/)、[Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/)、[CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/)。
 
-### 4. 托管于 Redis Cloud
+### 4. 托管于 Redis Cloud {#zh-managed-on-redis-cloud}
 
 同一个引擎，以服务形式提供。Essentials 是运行在共享基础设施上的单个数据库，可选复制；Pro 是独享的，可容纳多个数据库，并支持在多个区域建立都能接受写入的 Active-Active 副本。
 
@@ -314,7 +314,7 @@ Iris는 에이전트 주위에 서비스를 두어 매 턴 컨텍스트를 다�
 
 文档：[Redis Cloud](https://redis.io/docs/latest/operate/rc/)、[High availability](https://redis.io/docs/latest/operate/rc/databases/configuration/high-availability/)、[Active-Active](https://redis.io/docs/latest/operate/rc/databases/active-active/)。
 
-### 5. AI agent 的上下文层：Redis Iris
+### 5. AI agent 的上下文层：Redis Iris {#zh-context-layer-for-ai-agents-redis-iris}
 
 Iris 在 agent 周围提供一组服务，使它不必每一轮都重建上下文。文档写道："Redis Iris is a production-ready context engine for AI agents"，它 "adds persistent memory"，"answers recurring questions without a model call"，为 agent 提供 "one MCP endpoint for the tools of any MCP server and your Redis data"，并 "routes each message"。Agent Memory 把数据保存在你自己的 Redis 数据库中。
 
@@ -333,7 +333,7 @@ Iris 在 agent 周围提供一组服务，使它不必每一轮都重建上下�
 
 文档：[Redis Iris](https://redis.io/docs/latest/develop/ai/context-engine/)、[Agent Memory](https://redis.io/docs/latest/operate/iris/agent-memory/)、[Agent Playbooks](https://redis.io/docs/latest/operate/iris/agent-playbook/)、[Context Gateway](https://redis.io/docs/latest/operate/iris/context-gateway/)、[Intent Router](https://redis.io/docs/latest/operate/iris/intent-router/)、[Lens](https://redis.io/docs/latest/operate/iris/lens/)。
 
-### 6. 数据旁边的搜索与向量
+### 6. 数据旁边的搜索与向量 {#zh-search-and-vectors-next-to-the-data}
 
 记录、它们的二级索引和嵌入向量都存放在同一个 Redis 数据库中，因此查询不必跨到另一个系统。
 
@@ -366,7 +366,7 @@ Iris 在 agent 周围提供一组服务，使它不必每一轮都重建上下�
 | AI エージェントのコンテキスト層 (Iris) | LLM を取り巻くメモリ、ルーティング、承認済みの回答とツール | 実施済み：Agent Memory、Intent Router、Context Gateway、Agent Playbooks |
 | データの隣での検索とベクトル | インデックスとレコードを同じ場所に置く | 簡易検証のみ |
 
-### 1. データベース前段のキャッシュ
+### 1. データベース前段のキャッシュ {#ja-cache-in-front-of-a-database}
 
 アプリケーションはまず Redis に問い合わせ、ミスしたときはデータベースを読み、結果を TTL 付きで Redis に書き込みます。Redis はコピーを保持し、正本はデータベースのままです。
 
@@ -382,7 +382,7 @@ Iris 在 agent 周围提供一组服务，使它不必每一轮都重建上下�
 
 ドキュメント: [Client-side caching](https://redis.io/docs/latest/develop/reference/client-side-caching/)、[Eviction](https://redis.io/docs/latest/develop/reference/eviction/)。
 
-### 2. 高可用性を備えたホットステート
+### 2. 高可用性を備えたホットステート {#ja-hot-state-with-high-availability}
 
 セッション、カート、レート制限のカウンター、キューを、正本として Redis に置きます。プライマリが append-only ファイルを書き、2 台のレプリカがそれに追従し、プライマリ障害時には 3 台の Sentinel がレプリカを昇格させます。
 
@@ -398,7 +398,7 @@ Iris 在 agent 周围提供一组服务，使它不必每一轮都重建上下�
 
 ドキュメント: [Persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/)、[Replication](https://redis.io/docs/latest/operate/oss_and_stack/management/replication/)、[Sentinel](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/)、[WAIT](https://redis.io/docs/latest/commands/wait/)。
 
-### 3. Redis Cluster でスケールアウト
+### 3. Redis Cluster でスケールアウト {#ja-scale-out-with-redis-cluster}
 
 1 ノードのメモリや CPU では足りなくなったとき、Redis Cluster はキー空間を 16,384 個のハッシュスロットに分割して複数のプライマリに配置し、それぞれにレプリカを付けます。クライアントはスロットマップを取得し、適切なノードと直接通信します。
 
@@ -413,7 +413,7 @@ Iris 在 agent 周围提供一组服务，使它不必每一轮都重建上下�
 
 ドキュメント: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/)、[Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/)、[CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/)。
 
-### 4. Redis Cloud でのマネージド運用
+### 4. Redis Cloud でのマネージド運用 {#ja-managed-on-redis-cloud}
 
 同じエンジンをサービスとして利用します。Essentials は共有インフラ上の 1 つのデータベースで、レプリケーションは任意です。Pro は専有型で複数のデータベースを持て、複数リージョンのすべてが書き込みを受け付ける Active-Active コピーを追加できます。
 
@@ -429,7 +429,7 @@ Iris 在 agent 周围提供一组服务，使它不必每一轮都重建上下�
 
 ドキュメント: [Redis Cloud](https://redis.io/docs/latest/operate/rc/)、[High availability](https://redis.io/docs/latest/operate/rc/databases/configuration/high-availability/)、[Active-Active](https://redis.io/docs/latest/operate/rc/databases/active-active/)。
 
-### 5. AI エージェントのコンテキスト層：Redis Iris
+### 5. AI エージェントのコンテキスト層：Redis Iris {#ja-context-layer-for-ai-agents-redis-iris}
 
 Iris はエージェントの周りにサービスを置き、毎ターンでコンテキストを作り直さずに済むようにします。ドキュメントには次のようにあります。"Redis Iris is a production-ready context engine for AI agents" で、"adds persistent memory"、"answers recurring questions without a model call"、エージェントに "one MCP endpoint for the tools of any MCP server and your Redis data" を提供し、"routes each message"。Agent Memory はデータを自分が所有する Redis データベースに保存します。
 
@@ -448,7 +448,7 @@ Iris はエージェントの周りにサービスを置き、毎ターンでコ
 
 ドキュメント: [Redis Iris](https://redis.io/docs/latest/develop/ai/context-engine/)、[Agent Memory](https://redis.io/docs/latest/operate/iris/agent-memory/)、[Agent Playbooks](https://redis.io/docs/latest/operate/iris/agent-playbook/)、[Context Gateway](https://redis.io/docs/latest/operate/iris/context-gateway/)、[Intent Router](https://redis.io/docs/latest/operate/iris/intent-router/)、[Lens](https://redis.io/docs/latest/operate/iris/lens/)。
 
-### 6. データの隣での検索とベクトル
+### 6. データの隣での検索とベクトル {#ja-search-and-vectors-next-to-the-data}
 
 レコード、そのセカンダリインデックス、埋め込みベクトルが同じ Redis データベースにあるため、クエリが別のシステムをまたぐ必要がありません。
 
@@ -481,7 +481,7 @@ Iris はエージェントの周りにサービスを置き、毎ターンでコ
 | ชั้นบริบทสำหรับ AI agent (Iris) | หน่วยความจำ การกำหนดเส้นทาง คำตอบที่อนุมัติแล้ว และเครื่องมือรอบ LLM | รันแล้ว: Agent Memory, Intent Router, Context Gateway, Agent Playbooks |
 | การค้นหาและเวกเตอร์ข้างข้อมูล | ดัชนีและเรกคอร์ดอยู่ที่เดียวกัน | ทดสอบเบื้องต้นเท่านั้น |
 
-### 1. แคชหน้าฐานข้อมูล
+### 1. แคชหน้าฐานข้อมูล {#th-cache-in-front-of-a-database}
 
 แอปพลิเคชันถาม Redis ก่อน หากไม่พบจะอ่านจากฐานข้อมูลแล้วเขียนผลลัพธ์ลง Redis พร้อม TTL Redis เก็บสำเนาไว้ ส่วนฐานข้อมูลยังเป็นแหล่งข้อมูลจริง
 
@@ -497,7 +497,7 @@ Iris はエージェントの周りにサービスを置き、毎ターンでコ
 
 เอกสาร: [Client-side caching](https://redis.io/docs/latest/develop/reference/client-side-caching/), [Eviction](https://redis.io/docs/latest/develop/reference/eviction/)
 
-### 2. สถานะที่ใช้งานบ่อยพร้อม high availability
+### 2. สถานะที่ใช้งานบ่อยพร้อม high availability {#th-hot-state-with-high-availability}
 
 เซสชัน ตะกร้าสินค้า ตัวนับ rate limit และคิว อยู่ใน Redis ในฐานะระบบบันทึกหลัก primary เขียน append-only file, replica สองตัวตามมา และ Sentinel สามตัวจะเลื่อนระดับ replica ขึ้นเป็น primary เมื่อ primary ล้มเหลว
 
@@ -513,7 +513,7 @@ Iris はエージェントの周りにサービスを置き、毎ターンでコ
 
 เอกสาร: [Persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/), [Replication](https://redis.io/docs/latest/operate/oss_and_stack/management/replication/), [Sentinel](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/), [WAIT](https://redis.io/docs/latest/commands/wait/)
 
-### 3. ขยายแนวนอนด้วย Redis Cluster
+### 3. ขยายแนวนอนด้วย Redis Cluster {#th-scale-out-with-redis-cluster}
 
 เมื่อหน่วยความจำหรือ CPU ของโหนดเดียวไม่พอ Redis Cluster จะแบ่ง keyspace ออกเป็น hash slot 16,384 ช่องกระจายไปตาม primary ซึ่งแต่ละตัวมี replica ไคลเอนต์เรียนรู้แผนที่ slot แล้วคุยกับโหนดที่ถูกต้องโดยตรง
 
@@ -528,7 +528,7 @@ Iris はエージェントの周りにサービスを置き、毎ターンでコ
 
 เอกสาร: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/)
 
-### 4. ใช้แบบมีผู้ดูแลบน Redis Cloud
+### 4. ใช้แบบมีผู้ดูแลบน Redis Cloud {#th-managed-on-redis-cloud}
 
 เอนจินเดียวกันในรูปแบบบริการ Essentials คือฐานข้อมูลหนึ่งตัวบนโครงสร้างพื้นฐานที่ใช้ร่วมกัน พร้อมการทำ replication แบบเลือกได้ ส่วน Pro เป็นแบบเฉพาะ รองรับหลายฐานข้อมูล และเพิ่มสำเนา Active-Active ในหลายภูมิภาคที่รับการเขียนได้ทั้งหมด
 
@@ -544,7 +544,7 @@ Iris はエージェントの周りにサービスを置き、毎ターンでコ
 
 เอกสาร: [Redis Cloud](https://redis.io/docs/latest/operate/rc/), [High availability](https://redis.io/docs/latest/operate/rc/databases/configuration/high-availability/), [Active-Active](https://redis.io/docs/latest/operate/rc/databases/active-active/)
 
-### 5. ชั้นบริบทสำหรับ AI agent: Redis Iris
+### 5. ชั้นบริบทสำหรับ AI agent: Redis Iris {#th-context-layer-for-ai-agents-redis-iris}
 
 Iris วางบริการไว้รอบ agent เพื่อไม่ให้ต้องสร้างบริบทใหม่ทุกเทิร์น เอกสารระบุว่า "Redis Iris is a production-ready context engine for AI agents" ที่ "adds persistent memory", "answers recurring questions without a model call" ให้ agent มี "one MCP endpoint for the tools of any MCP server and your Redis data" และ "routes each message" Agent Memory เก็บข้อมูลไว้ในฐานข้อมูล Redis ที่คุณเป็นเจ้าของ
 
@@ -563,7 +563,7 @@ Iris วางบริการไว้รอบ agent เพื่อไม�
 
 เอกสาร: [Redis Iris](https://redis.io/docs/latest/develop/ai/context-engine/), [Agent Memory](https://redis.io/docs/latest/operate/iris/agent-memory/), [Agent Playbooks](https://redis.io/docs/latest/operate/iris/agent-playbook/), [Context Gateway](https://redis.io/docs/latest/operate/iris/context-gateway/), [Intent Router](https://redis.io/docs/latest/operate/iris/intent-router/), [Lens](https://redis.io/docs/latest/operate/iris/lens/)
 
-### 6. การค้นหาและเวกเตอร์ข้างข้อมูล
+### 6. การค้นหาและเวกเตอร์ข้างข้อมูล {#th-search-and-vectors-next-to-the-data}
 
 เรกคอร์ด ดัชนีรอง และ embedding ของข้อมูลอยู่ในฐานข้อมูล Redis เดียวกัน การค้นหาจึงไม่ต้องข้ามไปยังระบบอื่น
 
@@ -596,7 +596,7 @@ Iris วางบริการไว้รอบ agent เพื่อไม�
 | Lapisan konteks untuk agen AI (Iris) | memori, perutean, jawaban yang disetujui, dan alat di sekitar LLM | ya: Agent Memory, Intent Router, Context Gateway, Agent Playbooks |
 | Pencarian dan vektor di samping data | indeks dan rekaman di satu tempat | hanya uji coba awal |
 
-### 1. Cache di depan basis data
+### 1. Cache di depan basis data {#id-cache-in-front-of-a-database}
 
 Aplikasi bertanya ke Redis lebih dulu; jika tidak ada (miss), aplikasi membaca basis data dan menulis hasilnya ke Redis dengan TTL. Redis menyimpan salinan, sedangkan basis data tetap menjadi sumber kebenaran.
 
@@ -612,7 +612,7 @@ Aplikasi bertanya ke Redis lebih dulu; jika tidak ada (miss), aplikasi membaca b
 
 Dokumentasi: [Client-side caching](https://redis.io/docs/latest/develop/reference/client-side-caching/), [Eviction](https://redis.io/docs/latest/develop/reference/eviction/).
 
-### 2. Hot state dengan high availability
+### 2. Hot state dengan high availability {#id-hot-state-with-high-availability}
 
 Sesi, keranjang belanja, penghitung pembatasan laju, dan antrean berada di Redis sebagai sistem pencatatan utama. Satu primary menulis append-only file, dua replika mengikutinya, dan tiga Sentinel mempromosikan sebuah replika saat primary gagal.
 
@@ -628,7 +628,7 @@ Sesi, keranjang belanja, penghitung pembatasan laju, dan antrean berada di Redis
 
 Dokumentasi: [Persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/), [Replication](https://redis.io/docs/latest/operate/oss_and_stack/management/replication/), [Sentinel](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/), [WAIT](https://redis.io/docs/latest/commands/wait/).
 
-### 3. Scale-out dengan Redis Cluster
+### 3. Scale-out dengan Redis Cluster {#id-scale-out-with-redis-cluster}
 
 Saat memori atau CPU satu node tidak cukup, Redis Cluster membagi keyspace menjadi 16,384 hash slot di beberapa primary, masing-masing dengan replika. Klien mempelajari peta slot dan berkomunikasi langsung dengan node yang tepat.
 
@@ -643,7 +643,7 @@ Saat memori atau CPU satu node tidak cukup, Redis Cluster membagi keyspace menja
 
 Dokumentasi: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/).
 
-### 4. Terkelola di Redis Cloud
+### 4. Terkelola di Redis Cloud {#id-managed-on-redis-cloud}
 
 Engine yang sama sebagai layanan. Essentials adalah satu basis data pada infrastruktur bersama dengan replikasi opsional; Pro bersifat dedicated, menampung banyak basis data, dan menambahkan salinan Active-Active di beberapa wilayah yang semuanya menerima penulisan.
 
@@ -659,7 +659,7 @@ Engine yang sama sebagai layanan. Essentials adalah satu basis data pada infrast
 
 Dokumentasi: [Redis Cloud](https://redis.io/docs/latest/operate/rc/), [High availability](https://redis.io/docs/latest/operate/rc/databases/configuration/high-availability/), [Active-Active](https://redis.io/docs/latest/operate/rc/databases/active-active/).
 
-### 5. Lapisan konteks untuk agen AI: Redis Iris
+### 5. Lapisan konteks untuk agen AI: Redis Iris {#id-context-layer-for-ai-agents-redis-iris}
 
 Iris menempatkan layanan di sekitar agen agar tidak perlu membangun ulang konteks pada setiap giliran. Dokumentasi menyebut "Redis Iris is a production-ready context engine for AI agents" yang "adds persistent memory", "answers recurring questions without a model call", memberi agen "one MCP endpoint for the tools of any MCP server and your Redis data", dan "routes each message". Agent Memory menyimpan datanya di basis data Redis milik Anda.
 
@@ -678,7 +678,7 @@ Iris menempatkan layanan di sekitar agen agar tidak perlu membangun ulang kontek
 
 Dokumentasi: [Redis Iris](https://redis.io/docs/latest/develop/ai/context-engine/), [Agent Memory](https://redis.io/docs/latest/operate/iris/agent-memory/), [Agent Playbooks](https://redis.io/docs/latest/operate/iris/agent-playbook/), [Context Gateway](https://redis.io/docs/latest/operate/iris/context-gateway/), [Intent Router](https://redis.io/docs/latest/operate/iris/intent-router/), [Lens](https://redis.io/docs/latest/operate/iris/lens/).
 
-### 6. Pencarian dan vektor di samping data
+### 6. Pencarian dan vektor di samping data {#id-search-and-vectors-next-to-the-data}
 
 Rekaman, indeks sekunder, dan embedding-nya berada di basis data Redis yang sama, sehingga kueri tidak perlu berpindah ke sistem lain.
 
@@ -711,7 +711,7 @@ Dokumentasi: [Search and query](https://redis.io/docs/latest/develop/ai/search-a
 | Lapisan konteks untuk ejen AI (Iris) | memori, penghalaan, jawapan yang diluluskan dan alat di sekeliling LLM | ya: Agent Memory, Intent Router, Context Gateway, Agent Playbooks |
 | Carian dan vektor di sebelah data | indeks dan rekod di satu tempat | hanya ujian awal |
 
-### 1. Cache di hadapan pangkalan data
+### 1. Cache di hadapan pangkalan data {#ms-cache-in-front-of-a-database}
 
 Aplikasi bertanya kepada Redis dahulu; jika tiada (miss), aplikasi membaca pangkalan data dan menulis hasilnya ke Redis dengan TTL. Redis menyimpan salinan, manakala pangkalan data kekal sebagai sumber kebenaran.
 
@@ -727,7 +727,7 @@ Aplikasi bertanya kepada Redis dahulu; jika tiada (miss), aplikasi membaca pangk
 
 Dokumentasi: [Client-side caching](https://redis.io/docs/latest/develop/reference/client-side-caching/), [Eviction](https://redis.io/docs/latest/develop/reference/eviction/).
 
-### 2. Hot state dengan high availability
+### 2. Hot state dengan high availability {#ms-hot-state-with-high-availability}
 
 Sesi, troli, pembilang had kadar dan baris gilir berada dalam Redis sebagai sistem rekod. Satu primary menulis fail append-only, dua replika mengikutinya, dan tiga Sentinel menaik taraf sebuah replika apabila primary gagal.
 
@@ -743,7 +743,7 @@ Sesi, troli, pembilang had kadar dan baris gilir berada dalam Redis sebagai sist
 
 Dokumentasi: [Persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/), [Replication](https://redis.io/docs/latest/operate/oss_and_stack/management/replication/), [Sentinel](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/), [WAIT](https://redis.io/docs/latest/commands/wait/).
 
-### 3. Scale-out dengan Redis Cluster
+### 3. Scale-out dengan Redis Cluster {#ms-scale-out-with-redis-cluster}
 
 Apabila memori atau CPU satu nod tidak mencukupi, Redis Cluster membahagikan keyspace kepada 16,384 hash slot merentas beberapa primary, masing-masing dengan replika. Klien mempelajari peta slot dan berhubung terus dengan nod yang betul.
 
@@ -758,7 +758,7 @@ Apabila memori atau CPU satu nod tidak mencukupi, Redis Cluster membahagikan key
 
 Dokumentasi: [Scaling with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/), [Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/), [CLUSTER MIGRATION](https://redis.io/docs/latest/commands/cluster-migration/).
 
-### 4. Terurus di Redis Cloud
+### 4. Terurus di Redis Cloud {#ms-managed-on-redis-cloud}
 
 Enjin yang sama sebagai perkhidmatan. Essentials ialah satu pangkalan data pada infrastruktur kongsi dengan replikasi pilihan; Pro bersifat dedicated, menampung banyak pangkalan data, dan menambah salinan Active-Active di beberapa wilayah yang semuanya menerima penulisan.
 
@@ -774,7 +774,7 @@ Enjin yang sama sebagai perkhidmatan. Essentials ialah satu pangkalan data pada 
 
 Dokumentasi: [Redis Cloud](https://redis.io/docs/latest/operate/rc/), [High availability](https://redis.io/docs/latest/operate/rc/databases/configuration/high-availability/), [Active-Active](https://redis.io/docs/latest/operate/rc/databases/active-active/).
 
-### 5. Lapisan konteks untuk ejen AI: Redis Iris
+### 5. Lapisan konteks untuk ejen AI: Redis Iris {#ms-context-layer-for-ai-agents-redis-iris}
 
 Iris meletakkan perkhidmatan di sekeliling ejen supaya ia tidak perlu membina semula konteks pada setiap giliran. Dokumentasi menyatakan "Redis Iris is a production-ready context engine for AI agents" yang "adds persistent memory", "answers recurring questions without a model call", memberi ejen "one MCP endpoint for the tools of any MCP server and your Redis data", dan "routes each message". Agent Memory menyimpan datanya dalam pangkalan data Redis milik anda.
 
@@ -793,7 +793,7 @@ Iris meletakkan perkhidmatan di sekeliling ejen supaya ia tidak perlu membina se
 
 Dokumentasi: [Redis Iris](https://redis.io/docs/latest/develop/ai/context-engine/), [Agent Memory](https://redis.io/docs/latest/operate/iris/agent-memory/), [Agent Playbooks](https://redis.io/docs/latest/operate/iris/agent-playbook/), [Context Gateway](https://redis.io/docs/latest/operate/iris/context-gateway/), [Intent Router](https://redis.io/docs/latest/operate/iris/intent-router/), [Lens](https://redis.io/docs/latest/operate/iris/lens/).
 
-### 6. Carian dan vektor di sebelah data
+### 6. Carian dan vektor di sebelah data {#ms-search-and-vectors-next-to-the-data}
 
 Rekod, indeks sekunder dan embedding berada dalam pangkalan data Redis yang sama, jadi pertanyaan tidak perlu merentasi ke sistem lain.
 

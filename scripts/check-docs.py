@@ -224,6 +224,29 @@ def check_secrets():
     ok(f"secrets: {len(tracked)} tracked files scanned")
 
 
+# --------------------------------------------------------------------------
+# 6. Heading ids
+#
+# Non-English headings carry `{#<lang>-<english id>}` (#64); kramdown alone
+# would give them `section-3`. A heading added or reordered without rerunning
+# scripts/lang-heading-ids.py leaves an id pointing at the wrong section.
+# --------------------------------------------------------------------------
+def check_heading_ids():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("lhi", ROOT / "scripts" / "lang-heading-ids.py")
+    lhi = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(lhi)
+    n = 0
+    for p, text in lhi.pages():
+        n += 1
+        try:
+            if lhi.rewrite(text) != text:
+                fail(rel(p), "non-English heading ids out of date: run scripts/lang-heading-ids.py")
+        except SystemExit as e:
+            fail(rel(p), f"heading ids: {e}")
+    ok(f"heading ids: {n} pages")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -231,7 +254,7 @@ def main():
     args = ap.parse_args()
 
     for check in (check_bilingual, check_site_pages, check_nav,
-                  check_internal_links, check_secrets):
+                  check_internal_links, check_secrets, check_heading_ids):
         check()
 
     if args.verbose:

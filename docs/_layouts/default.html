@@ -216,8 +216,39 @@
       });
       setLangMenu(false);
       buildToc();
+      document.documentElement.setAttribute('data-lang-ready', shown);
+      followHash();
     }
   });
+
+  // A link to a heading in a hidden language block would jump nowhere. Non-English
+  // headings carry `<lang>-<english id>` (scripts/lang-heading-ids.py, #64), so
+  // `#intent-router` and `#ko-intent-router` name the same section: point the
+  // fragment at the copy in the shown language. Also runs on a language switch,
+  // which keeps the reader at the same section.
+  // 숨겨진 언어 블록의 제목을 가리키는 링크는 아무 데로도 가지 않는다. 영어가 아닌
+  // 제목은 `<언어>-<영어 id>` 를 쓰므로 (#64) `#intent-router` 와
+  // `#ko-intent-router` 는 같은 절이다. 보이는 언어의 제목으로 옮긴다. 언어를
+  // 바꿀 때도 실행되어 읽던 절을 유지한다.
+  function followHash() {
+    var h;
+    try { h = decodeURIComponent(location.hash.slice(1)); } catch (e) { return; }
+    if (!h) return;
+    var visible = function (el) { return el && !el.closest('.lang[hidden]'); };
+    if (visible(document.getElementById(h))) return;
+    var shown = document.documentElement.getAttribute('data-lang-ready') || 'en';
+    var base = h.replace(/^(ko|zh|ja|th|id|ms)-/, '');
+    var tries = shown === 'en' ? [base, h] : [shown + '-' + base, shown + '-' + h];
+    for (var i = 0; i < tries.length; i++) {
+      var el = document.getElementById(tries[i]);
+      if (visible(el)) {
+        history.replaceState(null, '', '#' + tries[i]);
+        el.scrollIntoView();
+        return;
+      }
+    }
+  }
+  window.addEventListener('hashchange', followHash);
 
   // The language menu: opens on the globe, closes on a choice, Escape or a
   // click elsewhere.
