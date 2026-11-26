@@ -105,7 +105,7 @@ median 611 ms, min 559, max 1312; memories returned 3
 ### Not run / caveats
 
 - Sensitive-data exclusions, custom memory types, MemoryETL and `forget()` were not exercised; the Agent Memory lab (`iris/02`) covers them.
-- Keys `notes-on-redis-lab` (read) and `notes-on-redis-lab-write` expire on 2026-12-07; delete them earlier if the lab is done.
+- Keys `notes-on-redis-lab` (read) and `notes-on-redis-lab-write` were deleted on 2026-11-26 with the service, before their 2026-12-07 expiry ([#66](https://github.com/litkhai/notes-on-redis/issues/66)). Keys issued in Access & Identity were set to expire 30 days after issue.
 
 | | |
 |---|---|
@@ -149,7 +149,7 @@ set -a; . ./.env; set +a
 ### 미실행 / 주의
 
 - 민감 데이터 제외, 사용자 정의 기억 유형, MemoryETL, `forget()`은 시험하지 않았다. Agent Memory 실습(`iris/02`)에서 다룬다.
-- 키 `notes-on-redis-lab`(read)와 `notes-on-redis-lab-write`는 2026-12-07에 만료된다. 실습이 끝나면 먼저 지운다.
+- 키 `notes-on-redis-lab`(read)와 `notes-on-redis-lab-write`는 2026-12-07 만료 전인 2026-11-26에 서비스와 함께 지웠다([#66](https://github.com/litkhai/notes-on-redis/issues/66)). 여기서 Access & Identity로 발급한 키는 30일 뒤 만료로 설정됐다.
 
 | | |
 |---|---|

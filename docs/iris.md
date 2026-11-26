@@ -235,6 +235,8 @@ The services keep their data and their connection pools in the database you pick
 
 On the free plan that leaves two connections for an application. Give Iris its own database, or a plan with more connections, before putting real traffic next to it.
 
+**Removed 2026-11-26** ([#66](https://github.com/litkhai/notes-on-redis/issues/66)): the four services and their five keys were deleted in the console, Agent Memory flushed first. Read on the database card right after: 6 connections, 34 keys, 17.7 MB. Deleting a service frees its connections; what it wrote into the database stays until you delete it (the Agent Memory and Context Gateway delete dialogs say so, and 34 keys remained). Then emptied with `FLUSHALL` the same day: the 34 keys were 4 Agent Memory leftovers and the 30 lab products, plus 4 Agent Memory search indexes; afterwards `DBSIZE` 0 and `FT._LIST` empty (FLUSHALL removed the indexes too), `used_memory` 2.98 MB.
+
 ### Not covered yet
 
 Lens on Redis Cloud waits for the Essentials budget in [#8](https://github.com/litkhai/notes-on-redis/issues/8): creating it, the Lens UI, reading turns back and model-call tracing. Message consumption stays an open question until the console or the bill shows it.
@@ -469,6 +471,8 @@ Agent Mesh는 페이지만 있고 만들 것은 없다. 내 앱 안에서 돈다
 | 알림 | Redis의 이메일 | "The number of connections for your database has reached 93.33% of the connections limit" |
 
 무료 플랜이면 애플리케이션에 남는 커넥션은 두 개다. 실제 트래픽을 옆에 두기 전에 Iris에 별도 DB나 커넥션이 더 많은 플랜을 준다.
+
+**2026-11-26 삭제**([#66](https://github.com/litkhai/notes-on-redis/issues/66)): 콘솔에서 서비스 네 개와 키 다섯 개를 지웠다. Agent Memory는 먼저 Flush했다. 직후 DB 카드: 커넥션 6, 키 34개, 17.7 MB. 서비스를 지우면 커넥션은 풀리지만 서비스가 DB에 쓴 데이터는 직접 지울 때까지 남는다(Agent Memory와 Context Gateway 삭제 창이 그렇게 말하고, 키 34개가 남았다). 같은 날 `FLUSHALL`로 비웠다. 키 34개는 Agent Memory 잔여 4개와 실습 상품 30개였고, Agent Memory 검색 인덱스 4개가 있었다. 이후 `DBSIZE` 0, `FT._LIST` 비어 있음(FLUSHALL이 인덱스도 지웠다), `used_memory` 2.98 MB.
 
 ### 아직 다루지 않은 것 {#ko-not-covered-yet}
 
@@ -705,6 +709,8 @@ Agent Mesh 有页面，但没有可创建的东西：它在你自己的应用内
 
 在免费计划上，这只给应用程序留下两个连接。在让真实流量与它并存之前，请为 Iris 单独准备一个数据库，或选择连接数更多的计划。
 
+**2026-11-26 已删除**（[#66](https://github.com/litkhai/notes-on-redis/issues/66)）：在控制台删除了四个服务及其五个密钥，Agent Memory 先执行了 Flush。紧接着在数据库卡片上读到：6 个连接、34 个键、17.7 MB。删除服务会释放其连接，但它写入数据库的数据会一直保留，直到你自己删除（Agent Memory 和 Context Gateway 的删除对话框都这样说明，且剩下 34 个键）。 当天随后用 `FLUSHALL` 清空：这 34 个键是 4 个 Agent Memory 残留和 30 个实验商品，另有 4 个 Agent Memory 搜索索引；之后 `DBSIZE` 为 0，`FT._LIST` 为空（FLUSHALL 也删除了索引），`used_memory` 2.98 MB。
+
 ### 尚未涉及的内容 {#zh-not-covered-yet}
 
 Redis Cloud 上的 Lens 在等待 [#8](https://github.com/litkhai/notes-on-redis/issues/8) 中的 Essentials 预算：创建它、Lens UI、回读各轮以及模型调用追踪。在控制台或账单显示出来之前，消息消耗量仍是一个未解的问题。
@@ -939,6 +945,8 @@ Agent Mesh にはページがあるが、作るものはない。自分のアプ
 | アラート | Redis からのメール | "The number of connections for your database has reached 93.33% of the connections limit" |
 
 無料プランでは、アプリケーションに残る接続は 2 件です。実際のトラフィックをそばに置く前に、Iris 専用のデータベースか、接続数の多いプランを用意してください。
+
+**2026-11-26 に削除**（[#66](https://github.com/litkhai/notes-on-redis/issues/66)）：コンソールで 4 つのサービスと 5 つのキーを削除した。Agent Memory は先に Flush した。直後のデータベースカード：接続 6、キー 34 個、17.7 MB。サービスを削除すると接続は解放されるが、サービスがデータベースに書いたデータは自分で消すまで残る（Agent Memory と Context Gateway の削除ダイアログがそう説明しており、キーが 34 個残った）。 同じ日に `FLUSHALL` で空にした。34 個のキーは Agent Memory の残り 4 個とラボの商品 30 個で、ほかに Agent Memory の検索インデックスが 4 つあった。その後 `DBSIZE` は 0、`FT._LIST` は空（FLUSHALL がインデックスも削除した）、`used_memory` は 2.98 MB。
 
 ### まだ扱っていないこと {#ja-not-covered-yet}
 
@@ -1175,6 +1183,8 @@ Agent Mesh มีหน้าของตัวเองแต่ไม่มี
 
 บนแผนฟรี จะเหลือการเชื่อมต่อให้แอปพลิเคชันเพียงสองรายการ ควรให้ Iris มีฐานข้อมูลของตัวเอง หรือใช้แผนที่มีการเชื่อมต่อมากกว่านี้ ก่อนนำทราฟฟิกจริงมาวางไว้ข้างกัน
 
+**ลบเมื่อ 2026-11-26** ([#66](https://github.com/litkhai/notes-on-redis/issues/66)): ลบบริการทั้งสี่และคีย์ทั้งห้าในคอนโซล โดย Flush Agent Memory ก่อน การ์ดฐานข้อมูลหลังจากนั้นทันที: 6 การเชื่อมต่อ, 34 คีย์, 17.7 MB การลบบริการจะคืนการเชื่อมต่อ แต่ข้อมูลที่บริการเขียนลงฐานข้อมูลยังคงอยู่จนกว่าคุณจะลบเอง (หน้าต่างยืนยันการลบของ Agent Memory และ Context Gateway บอกไว้เช่นนั้น และเหลือ 34 คีย์) จากนั้นล้างด้วย `FLUSHALL` ในวันเดียวกัน: 34 คีย์คือส่วนที่เหลือของ Agent Memory 4 คีย์และสินค้าจากแล็บ 30 รายการ รวมถึงดัชนีค้นหาของ Agent Memory 4 รายการ หลังจากนั้น `DBSIZE` เป็น 0 และ `FT._LIST` ว่าง (FLUSHALL ลบดัชนีด้วย) `used_memory` 2.98 MB
+
 ### สิ่งที่ยังไม่ได้ครอบคลุม {#th-not-covered-yet}
 
 Lens บน Redis Cloud รองบประมาณ Essentials ใน [#8](https://github.com/litkhai/notes-on-redis/issues/8) ได้แก่ การสร้าง, UI ของ Lens, การอ่านเทิร์นย้อนกลับ และการติดตามการเรียกโมเดล ปริมาณการใช้ข้อความยังเป็นคำถามที่เปิดอยู่จนกว่าคอนโซลหรือใบเรียกเก็บเงินจะแสดงให้เห็น
@@ -1410,6 +1420,8 @@ Layanan menyimpan data dan connection pool-nya di database yang Anda pilih. Deng
 
 Pada paket gratis, itu menyisakan dua koneksi untuk aplikasi. Berikan Iris database tersendiri, atau paket dengan lebih banyak koneksi, sebelum menempatkan lalu lintas nyata di sampingnya.
 
+**Dihapus 2026-11-26** ([#66](https://github.com/litkhai/notes-on-redis/issues/66)): keempat layanan dan kelima kuncinya dihapus di konsol, Agent Memory di-flush lebih dulu. Dibaca di kartu database sesudahnya: 6 koneksi, 34 key, 17,7 MB. Menghapus layanan membebaskan koneksinya; data yang ditulisnya ke database tetap ada sampai Anda menghapusnya (dialog hapus Agent Memory dan Context Gateway menyatakan begitu, dan 34 key tersisa). Lalu dikosongkan dengan `FLUSHALL` pada hari yang sama: 34 key itu adalah 4 sisa Agent Memory dan 30 produk lab, ditambah 4 indeks pencarian Agent Memory; sesudahnya `DBSIZE` 0 dan `FT._LIST` kosong (FLUSHALL juga menghapus indeksnya), `used_memory` 2,98 MB.
+
 ### Yang belum dicakup {#id-not-covered-yet}
 
 Lens di Redis Cloud menunggu anggaran Essentials di [#8](https://github.com/litkhai/notes-on-redis/issues/8): pembuatannya, UI Lens, membaca kembali giliran, dan pelacakan panggilan model. Konsumsi pesan tetap menjadi pertanyaan terbuka sampai konsol atau tagihan menunjukkannya.
@@ -1644,6 +1656,8 @@ Perkhidmatan menyimpan data dan connection pool mereka dalam pangkalan data yang
 | Alert | e-mel daripada Redis | "The number of connections for your database has reached 93.33% of the connections limit" |
 
 Pada pelan percuma, itu hanya meninggalkan dua sambungan untuk aplikasi. Berikan Iris pangkalan data sendiri, atau pelan dengan lebih banyak sambungan, sebelum meletakkan trafik sebenar di sebelahnya.
+
+**Dipadam 2026-11-26** ([#66](https://github.com/litkhai/notes-on-redis/issues/66)): keempat-empat perkhidmatan dan lima kuncinya dipadam di konsol, Agent Memory di-flush dahulu. Dibaca pada kad pangkalan data sejurus selepas itu: 6 sambungan, 34 kunci, 17.7 MB. Memadam perkhidmatan membebaskan sambungannya; data yang ditulisnya ke pangkalan data kekal sehingga anda memadamnya (dialog padam Agent Memory dan Context Gateway menyatakan demikian, dan 34 kunci tinggal). Kemudian dikosongkan dengan `FLUSHALL` pada hari yang sama: 34 kunci itu ialah 4 baki Agent Memory dan 30 produk makmal, serta 4 indeks carian Agent Memory; selepas itu `DBSIZE` 0 dan `FT._LIST` kosong (FLUSHALL turut memadam indeks), `used_memory` 2.98 MB.
 
 ### Yang belum diliputi {#ms-not-covered-yet}
 
