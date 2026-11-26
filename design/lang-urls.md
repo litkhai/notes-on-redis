@@ -2,7 +2,7 @@
 
 [English](#english) | [한국어](#한국어)
 
-Status: **proposal, nothing built.** Sizes measured on https://redis.litkhai.dev on 2026-11-26;
+Status: **decided 2026-11-26 (D1–D3 below), nothing built.** Sizes measured on https://redis.litkhai.dev on 2026-11-26;
 search-engine guidance read the same day from Google Search Central
 ([multi-regional sites](https://developers.google.com/search/docs/specialty/international/managing-multi-regional-sites),
 [localized versions](https://developers.google.com/search/docs/specialty/international/localized-versions); neither page shows an update date).
@@ -144,13 +144,13 @@ The bilingual heading-parity check stays on the sources.
 
 Steps 1–3 land as one pull request: a half-done split serves broken links.
 
-### 11. Open decisions
+### 11. Decisions
 
-| # | Decision | Recommendation |
+| # | Decision | Decided 2026-11-26 |
 |---|---|---|
-| D1 | English at the root, or under `/en/` too | Root: no existing URL changes |
-| D2 | Banner only, redirect a saved choice, or nothing (§6) | A, banner only |
-| D3 | Commit generated files, or generate at Vercel build time | Commit: Python on Vercel's Jekyll build image is unverified, and committed output can be checked locally |
+| D1 | English at the root, or under `/en/` too | **Root** — no existing URL changes |
+| D2 | Banner only, redirect a saved choice, or nothing (§6) | **A, banner only** |
+| D3 | Commit generated files, or generate at Vercel build time | **Commit** — Python on Vercel's Jekyll build image is unverified, and committed output can be checked locally |
 
 ---
 
@@ -285,10 +285,10 @@ A는 가이드에 맞고, 일부러 영어 링크를 연 독자를 놀라게 하
 
 1–3단계는 PR 하나로 낸다. 반쯤 나눈 상태는 깨진 링크를 낸다.
 
-### 11. 열린 결정
+### 11. 결정
 
-| # | 결정 | 권장 |
+| # | 결정 | 2026-11-26 결정 |
 |---|---|---|
-| D1 | 영어를 루트에, 아니면 `/en/`에도 | 루트: 기존 URL이 바뀌지 않는다 |
-| D2 | 배너만, 저장된 선택 리다이렉트, 아무것도 안 함(§6) | A, 배너만 |
-| D3 | 생성 파일 커밋, 아니면 Vercel 빌드 때 생성 | 커밋: Vercel Jekyll 빌드 이미지의 Python은 확인 안 됨, 커밋된 출력은 로컬에서 검사 가능 |
+| D1 | 영어를 루트에, 아니면 `/en/`에도 | **루트** — 기존 URL이 바뀌지 않는다 |
+| D2 | 배너만, 저장된 선택 리다이렉트, 아무것도 안 함(§6) | **A, 배너만** |
+| D3 | 생성 파일 커밋, 아니면 Vercel 빌드 때 생성 | **커밋** — Vercel Jekyll 빌드 이미지의 Python은 확인 안 됨, 커밋된 출력은 로컬에서 검사 가능 |
